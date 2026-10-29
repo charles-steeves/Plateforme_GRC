@@ -7,6 +7,7 @@ use App\Core\ApiException;
 use App\Core\Database;
 use App\Core\Validation;
 use App\Repositories\OrderRepository;
+use App\Repositories\IdempotencyRepository;
 use PDO;
 
 final class OrderService
@@ -24,7 +25,8 @@ final class OrderService
             throw new ApiException(403, 'FORBIDDEN', 'Accès réservé aux clients.');
         }
         // Submitted prices are deliberately ignored; authority fields are rejected.
-        Validation::fields($input, ['items', 'price', 'price_xaf', 'unit_price_xaf']);
+        Validation::fields($input, ['items', 'request_id', 'price', 'price_xaf', 'unit_price_xaf']);
+        $requestKey = IdempotencyRepository::key($input);
         $items = $input['items'] ?? null;
         if (!is_array($items) || !array_is_list($items) || count($items) < 1 || count($items) > 30) {
             throw new ApiException(422, 'VALIDATION_ERROR', 'Une commande contient entre 1 et 30 lignes.');
@@ -44,7 +46,20 @@ final class OrderService
             $seen[$productId] = true;
             $lines[] = ['product_id' => $productId, 'quantity' => $quantity];
         }
-        return Database::write($this->pdo, function () use ($user, $lines): array {
+        usort($lines, static fn(array $left, array $right): int => $left['product_id'] <=> $right['product_id']);
+        $fingerprint = hash('sha256', json_encode($lines, JSON_THROW_ON_ERROR));
+        return Database::write($this->pdo, function () use ($user, $lines, $requestKey, $fingerprint): array {
+            $requestLog = null;
+            if ($requestKey !== null) {
+                $requestLog = new IdempotencyRepository($this->pdo);
+                $requestLog->ensureTable();
+                $oldId = $requestLog->previous((int)$user['id'], 'order', $requestKey, $fingerprint);
+                if ($oldId !== null) {
+                    $previous = $this->orders->find($oldId);
+                    if ($previous === null) throw new \RuntimeException('Commande précédente introuvable.');
+                    return $previous;
+                }
+            }
             $find = $this->pdo->prepare('SELECT id, name, price_xaf, stock_quantity FROM products WHERE id=:id AND active=1');
             $total = 0;
             foreach ($lines as &$line) {
@@ -82,6 +97,9 @@ final class OrderService
                     throw new ApiException(409, 'OUT_OF_STOCK', 'Stock insuffisant pour cette commande.');
                 }
                 $insertLine->execute(['order_id' => $orderId, 'product_id' => $line['product_id'], 'name' => $line['product_name'], 'quantity' => $line['quantity'], 'price' => $line['unit_price_xaf'], 'total' => $line['line_total_xaf']]);
+            }
+            if ($requestLog !== null) {
+                $requestLog->remember((int)$user['id'], 'order', $requestKey, $fingerprint, $orderId);
             }
             return $this->orders->find($orderId);
         });

@@ -712,3 +712,18 @@ body.store-workspace .product-card:nth-child(3n) .product-image { background: #e
   .site-header .brand { font-size: 1.02rem; }
   .site-header .brand small { font-size: .52rem; }
 }
+
+
+/* Pied de page sobre et contrasté, sur tous les écrans. Les liens vers les
+   contacts réels pourront être ajoutés après la validation des coordonnées. */
+.site-footer {
+  background: #111820;
+  border-top: 3px solid #e2a078;
+  color: #e4e9ef;
+}
+.site-footer .footer-inner { color: #c5d0dc; }
+.site-footer .brand { color: #ffffff; }
+.site-footer a { color: #b8e9f6; text-underline-offset: 3px; }
+.site-footer a:hover { color: #ffffff; }
+.site-footer a:focus-visible { outline-color: #ffd2a8; }
+.site-footer .footer-inner p { color: #c5d0dc; }

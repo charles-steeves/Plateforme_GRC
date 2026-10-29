@@ -136,7 +136,6 @@ La vérification automatisée GitHub Actions (`.github/workflows/grc-smoke.yml`)
 
 En cas d'erreur, commencer par vérifier le terminal PHP, les extensions, l'existence de `storage/grc.sqlite`, puis les erreurs réseau du navigateur. Les réponses HTTP ne doivent jamais afficher de secrets ni de traces PHP internes.
 
-
 ## Sauvegarde complète de l'état de démonstration
 
 Pour garder l'état des essais (base SQLite, identifiants privés et photos de produits importées), **arrêter PHP**, puis utiliser un dossier encore inexistant :
