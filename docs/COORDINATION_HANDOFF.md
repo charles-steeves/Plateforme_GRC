@@ -14,6 +14,9 @@ Dépôt privé : [Nemsis7036/GRC-Plateforme](https://github.com/Nemsis7036/GRC-P
 | [#4](https://github.com/Nemsis7036/GRC-Plateforme/pull/4) | Finalisation backend / installation | Fusionnée |
 | [#5](https://github.com/Nemsis7036/GRC-Plateforme/pull/5) | Fiabilisation intermodules, harmonisation du nom et régressions | **Fusionnée** |
 | [#6](https://github.com/Nemsis7036/GRC-Plateforme/pull/6) | Typographie, navigation responsive et contrôles UI | **Fusionnée** |
+| [#7](https://github.com/Nemsis7036/GRC-Plateforme/pull/7) | Textes naturels et diagnostic PHP | **Fusionnée** |
+| [#8](https://github.com/Nemsis7036/GRC-Plateforme/pull/8) | Refonte limitée admin bleu/cyan, navigation, cours, polling | **Ouverte lors de cette mise à jour** |
+| [#9](https://github.com/Nemsis7036/GRC-Plateforme/pull/9) | Upload photos + création d'admins CLI | **Ouverte lors de cette mise à jour** |
 | [#7](https://github.com/Nemsis7036/GRC-Plateforme/pull/7) | Présentation commerciale naturelle, recherche alignée et diagnostic PHP | **Préparée sur sa branche ; à fusionner après tests** |
 
 La PR #5 et la PR #6 sont fusionnées dans `main`. Les retouches de textes, le formulaire de recherche et le diagnostic SQLite sont sur `feature/ux-natural-language-grc-20261029` (PR #7), non intégrées à `main` avant fusion. Voir [l'état du projet](PROJECT_STATUS.md) pour les estimations et les tâches restantes.
