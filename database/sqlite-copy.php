@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/install-files.php';
+
 /** CLI-only helpers for SQLite snapshot copies. Never copy an open DB with file copy(). */
 function privateSqlitePath(string $path, bool $mustExist): string
 {
@@ -76,12 +78,9 @@ function sqliteSnapshot(string $source, string $destination, bool $replace = fal
         $output->close();
         $output = null;
         @chmod($temporary, 0600);
-        if ($replace && file_exists($destination) && !unlink($destination)) {
-            throw new RuntimeException('Impossible de remplacer la destination, serveur à arrêter.');
-        }
-        if (!rename($temporary, $destination)) {
-            throw new RuntimeException('Impossible d’installer la copie vérifiée.');
-        }
+        // Never delete the existing destination before the new snapshot is installed.
+        // The shared installer preserves the original and restores it if rename fails.
+        installDatabaseFiles([$temporary => $destination], $replace);
         $temporary = null;
     } finally {
         if ($input instanceof SQLite3) {
