@@ -1,5 +1,7 @@
 # Frontend GRC — Plateforme de vente en ligne et relation client
 
+> Mise à jour ciblée UI du 29 octobre 2026 : typographie locale unifiée (sans police non livrée), suppression de la famille serif isolée sur le grand titre, en-tête neutre plus souple entre 801 et 1100 px, navigation mobile et paniers améliorés sur écran étroit. Les douze pages partagent toujours le même CSS, sans modification des appels API ni des données. Le test `node tests/ui-style-contract.mjs` protège ces règles structurelles. **Le rendu sur Windows 11, les caractères anormaux signalés et l'ensemble des résolutions restent à vérifier en situation réelle.**
+
 Finalisation du chantier A sur `feature/frontend-finalization`, créée depuis
 `main` au commit `376f9a627174e30d372c61d74a3239e6767b85bb`, après fusion des
 premiers développements frontend et backend. Contrats v3.0 relus et conservés.
