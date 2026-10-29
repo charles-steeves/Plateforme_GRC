@@ -88,7 +88,11 @@ function renderAdminNav(user) {
   const sidebar = el('aside', { className: 'admin-sidebar', 'aria-label': 'Espace administration' },
     el('div', { className: 'admin-sidebar-heading' },
       el('span', { className: 'admin-sidebar-title' }, 'ESPACE GRC')),
-    nav, el('div', { className: 'admin-sidebar-bottom' }, account, signout));
+    nav, el('div', { className: 'admin-sidebar-bottom' },
+      el('a', { className: 'admin-sidebar-shop', href: '/', title: 'Voir la boutique' },
+        el('span', { className: 'admin-nav-icon', 'aria-hidden': 'true' }, '⌂'),
+        el('span', { className: 'admin-nav-label' }, 'Voir la boutique')),
+      account, signout));
   const overlay = el('button', { type: 'button', className: 'admin-sidebar-overlay',
     'aria-label': 'Fermer le menu administration', hidden: true });
   const toggle = button('☰ Menu', { type: 'button', className: 'admin-sidebar-toggle button button-secondary',
