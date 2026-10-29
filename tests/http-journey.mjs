@@ -197,16 +197,33 @@ try {
 
   const forbidden = await client.get('/admin/dashboard');
   ok(forbidden.status === 403, 'client forbidden from admin API');
+  ok((await visitor.get('/admin/dashboard')).status === 401,
+    'visitor cannot see dashboard metrics');
+  for (const endpoint of ['/admin/products', '/admin/orders', '/admin/customers', '/admin/tickets', '/admin/categories']) {
+    ok((await client.get(endpoint)).status === 403, 'client cannot read ' + endpoint);
+  }
+  ok((await client.post('/admin/products', { name: 'Interdit' })).status === 403,
+    'client cannot create admin-only products');
   const noCsrf = await client.post('/orders', { items: [{ product_id: 1, quantity: 1 }] }, false);
   ok(noCsrf.status === 403, 'missing CSRF refused before writing');
 
   const stockBefore = (await visitor.get('/products/1')).data.product.stock_quantity;
   const pointsBefore = (await client.get('/loyalty/me')).data.balance;
-  const dashboardBefore = (await admin.get('/admin/dashboard')).data.ca_simule_xaf;
+  const firstDashboard = (await admin.get('/admin/dashboard')).data;
+  const dashboardBefore = firstDashboard.ca_simule_xaf;
+  ok(Array.isArray(firstDashboard.orders_last_7_days)
+    && firstDashboard.orders_last_7_days.length === 7
+    && firstDashboard.orders_last_7_days.every(row => /^\\d{4}-\\d{2}-\\d{2}$/.test(row.day)
+      && Number.isSafeInteger(row.count) && row.count >= 0),
+    'dashboard trend is a seven-day real SQLite series');
+  const trendBefore = firstDashboard.orders_last_7_days.reduce((sum, item) => sum + item.count, 0);
   const orderResponse = await client.post('/orders', { items: [{ product_id: 1, quantity: 1 }] });
   ok(orderResponse.status === 201, 'created order through real HTTP API');
   const order = orderResponse.data.order;
   ok(order.status === 'pending' && order.total_xaf === 95000, 'server computes integer order amount');
+  const trendAfter = (await admin.get('/admin/dashboard')).data.orders_last_7_days;
+  ok(trendAfter.reduce((sum, row) => sum + row.count, 0) === trendBefore + 1,
+    'admin order history graph updates when a customer orders');
   ok((await visitor.get('/products/1')).data.product.stock_quantity === stockBefore - 1, 'stock decreased');
 
   const seenOrders = await admin.get('/admin/orders');
