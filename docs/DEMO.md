@@ -14,7 +14,7 @@ Version : parcours pédagogique avec **données exclusivement fictives**. Il est
 
 | Durée indicative | Démonstration concrète | Notion du cours à expliquer |
 | --- | --- | --- |
-| 0:00–0:45 | Présenter **Équateur**, boutique gabonaise fictive et espace de GRC. Montrer le catalogue public et les prix en FCFA. | L'e-commerce produit des interactions et données utiles à la relation client |
+| 0:00–0:45 | Présenter la plateforme de vente en ligne et l'espace GRC, sans nom commercial ni entreprise prédéfinie. Montrer le catalogue de démonstration et les prix en FCFA. | L'e-commerce produit des interactions et données utiles à la relation client |
 | 0:45–1:40 | Se connecter en client, ouvrir une fiche produit, ajouter au panier et confirmer une **commande simulée**. | GRC **opérationnelle** : centralisation et suivi des commandes |
 | 1:40–2:30 | Passer au profil administrateur, retrouver la commande, la confirmer puis la marquer livrée. | Coordination des opérations commerciales et des données de stock |
 | 2:30–3:10 | Revenir au client et afficher historique des commandes et solde de fidélité actualisé. | **Fidélisation** : attribution des points à la livraison, sans double crédit |
@@ -27,7 +27,7 @@ Version : parcours pédagogique avec **données exclusivement fictives**. Il est
 
 ## Script de présentation possible
 
-> « Notre projet Équateur illustre comment la vente en ligne peut alimenter un système de gestion de la relation client. La boutique accueille des visiteurs et des clients, mais toutes les opérations de cette démonstration portent sur des produits et utilisateurs fictifs.
+> « Notre plateforme illustre comment la vente en ligne peut alimenter un système de gestion de la relation client. Elle accueille des visiteurs et des clients ; le nom et l'identité de l'entreprise seront définis ultérieurement. Pour cette démonstration, seuls des produits et utilisateurs de test sont utilisés.
 >
 > Lorsqu'un client passe commande, son historique est enregistré sur notre serveur PHP dans une base SQLite commune. Le responsable peut suivre cette commande, la confirmer, gérer le stock et signaler une livraison simulée. Cette livraison déclenche une attribution unique de points : c'est un mécanisme concret de fidélisation.
 >
@@ -37,7 +37,7 @@ Version : parcours pédagogique avec **données exclusivement fictives**. Il est
 
 ## Messages importants au jury
 
-- **Entreprise fictive, application fonctionnelle** : les commandes, tickets, points et avis sont réellement enregistrés dans une base de démonstration ; aucun argent n'est encaissé.
+- **Plateforme fonctionnelle avec données de démonstration** : les commandes, tickets, points et avis sont réellement enregistrés dans une base de test ; aucun argent n'est encaissé.
 - **GRC opérationnelle** : gérer commandes, clients et produits.
 - **GRC interactive** : permettre l'échange entre client et entreprise par le SAV.
 - **GRC analytique** : exploiter historiques, segments et indicateurs pour mieux comprendre la clientèle.
