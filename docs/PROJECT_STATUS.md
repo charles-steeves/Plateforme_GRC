@@ -21,7 +21,9 @@ Méthode : cinq catégories de préparation à la soutenance, pondérées, pour 
 
 - PR [#1](https://github.com/Nemsis7036/GRC-Plateforme/pull/1) à [#5](https://github.com/Nemsis7036/GRC-Plateforme/pull/5) : **fusionnées** dans `main`.
 - PR [#6](https://github.com/Nemsis7036/GRC-Plateforme/pull/6) : typographie et navigation responsive, **fusionnée**.
-- PR [#7](https://github.com/Nemsis7036/GRC-Plateforme/pull/7) : formulaire de recherche aligné, textes client plus naturels, simplification des erreurs et diagnostic local PHP/SQLite, **en cours de livraison**. Aucun de ces changements n'est intégré à `main` avant fusion.
+- PR [#7](https://github.com/Nemsis7036/GRC-Plateforme/pull/7) : recherche alignée, textes naturels et diagnostic PHP, **fusionnée**.
+- PR [#8](https://github.com/Nemsis7036/GRC-Plateforme/pull/8) : bleu/cyan, barre latérale admin, KPI épurés, rafraîchissement dashboard HTTP et correspondance cours, **ouverte à la rédaction**.
+- PR [#9](https://github.com/Nemsis7036/GRC-Plateforme/pull/9) : upload sécurisé de photos produits et création facultative d'admins supplémentaires par CLI, **ouverte à la rédaction**. Fusionner dans cet ordre sous réserve des tests et des conflits.
 - L'identité commerciale reste **indéterminée** : « Plateforme GRC » est un libellé neutre, et non une marque ; ne pas réintroduire l'ancien nom ni inventer d'entreprise.
 - Les données de soutenance et les commandes restent simulées ; aucun paiement réel ni données personnelles réelles.
 
