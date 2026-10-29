@@ -64,6 +64,7 @@ export async function mountTickets(root, { user, admin = false }) {
   let displayedListStamp = null;
   let displayedDetailStamp = null;
   let displayedTicketStatus = null;
+  let displayedMessageCount = 0;
   let polling = false;
   const drafts = new Map();
   const pendingTickets = new Set();
@@ -146,6 +147,7 @@ export async function mountTickets(root, { user, admin = false }) {
     selectedId = id;
     displayedDetailStamp = null;
     displayedTicketStatus = null;
+    displayedMessageCount = 0;
     const generation = ++detailGeneration;
     if (updateUrl) {
       const url = new URL(window.location.href);
@@ -167,6 +169,7 @@ export async function mountTickets(root, { user, admin = false }) {
       renderDetail(data.ticket, data.messages);
       displayedDetailStamp = ticketStamp(data.ticket, data.messages);
       displayedTicketStatus = data.ticket.status;
+      displayedMessageCount = data.messages.length;
       return true;
     } catch (error) {
       if (generation !== detailGeneration) return;
@@ -238,8 +241,12 @@ export async function mountTickets(root, { user, admin = false }) {
         }
       }
     }
+    if (data.messages.length > displayedMessageCount) {
+      notice(summaryNotice, 'Un nouveau message est arrivé dans cette conversation.', 'info');
+    }
     displayedDetailStamp = stamp;
     displayedTicketStatus = data.ticket.status;
+    displayedMessageCount = data.messages.length;
   }
 
   function syncTicketLock(id) {
