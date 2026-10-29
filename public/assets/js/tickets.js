@@ -105,6 +105,7 @@ export async function mountTickets(root, { user, admin = false }) {
   }
 
   async function loadList({ silent = false } = {}) {
+    if (silent && refresh.disabled) return false;
     const generation = ++listGeneration;
     if (!silent) {
       refresh.disabled = true;
@@ -219,8 +220,8 @@ export async function mountTickets(root, { user, admin = false }) {
       const conversation = detail.querySelector('[data-ticket-conversation]');
       if (!conversation) return;
       conversation.replaceWith(conversationContent(data.messages));
-      const statusBadge = detail.querySelector('[data-ticket-status]');
-      if (statusBadge) statusBadge.replaceChildren(badge(data.ticket.status));
+      const statusBadge = detail.querySelector('[data-ticket-status] .badge');
+      if (statusBadge) statusBadge.replaceWith(badge(data.ticket.status));
       const updatedAt = detail.querySelector('[data-ticket-updated]');
       if (updatedAt) updatedAt.textContent = `Ouvert le ${date(data.ticket.created_at)} · Mis à jour le ${date(data.ticket.updated_at)}`;
       if (changedStatus) {
