@@ -92,6 +92,27 @@ try {
   }
   assert.ok(ready, 'PHP server did not start: ' + phpErrors.slice(0, 1000));
 
+  // Every public HTML entry point and its shared CSS should remain routable.
+  // Authentication and data permissions are still enforced by the API.
+  for (const page of [
+    '/', '/product.html', '/cart.html', '/login.html', '/register.html',
+    '/account.html', '/tickets.html', '/admin.html',
+    '/admin-products.html', '/admin-orders.html', '/admin-customers.html',
+    '/admin-tickets.html',
+  ]) {
+    const response = await fetch(base + page, { signal: AbortSignal.timeout(5000) });
+    ok(response.status === 200 && response.headers.get('content-type')?.includes('text/html'),
+      'HTML route should be available: ' + page);
+    const html = await response.text();
+    ok(html.includes('Plateforme GRC') && html.includes('charset="utf-8"'),
+      'Neutral identity and UTF-8 should be present: ' + page);
+  }
+  const cssResponse = await fetch(base + '/assets/css/site.css', { signal: AbortSignal.timeout(5000) });
+  ok(cssResponse.status === 200 && cssResponse.headers.get('content-type')?.includes('text/css'),
+    'Stylesheet should be served with correct MIME type');
+  ok((await cssResponse.text()).includes('font-family: "Segoe UI"'),
+    'Shared local typography should reach the browser');
+
   const visitor = new Session(base);
   const client = new Session(base);
   const admin = new Session(base);
