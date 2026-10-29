@@ -160,3 +160,12 @@ Les conversations SAV côté client et administration sont relues automatiquemen
 **Session :** refuser l'enregistrement du mot de passe Chrome n'empêche pas l'utilisation d'un cookie de session HTTP ; un redémarrage du serveur ne révoque pas les sessions PHP stockées. Expiration actuelle : 30 minutes d'inactivité / 8 heures absolues. Les lectures périodiques passives (SAV et tableau de bord) sont signalées par `X-GRC-Passive: 1` et ne prolongent pas le délai de 30 minutes ; le contrôle du rôle reste obligatoire. Un clic normal et la déconnexion conservent leurs comportements actuels. Pas de modification de base, de comptes ou de mots de passe.
 
 **Après cette livraison :** gel progressif de l'interface et audit des fonctions restantes avant de décider d'un nouvel ajout. Les taux de change et la traduction complète restent des chantiers distincts non implémentés.
+
+
+### 9.12 Sauvegarde complète sans destruction des essais (29 octobre 2026)
+
+L'utilisateur **souhaite pouvoir revenir à zéro uniquement pour sa future présentation**, mais confirme conserver toutes les données actuelles pour continuer les essais de persistance. **Aucune réinitialisation n'est autorisée pendant ce chantier.**
+
+Ajouts CLI strictement locaux : `database/backup-bundle.php --to=<nouveau-dossier-prive>` sauvegarde une copie cohérente de SQLite, les identifiants `demo-accounts.json` et les images administrateur importées, puis vérifie le manifest et les empreintes. `database/restore-bundle.php --from=<dossier> --replace --confirm` vérifie et restaure le tout, après arrêt des connexions. Les sauvegardes sont privées et exclues par `.gitignore` lorsqu'elles sont rangées sous `storage/`. Un `git pull` reste sans effet sur ces données.
+
+Le `--reset` existant de `database/init.php` est **potentiellement destructif**, ne doit pas être lancé maintenant et exige une sauvegarde complète préalablement inspectée lors de la future répétition. Les photos ne sont pas effacées par le reset de base. Aucune promesse de retour automatique à zéro n'est faite.
