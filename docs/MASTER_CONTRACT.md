@@ -122,3 +122,13 @@ Cet addendum n'est pas une liste d'autorisations pour ajouter des fonctions P1/P
 ### 9.6 Présentation réaliste de l'interface, à la demande de l'utilisateur
 
 L'utilisateur confirme que les messages répétés « projet universitaire », « données fictives », « aucun paiement réel », « adresse e-mail fictive » et les explications d'implémentation (« 72 octets UTF-8 ») **ne doivent plus polluer les pages client/admin**. Les mêmes garanties restent nécessaires dans le code et documentées pour les développeurs et les évaluateurs. L'inscription conserve la règle de sécurité de longueur du mot de passe, mais l'interface affiche une indication concise (12 caractères minimum) et une erreur compréhensible en cas de dépassement. Le formulaire catalogue est harmonisé sur ordinateur et mobile. L'expérience doit être crédible sans prétendre exécuter un paiement ou une livraison réels. Les prix restent affichés en FCFA, mais sans slogans pédagogiques sur la devise. Aucun changement de marque ni de modèle API n'est autorisé par cette décision.
+
+### 9.7 Ajustements de l'administration et démonstration multi-appareils (29 octobre 2026)
+
+**Validations utilisateur :** adopter une palette claire bleu/cyan avec touches complémentaires ; retirer les sous-légendes triviales des indicateurs ; ajouter une barre latérale d'administration repliable avec section compte/déconnexion ; mettre en avant le lien effectif avec le cours, par l'historique client, les segments, les opérations, le SAV et la fidélisation. Prévoir une mise à jour discrète des indicateurs (rafraîchissement périodique possible), sans affirmer que le site utilise WebSocket ou chat direct.
+
+**Demandes distinctes à implémenter prudemment :** sélection d'image depuis une galerie smartphone via une route d'upload administrateur sécurisée ; possibilité de comptes administrateurs distincts. Les choix de sécurité et de stockage devront être documentés avec tests et sans reset de la base existante. Plusieurs navigateurs peuvent déjà ouvrir des sessions indépendantes du même compte ; la cohérence d'écritures concurrentes doit rester contrôlée.
+
+**Conservation impérative :** `storage/` est ignoré par Git ; un `git pull` normal ne recrée ni n'écrase les données. Ne jamais publier la base ou les identifiants, ni supprimer les comptes clients préchargés sans une décision explicite de migration. Les premiers comptes de démonstration restent dans l'installation actuelle, sans être réinitialisés. Les opérations de paiement et livraison restent purement simulées.
+
+**Cours complet :** voir `docs/COURSE_IMPLEMENTATION_AUDIT.md` ; les concepts RFM complet, CLV, personnalisation marketing et support synchrone ne doivent pas être affichés comme déjà implémentés.
