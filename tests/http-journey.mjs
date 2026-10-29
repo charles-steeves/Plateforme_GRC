@@ -213,7 +213,7 @@ try {
   const dashboardBefore = firstDashboard.ca_simule_xaf;
   ok(Array.isArray(firstDashboard.orders_last_7_days)
     && firstDashboard.orders_last_7_days.length === 7
-    && firstDashboard.orders_last_7_days.every(row => /^\\d{4}-\\d{2}-\\d{2}$/.test(row.day)
+    && firstDashboard.orders_last_7_days.every(row => /^\d{4}-\d{2}-\d{2}$/.test(row.day)
       && Number.isSafeInteger(row.count) && row.count >= 0),
     'dashboard trend is a seven-day real SQLite series');
   const trendBefore = firstDashboard.orders_last_7_days.reduce((sum, item) => sum + item.count, 0);
