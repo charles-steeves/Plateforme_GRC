@@ -161,6 +161,10 @@ Les scripts/rapports de cette finalisation sont conservés hors checkout dans `/
 Aucune correction frontend nécessaire au parcours testé n’est restée bloquante. L’indication de la limite serveur de 72 octets dans le formulaire de mot de passe pourrait être ajoutée par le Chat A : actuellement, le serveur la refuse avec 422, mais le formulaire annonce seulement 12 caractères minimum. Aucun fichier frontend, contrat, README, test du Chat C, base active ou identifiant local n’est modifié/versionné par cette PR.
 
 
+### Protection contre les doublons après une coupure
+
+Les requêtes modernes du navigateur joignent `request_id` à la création d'une commande ou d'un ticket. Le serveur retourne la même ressource sur replay ; une clé utilisée avec un autre contenu renvoie 409. La table `idempotency_requests` est créée automatiquement et sans perte de données lors de la première requête dotée d'une clé sur une base locale antérieure. **Ne pas relancer `database/init.php --reset`.** Les clients API anciens sans clé ne sont pas protégés contre le renvoi d'un POST. Les messages de conversation SAV restent soumis à une vérification d'historique en cas de réponse perdue.
+
 ## Sauvegarde complète et restauration pour la soutenance (29 octobre 2026)
 
 Les commandes SQLite seules (`database/backup.php` / `database/restore.php`) ne sauvegardent **ni les mots de passe locaux de démonstration ni les images de produits envoyées**. Utiliser désormais un *dossier de sauvegarde complet* lorsque l'objectif est de revenir exactement à l'état précédent.
