@@ -1,0 +1,504 @@
+import { api } from './api.js';
+import {
+  el, money, date, badge, notice, field, button, heading, empty,
+  renderError, busy, orderCard, productImage, isLocalImagePath,
+} from './ui.js';
+
+const ORDER_LABELS = {
+  pending: 'En attente', confirmed: 'Confirmée', delivered: 'Livrée', cancelled: 'Annulée',
+};
+const ORDER_TRANSITIONS = {
+  pending: ['confirmed', 'cancelled'], confirmed: ['delivered', 'cancelled'],
+  delivered: [], cancelled: [],
+};
+const ORDER_ACTIONS = {
+  confirmed: 'Confirmer la commande', delivered: 'Marquer comme livrée', cancelled: 'Annuler la commande',
+};
+const SEGMENTS = {
+  no_purchase: 'Sans achat', new: 'Nouveau client', occasional: 'Client occasionnel',
+  regular: 'Client régulier', inactive: 'Client inactif',
+};
+
+function records(data) {
+  if (!data || !Array.isArray(data.items)) throw new Error('La liste reçue du serveur est invalide.');
+  return data.items;
+}
+
+function validId(value) {
+  return Number.isSafeInteger(value) && value > 0;
+}
+
+function count(value) {
+  if (!Number.isSafeInteger(value) || value < 0) throw new Error('Un indicateur reçu du serveur est invalide.');
+  return new Intl.NumberFormat('fr-FR').format(value);
+}
+
+function loading(root, message) {
+  root.replaceChildren(el('p', { role: 'status', className: 'muted' }, message));
+  root.setAttribute('aria-busy', 'true');
+}
+
+function confirmedMutation(data, key, expectedId) {
+  const value = data?.[key];
+  if (!value || !validId(value.id) || (expectedId !== undefined && value.id !== expectedId)) {
+    const error = new Error('Le serveur n’a pas confirmé la modification. Actualisez les données avant de recommencer.');
+    error.uncertain = true;
+    throw error;
+  }
+  return value;
+}
+
+function uncertain(error) {
+  return error.uncertain || !error.status || error.status >= 500
+    || error.code === 'INVALID_RESPONSE' || (error.status >= 200 && error.status < 300);
+}
+
+function mutationMessage(error) {
+  return uncertain(error)
+    ? 'La confirmation du serveur n’a pas été reçue. La modification a peut-être été enregistrée : vérifiez les données avant de recommencer.'
+    : error.message;
+}
+
+function metric(label, value, description) {
+  return el('article', { className: 'panel metric-card' },
+    el('p', { className: 'muted' }, label),
+    el('p', { className: 'metric-value' }, value),
+    el('p', { className: 'muted' }, description));
+}
+
+async function dashboard(root) {
+  const content = el('div', { className: 'stack' });
+  const refresh = button('Actualiser les indicateurs', { className: 'button button-secondary', onClick: () => load() });
+  root.replaceChildren(heading('Tableau de bord GRC', 'Les indicateurs proviennent exclusivement des données enregistrées par le serveur.'), refresh, content);
+  let generation = 0;
+  async function load() {
+    const request = ++generation;
+    refresh.disabled = true;
+    loading(content, 'Chargement des indicateurs…');
+    try {
+      const data = await api('/admin/dashboard');
+      if (request !== generation) return;
+      const satisfaction = data.satisfaction_avg;
+      if (satisfaction !== null && (typeof satisfaction !== 'number' || !Number.isFinite(satisfaction) || satisfaction < 1 || satisfaction > 5)) {
+        throw new Error('La moyenne de satisfaction reçue est invalide.');
+      }
+      const values = el('div', { className: 'metrics' },
+        metric('Clients', count(data.customers_count), 'Comptes clients, administrateurs exclus.'),
+        metric('Commandes', count(data.orders_count), 'Commandes non annulées.'),
+        metric('Chiffre d’affaires simulé', money(data.ca_simule_xaf), 'Montant des commandes livrées uniquement.'),
+        metric('Tickets à traiter', count(data.tickets_open_count), 'Tickets ouverts ou en cours.'),
+        metric('Satisfaction', satisfaction === null ? 'Aucun avis' : `${new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 2 }).format(satisfaction)} / 5`, 'Notes reçues après livraison.'),
+        metric('Clients inactifs', count(data.customers_inactive_count), 'Dernier achat datant de plus de 90 jours.'));
+      const status = el('section', { className: 'panel stack' }, el('h2', {}, 'Répartition des commandes'));
+      const list = el('dl', { className: 'summary' });
+      for (const [key, label] of Object.entries(ORDER_LABELS)) {
+        list.append(el('div', {}, el('dt', {}, label), el('dd', {}, count(data.order_status_counts?.[key]))));
+      }
+      status.append(list);
+      content.replaceChildren(values, status,
+        el('p', { className: 'muted' }, 'Démonstration — données fictives. Aucun paiement réel. Les segments et les points de fidélité sont calculés par le serveur.'),
+        el('div', { className: 'cluster' },
+          el('a', { href: '/admin-orders.html', className: 'button button-secondary' }, 'Gérer les commandes'),
+          el('a', { href: '/admin-tickets.html', className: 'button button-secondary' }, 'Traiter le SAV')));
+    } catch (error) {
+      if (request === generation) renderError(content, error, load);
+    } finally {
+      if (request === generation) {
+        content.removeAttribute('aria-busy');
+        refresh.disabled = false;
+      }
+    }
+  }
+  await load();
+}
+
+function integerControl(name, value, label) {
+  const input = el('input', {
+    id: `product-${name}`, name, type: 'number', required: true, min: '0',
+    max: String(Number.MAX_SAFE_INTEGER), step: '1', inputMode: 'numeric', value: String(value),
+  });
+  return { input, field: field(label, input) };
+}
+
+function readInteger(control, label) {
+  const text = control.value.trim();
+  const value = Number(text);
+  if (!/^(0|[1-9]\d*)$/.test(text) || !Number.isSafeInteger(value)) {
+    control.focus();
+    throw new Error(`${label} doit être un entier positif ou nul, sans décimales.`);
+  }
+  return value;
+}
+
+async function products(root) {
+  const feedback = el('div', { 'aria-live': 'polite' });
+  const list = el('section', { className: 'stack', 'aria-label': 'Produits enregistrés' });
+  const editor = el('section', { className: 'panel stack', 'aria-label': 'Édition du produit' });
+  const refresh = button('Actualiser les produits', { className: 'button button-secondary', onClick: () => load() });
+  const newProduct = button('Nouveau produit', {
+    className: 'button button-primary', onClick: () => { if (mutationPending || needsRefresh) return; edit(); editor.querySelector('input')?.focus(); },
+  });
+  root.replaceChildren(heading('Produits et stocks', 'Créer, modifier ou désactiver les produits de démonstration.'),
+    el('div', { className: 'cluster' }, refresh, newProduct), feedback, el('div', { className: 'split' }, list, editor));
+  let generation = 0;
+  let editing = null;
+  let mutationPending = false;
+  let needsRefresh = false;
+
+  function edit(product = null) {
+    editing = product;
+    const original = product ? { ...product, active: Boolean(product.active) } : null;
+    const name = el('input', { id: 'product-name', name: 'name', type: 'text', required: true, maxLength: 120, value: product?.name ?? '' });
+    const description = el('textarea', { id: 'product-description', name: 'description', rows: 4 }, product?.description ?? '');
+    const category = el('input', { id: 'product-category', name: 'category', type: 'text', required: true, value: product?.category ?? '' });
+    const price = integerControl('price_xaf', product?.price_xaf ?? 0, 'Prix entier en FCFA (XAF)');
+    const stock = integerControl('stock_quantity', product?.stock_quantity ?? 0, 'Quantité disponible');
+    const image = el('input', { id: 'product-image', name: 'image_url', type: 'text', value: product?.image_url ?? '/assets/images/product-placeholder.svg', placeholder: '/assets/images/product-placeholder.svg' });
+    const active = el('input', { id: 'product-active', name: 'active', type: 'checkbox', checked: product ? Boolean(product.active) : true });
+    const message = el('div', { 'aria-live': 'polite' });
+    const save = button(product ? 'Enregistrer les modifications' : 'Créer le produit', { type: 'submit', className: 'button button-primary' });
+    const form = el('form', { className: 'stack' },
+      field('Nom du produit', name), field('Description', description), field('Catégorie', category),
+      price.field, stock.field,
+      field('Image locale', image, 'Chemin sous /assets/images/ uniquement. Un champ vide utilise le visuel de remplacement.'),
+      el('label', { htmlFor: 'product-active', className: 'cluster' }, active, 'Visible dans la boutique'),
+      el('p', { className: 'muted' }, 'Le stock est une quantité absolue. Un produit désactivé reste dans les commandes passées.'),
+      message, save);
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      if (save.disabled || mutationPending || needsRefresh || !form.reportValidity()) return;
+      message.replaceChildren();
+      let payload;
+      try {
+        payload = {
+          name: name.value.trim(), description: description.value.trim(), category: category.value.trim(),
+          price_xaf: readInteger(price.input, 'Le prix'), stock_quantity: readInteger(stock.input, 'Le stock'),
+          image_url: image.value.trim(), active: active.checked,
+        };
+        if (!payload.name || !payload.category) throw new Error('Le nom et la catégorie ne peuvent pas être vides.');
+        if (!isLocalImagePath(payload.image_url)) {
+          image.focus();
+          throw new Error('Utilisez un chemin d’image interne sous /assets/images/, sans URL externe.');
+        }
+        if (original) {
+          payload = Object.fromEntries(Object.entries(payload).filter(([key, value]) => value !== original[key]));
+          if (Object.keys(payload).length === 0) { notice(message, 'Aucune modification à enregistrer.', 'info'); return; }
+        }
+      } catch (error) { notice(message, error.message); return; }
+      let saved;
+      mutationPending = true;
+      // A GET initiated before this write must not unlock the editor later.
+      generation += 1;
+      refresh.disabled = true;
+      newProduct.disabled = true;
+      form.querySelectorAll('input,textarea').forEach((control) => { control.disabled = true; });
+      list.querySelectorAll('button').forEach((control) => { control.disabled = true; });
+      try {
+        await busy(save, async () => {
+          const data = await api(original ? `/admin/products/${original.id}` : '/admin/products', {
+            method: original ? 'PATCH' : 'POST', body: payload,
+          });
+          saved = confirmedMutation(data, 'product', original?.id);
+        });
+      } catch (error) {
+        notice(message, mutationMessage(error));
+        if (uncertain(error)) {
+          needsRefresh = true;
+          notice(feedback, mutationMessage(error));
+          save.disabled = true;
+          message.append(button('Vérifier les produits avant de recommencer', {
+            className: 'button button-secondary', onClick: () => load(),
+          }));
+        }
+        return;
+      } finally {
+        mutationPending = false;
+        refresh.disabled = false;
+        newProduct.disabled = needsRefresh;
+        form.querySelectorAll('input,textarea').forEach((control) => { control.disabled = false; });
+        list.querySelectorAll('button').forEach((control) => { control.disabled = needsRefresh; });
+      }
+      // Only a confirmed server response allows a success message. A failure
+      // of the subsequent GET does not turn the saved mutation into a retry.
+      notice(feedback, original ? 'Les modifications ont été enregistrées par le serveur.' : 'Le produit a été créé par le serveur.', 'success');
+      if (editing === product) edit(original ? saved : null);
+      await load();
+    });
+    editor.replaceChildren(el('h2', {}, product ? `Modifier le produit n° ${product.id}` : 'Nouveau produit'), form);
+  }
+
+  async function load() {
+    if (mutationPending) return;
+    const request = ++generation;
+    refresh.disabled = true;
+    loading(list, 'Chargement des produits…');
+    try {
+      const data = await api('/admin/products');
+      if (request !== generation) return;
+      const items = records(data);
+      if (items.some((product) => !validId(product.id))) throw new Error('Un identifiant de produit reçu est invalide.');
+      const wasUncertain = needsRefresh;
+      const body = el('tbody');
+      for (const product of items) {
+        body.append(el('tr', {},
+          el('td', {}, el('div', { className: 'admin-product-row' }, productImage(product),
+            el('div', {}, el('strong', {}, product.name), el('p', { className: 'muted' }, product.category)))),
+          el('td', {}, money(product.price_xaf)),
+          el('td', {}, count(product.stock_quantity)),
+          el('td', {}, el('span', { className: 'badge' }, product.active ? 'Actif' : 'Inactif')),
+          el('td', {}, button('Modifier', { className: 'button button-secondary', disabled: mutationPending || needsRefresh, 'aria-label': `Modifier ${product.name}`, onClick: () => {
+            if (mutationPending || needsRefresh) return;
+            edit(product); editor.querySelector('input')?.focus();
+          } }))));
+      }
+      list.replaceChildren(el('h2', {}, 'Catalogue administrateur'),
+        items.length ? el('div', { className: 'table-wrap', tabIndex: 0, 'aria-label': 'Tableau des produits, défilement horizontal possible' },
+          el('table', {}, el('caption', {}, `${items.length} produit${items.length > 1 ? 's' : ''} — données fictives`),
+            el('thead', {}, el('tr', {}, ...['Produit', 'Prix', 'Stock', 'Visibilité', 'Action'].map((label) => el('th', { scope: 'col' }, label)))), body))
+          : empty('Aucun produit enregistré', 'Créez un premier produit avec le formulaire.'));
+      // Do not unlock after a response that cannot be rendered coherently.
+      needsRefresh = false;
+      newProduct.disabled = false;
+      list.querySelectorAll('button').forEach((control) => { control.disabled = false; });
+      if (wasUncertain) notice(feedback, 'Les produits ont été relus sur le serveur. Vérifiez la liste : ouvrez le produit existant pour le modifier, ou choisissez « Nouveau produit » pour une création distincte.', 'info');
+    } catch (error) {
+      if (request === generation) renderError(list, error, load);
+    } finally {
+      if (request === generation) { list.removeAttribute('aria-busy'); refresh.disabled = false; }
+    }
+  }
+  edit();
+  await load();
+}
+
+async function orders(root) {
+  const message = el('div', { 'aria-live': 'polite' });
+  const list = el('div', { className: 'stack' });
+  const filter = el('select', { id: 'order-filter', name: 'status' },
+    el('option', { value: '' }, 'Tous les statuts'),
+    ...Object.entries(ORDER_LABELS).map(([value, label]) => el('option', { value }, label)));
+  const search = el('input', { id: 'order-search', type: 'search', placeholder: 'Nom, e-mail ou numéro' });
+  const refresh = button('Actualiser les commandes', { className: 'button button-secondary', onClick: () => load() });
+  root.replaceChildren(heading('Commandes', 'Suivre les achats fictifs et appliquer les transitions autorisées.'),
+    el('div', { className: 'cluster' }, field('Filtrer par statut', filter), field('Rechercher dans les commandes chargées', search), refresh), message, list);
+  let items = [];
+  let generation = 0;
+  let mutationPending = false;
+  let needsRefresh = false;
+  let loadingOrders = false;
+  filter.addEventListener('change', render);
+  search.addEventListener('input', render);
+
+  function render() {
+    const query = search.value.trim().toLocaleLowerCase('fr');
+    const selected = items.filter((order) => (!filter.value || order.status === filter.value)
+      && (!query || `${order.id} ${order.customer_name} ${order.customer_email}`.toLocaleLowerCase('fr').includes(query)));
+    list.replaceChildren();
+    if (!selected.length) {
+      list.append(empty('Aucune commande à afficher', items.length ? 'Modifiez les filtres pour retrouver une commande.' : 'Les commandes enregistrées apparaîtront ici.'));
+      return;
+    }
+    list.append(el('p', { role: 'status', className: 'muted' }, `${selected.length} commande${selected.length > 1 ? 's' : ''} affichée${selected.length > 1 ? 's' : ''}.`));
+    for (const order of selected) {
+      const card = orderCard(order);
+      const localMessage = el('div', { 'aria-live': 'polite' });
+      const actions = el('div', { className: 'cluster order-actions' });
+      card.prepend(el('p', {}, el('strong', {}, order.customer_name), ' · ', order.customer_email));
+      for (const nextStatus of ORDER_TRANSITIONS[order.status] ?? []) {
+        const action = button(ORDER_ACTIONS[nextStatus], {
+          className: nextStatus === 'cancelled' ? 'button button-secondary' : 'button button-primary',
+          disabled: mutationPending || needsRefresh || loadingOrders,
+          onClick: async () => {
+            if (mutationPending || needsRefresh || loadingOrders) return;
+            const text = nextStatus === 'delivered'
+              ? `Marquer la commande n° ${order.id} comme livrée ? Le serveur attribuera les points de fidélité une seule fois.`
+              : nextStatus === 'cancelled'
+                ? `Annuler la commande n° ${order.id} ? Cette décision est définitive et le serveur restaurera le stock.`
+                : `Confirmer la commande n° ${order.id} ?`;
+            if (!window.confirm(text)) return;
+            mutationPending = true;
+            refresh.disabled = true;
+            list.querySelectorAll('button').forEach((control) => { control.disabled = true; });
+            let failed;
+            try {
+              const data = await api(`/admin/orders/${order.id}`, { method: 'PATCH', body: { status: nextStatus } });
+              const saved = confirmedMutation(data, 'order', order.id);
+              if (!Object.hasOwn(ORDER_LABELS, saved.status)) throw new Error('Le statut retourné par le serveur est invalide. Actualisez les commandes.');
+              items = items.map((item) => item.id === saved.id ? saved : item);
+              notice(message, `Le serveur a enregistré la commande n° ${saved.id} : ${ORDER_LABELS[saved.status].toLocaleLowerCase('fr')}.`, 'success');
+            } catch (error) { failed = error; }
+            finally { mutationPending = false; refresh.disabled = false; }
+            if (failed) {
+              if (uncertain(failed)) needsRefresh = true;
+              notice(message, mutationMessage(failed));
+              notice(localMessage, mutationMessage(failed));
+              // Refresh must precede another attempt after an ambiguous result.
+              // Order transitions themselves remain enforced by the backend.
+              if (!uncertain(failed)) list.querySelectorAll('button').forEach((control) => { control.disabled = false; });
+              localMessage.append(button('Vérifier l’état des commandes', { className: 'button button-secondary', onClick: () => load() }));
+            } else render();
+          },
+        });
+        actions.append(action);
+      }
+      if (!(ORDER_TRANSITIONS[order.status] ?? []).length) actions.append(el('p', { className: 'muted' }, 'Statut définitif : aucune transition disponible.'));
+      card.append(actions, localMessage);
+      list.append(card);
+    }
+  }
+
+  async function load() {
+    if (mutationPending) return;
+    const request = ++generation;
+    loadingOrders = true;
+    refresh.disabled = true;
+    loading(list, 'Chargement des commandes…');
+    try {
+      const data = await api('/admin/orders');
+      if (request !== generation) return;
+      items = records(data);
+      if (items.some((order) => !validId(order.id) || !Object.hasOwn(ORDER_LABELS, order.status))) throw new Error('Une commande reçue du serveur est invalide.');
+      const wasUncertain = needsRefresh;
+      render();
+      needsRefresh = false;
+      loadingOrders = false;
+      list.querySelectorAll('button').forEach((control) => { control.disabled = false; });
+      if (wasUncertain) notice(message, 'Les commandes ont été relues sur le serveur. Vérifiez leur statut avant toute nouvelle action.', 'info');
+    } catch (error) {
+      if (request === generation) renderError(list, error, load);
+    } finally {
+      if (request === generation) { loadingOrders = false; list.removeAttribute('aria-busy'); refresh.disabled = false; }
+    }
+  }
+  await load();
+}
+
+function customerSummary(customer) {
+  return el('dl', { className: 'summary' },
+    ...[
+      ['E-mail', customer.email], ['Segment', SEGMENTS[customer.segment] ?? 'Segment non reconnu'],
+      ['Compte créé le', date(customer.created_at)], ['Commandes non annulées', count(customer.orders_count)],
+      ['Montant livré', money(customer.total_delivered_xaf)],
+      ['Dernier achat', customer.last_order_at ? date(customer.last_order_at) : 'Aucun achat'],
+    ].map(([label, value]) => el('div', {}, el('dt', {}, label), el('dd', {}, value))));
+}
+
+async function customers(root) {
+  const params = new URLSearchParams(location.search);
+  const initialPage = Number(params.get('page') ?? 1);
+  let page = Number.isSafeInteger(initialPage) && initialPage > 0 ? initialPage : 1;
+  let searchTerm = params.get('search') ?? '';
+  let selectedId = Number(params.get('id'));
+  if (!validId(selectedId)) selectedId = null;
+  let listRequest = 0;
+  let detailRequest = 0;
+  let listController;
+  let detailController;
+  const list = el('section', { className: 'stack', 'aria-label': 'Liste des clients' });
+  const detail = el('section', { className: 'panel stack customer-detail', 'aria-label': 'Fiche du client' });
+  const search = el('input', { id: 'customer-search', name: 'search', type: 'search', value: searchTerm, maxLength: 254, placeholder: 'Nom ou e-mail fictif' });
+  const submit = button('Rechercher', { type: 'submit', className: 'button button-primary' });
+  const form = el('form', { className: 'cluster' }, field('Rechercher un client', search), submit);
+  form.addEventListener('submit', (event) => { event.preventDefault(); searchTerm = search.value.trim(); page = 1; loadList(); });
+  root.replaceChildren(heading('Clients et segmentation', 'Consulter les données, l’historique et la fidélité de chaque client fictif.'), form,
+    el('p', { className: 'muted' }, 'Les segments sont calculés par le serveur sur les commandes non annulées. « Inactif » ne signifie pas « perdu ». Aucun message commercial n’est envoyé.'),
+    el('div', { className: 'split' }, list, detail));
+
+  function updateUrl() {
+    const next = new URLSearchParams();
+    if (searchTerm) next.set('search', searchTerm);
+    if (page > 1) next.set('page', String(page));
+    if (selectedId) next.set('id', String(selectedId));
+    history.replaceState(null, '', `${location.pathname}${next.size ? `?${next}` : ''}`);
+  }
+
+  async function loadDetail(id, focus = false) {
+    if (!validId(id)) return;
+    selectedId = id;
+    updateUrl();
+    detailController?.abort();
+    detailController = new AbortController();
+    const request = ++detailRequest;
+    loading(detail, 'Chargement de la fiche client…');
+    try {
+      const data = await api(`/admin/customers/${id}`, { signal: detailController.signal });
+      if (request !== detailRequest) return;
+      if (data.customer?.id !== id || !Array.isArray(data.orders) || !Array.isArray(data.tickets)) throw new Error('La fiche client reçue est invalide.');
+      const title = el('h2', { tabIndex: -1 }, data.customer.name);
+      const orderList = el('div', { className: 'stack' }, el('h3', {}, 'Historique des commandes'));
+      orderList.append(...(data.orders.length ? data.orders.map((order) => orderCard(order)) : [el('p', { className: 'muted' }, 'Aucune commande enregistrée.') ]));
+      const ticketList = el('div', { className: 'stack' }, el('h3', {}, 'Tickets SAV'));
+      ticketList.append(...(data.tickets.length ? data.tickets.map((ticket) => {
+        if (!validId(ticket.id)) throw new Error('Un identifiant de ticket reçu est invalide.');
+        return el('article', { className: 'panel' },
+          el('a', { href: `/admin-tickets.html?id=${ticket.id}` }, `Ticket n° ${ticket.id} : ${ticket.subject}`),
+          el('div', { className: 'cluster' }, badge(ticket.status), el('span', { className: 'muted' }, date(ticket.created_at))));
+      }) : [el('p', { className: 'muted' }, 'Aucun ticket SAV.') ]));
+      detail.replaceChildren(title, customerSummary(data.customer),
+        el('p', { className: 'metric-value' }, `${count(data.loyalty_balance)} points de fidélité`), orderList, ticketList);
+      if (focus) title.focus();
+    } catch (error) {
+      if (request === detailRequest && error.name !== 'AbortError') renderError(detail, error, () => loadDetail(id));
+    } finally {
+      if (request === detailRequest) detail.removeAttribute('aria-busy');
+    }
+  }
+
+  async function loadList() {
+    listController?.abort();
+    listController = new AbortController();
+    const request = ++listRequest;
+    submit.disabled = true;
+    loading(list, 'Chargement des clients…');
+    updateUrl();
+    try {
+      const query = new URLSearchParams({ search: searchTerm, page: String(page), per_page: '20' });
+      const data = await api(`/admin/customers?${query}`, { signal: listController.signal });
+      if (request !== listRequest) return;
+      const items = records(data);
+      if (!Number.isSafeInteger(data.page) || data.page < 1 || !Number.isSafeInteger(data.per_page) || data.per_page < 1
+        || !Number.isSafeInteger(data.total) || data.total < 0 || items.some((customer) => !validId(customer.id))) {
+        throw new Error('La pagination reçue du serveur est invalide.');
+      }
+      page = data.page;
+      updateUrl();
+      const pages = Math.max(1, Math.ceil(data.total / data.per_page));
+      const tableBody = el('tbody');
+      for (const customer of items) {
+        tableBody.append(el('tr', {},
+          el('th', { scope: 'row' }, button(customer.name, {
+            className: 'button button-secondary', 'aria-label': `Ouvrir la fiche de ${customer.name}`, onClick: () => loadDetail(customer.id, true),
+          }), el('p', { className: 'muted' }, customer.email)),
+          el('td', {}, SEGMENTS[customer.segment] ?? 'Segment non reconnu'),
+          el('td', {}, count(customer.orders_count)), el('td', {}, money(customer.total_delivered_xaf))));
+      }
+      list.replaceChildren(items.length ? el('div', { className: 'table-wrap', tabIndex: 0, 'aria-label': 'Tableau des clients, défilement horizontal possible' },
+        el('table', {}, el('caption', {}, `${data.total} client${data.total > 1 ? 's' : ''} — données fictives`),
+          el('thead', {}, el('tr', {}, ...['Client', 'Segment', 'Commandes', 'Montant livré'].map((label) => el('th', { scope: 'col' }, label)))), tableBody))
+        : empty('Aucun client trouvé', 'Essayez une autre recherche.'),
+      el('nav', { className: 'cluster pagination', 'aria-label': 'Pagination des clients' },
+        button('Page précédente', { className: 'button button-secondary', disabled: page <= 1, onClick: () => { page -= 1; loadList(); } }),
+        el('span', { role: 'status' }, `Page ${page} sur ${pages}`),
+        button('Page suivante', { className: 'button button-secondary', disabled: page >= pages, onClick: () => { page += 1; loadList(); } })));
+    } catch (error) {
+      if (request === listRequest && error.name !== 'AbortError') renderError(list, error, loadList);
+    } finally {
+      if (request === listRequest) { list.removeAttribute('aria-busy'); submit.disabled = false; }
+    }
+  }
+  if (!selectedId) detail.append(empty('Une vue complète de la relation client', 'Choisissez un client pour afficher son historique, ses tickets et ses points.'));
+  await Promise.all([loadList(), selectedId ? loadDetail(selectedId) : Promise.resolve()]);
+}
+
+export async function mountAdmin(root, { page, user }) {
+  if (user?.role !== 'admin') {
+    root.replaceChildren(heading('Accès administrateur requis', 'Connectez-vous avec un compte administrateur de démonstration pour consulter cette page.'),
+      el('a', { href: '/login.html', className: 'button button-primary' }, 'Se connecter'));
+    return;
+  }
+  const mount = {
+    admin: dashboard, 'admin-products': products, 'admin-orders': orders, 'admin-customers': customers,
+  }[page];
+  if (!mount) throw new Error('Cette page d’administration est inconnue.');
+  await mount(root);
+}
