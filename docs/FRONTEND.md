@@ -1,4 +1,4 @@
-# Frontend GRC — Équateur
+# Frontend GRC — Plateforme de vente en ligne et relation client
 
 Finalisation du chantier A sur `feature/frontend-finalization`, créée depuis
 `main` au commit `376f9a627174e30d372c61d74a3239e6767b85bb`, après fusion des
