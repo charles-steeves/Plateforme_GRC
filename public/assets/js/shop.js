@@ -189,7 +189,7 @@ async function mountProduct(root, user) {
         user?.role === 'admin'
           ? el('p', { className: 'notice' }, 'Le panier et les commandes sont réservés aux comptes clients.')
           : form,
-        messages))));
+        messages)));
   } catch (error) {
     if (error.status === 404) content.replaceChildren(heading('Produit introuvable'),
       empty('Ce produit n’est pas disponible', 'Il a peut-être été retiré du catalogue.'));
