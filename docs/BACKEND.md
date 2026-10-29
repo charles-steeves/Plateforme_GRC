@@ -1,5 +1,7 @@
 # Backend PHP / SQLite — contrat v3
 
+> Extension locale validée du 29 octobre 2026 : `POST /api/v1/admin/product-image` accepte une image JPG/PNG/WebP de 1,9 Mo maximum avec session administrateur et CSRF, dans un dossier public interne dédié dont les fichiers sont ignorés par Git. Aucune extension de schéma SQLite. Pour créer deux comptes administrateurs supplémentaires **sans réinitialiser** la base existante, employer deux fois `php database/add-admin.php --name="Nom" --email=adresse@example.test` avec des adresses distinctes ; leurs mots de passe sont ajoutés au fichier local privé `storage/demo-accounts.json`. Les sessions de navigateur restent distinctes. Le script n'est pas appelé automatiquement par `git pull` ni par le démarrage du site.
+
 Démonstration — données fictives. Serveur local sans paiement, livraison, courriel ou donnée personnelle réels.
 
 ## Installation Windows et Linux
