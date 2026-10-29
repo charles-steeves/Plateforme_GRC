@@ -16,7 +16,7 @@ export function isUncertainMutation(error) {
     || error.status < 400 || error.status >= 500 || error.code === 'INVALID_RESPONSE');
 }
 
-async function request(path, { method = 'GET', body, signal, token } = {}) {
+async function request(path, { method = 'GET', body, signal, token, passive = false } = {}) {
   if (!path.startsWith('/') || path.startsWith('//') || path.includes('\\')) {
     throw new ApiError('Adresse de requête non autorisée.', 0, 'INVALID_PATH');
   }
@@ -35,6 +35,7 @@ async function request(path, { method = 'GET', body, signal, token } = {}) {
     const multipart = body instanceof FormData;
     if (body !== undefined && !multipart) headers['Content-Type'] = 'application/json';
     if (token) headers['X-CSRF-Token'] = token;
+    if (passive && method === 'GET') headers['X-GRC-Passive'] = '1';
     response = await fetch(url, {
       method, headers, credentials: 'same-origin', redirect: 'error',
       cache: 'no-store', signal: controller.signal,
