@@ -60,6 +60,69 @@ function metric(label, value) {
     el('p', { className: 'metric-value' }, value));
 }
 
+function statusChart(counts) {
+  const entries = Object.entries(ORDER_LABELS).map(([key, label]) => ({
+    key, label, value: counts[key],
+  }));
+  if (entries.some(row => !Number.isSafeInteger(row.value) || row.value < 0)) {
+    throw new Error('Les données de commandes reçues sont invalides.');
+  }
+  const total = entries.reduce((sum, row) => sum + row.value, 0);
+  const circumference = 2 * Math.PI * 46;
+  let offset = 0;
+  const rings = entries.map(row => {
+    const portion = total > 0 ? row.value / total * circumference : 0;
+    const element = el('circle', {
+      cx: '65', cy: '65', r: '46', fill: 'none', 'stroke-width': '17',
+      className: `chart-ring chart-ring-${row.key}`,
+      'stroke-dasharray': `${portion} ${circumference - portion}`,
+      'stroke-dashoffset': String(-offset),
+    });
+    offset += portion;
+    return element;
+  });
+  const legend = el('ul', { className: 'chart-legend' }, entries.map(row =>
+    el('li', {},
+      el('span', { className: `chart-key chart-key-${row.key}`, 'aria-hidden': 'true' }),
+      el('span', {}, row.label),
+      el('strong', {}, count(row.value)))));
+  return el('section', { className: 'panel chart-panel' },
+    el('h2', {}, 'État des commandes'),
+    el('div', { className: 'chart-donut-layout' },
+      el('div', { className: 'chart-donut' },
+        el('svg', { viewBox: '0 0 130 130', role: 'img',
+          'aria-label': `${total} commandes réparties par statut` },
+          el('circle', { cx: '65', cy: '65', r: '46', fill: 'none',
+            stroke: '#e7edf4', 'stroke-width': '17' }),
+          el('g', { transform: 'rotate(-90 65 65)' }, rings)),
+        el('div', { className: 'chart-donut-center', 'aria-hidden': 'true' },
+          el('strong', {}, count(total)), el('span', {}, 'total'))),
+      legend));
+}
+
+function trendChart(rows) {
+  if (!Array.isArray(rows) || rows.length !== 7 ||
+    rows.some(row => typeof row?.day !== 'string' ||
+      !/^\\d{4}-\\d{2}-\\d{2}$/.test(row.day) ||
+      !Number.isSafeInteger(row.count) || row.count < 0)) {
+    throw new Error('L’évolution des commandes reçue est invalide.');
+  }
+  const max = Math.max(1, ...rows.map(row => row.count));
+  const bars = rows.map(row => {
+    const label = new Intl.DateTimeFormat('fr-FR', {
+      weekday: 'short', day: 'numeric', timeZone: 'UTC',
+    }).format(new Date(`${row.day}T12:00:00Z`));
+    return el('div', { className: 'chart-trend-row' },
+      el('span', {}, label),
+      el('progress', { value: String(row.count), max: String(max),
+        'aria-label': `${label} : ${row.count} commande(s)` }),
+      el('strong', {}, count(row.count)));
+  });
+  return el('section', { className: 'panel chart-panel' },
+    el('h2', {}, 'Commandes sur 7 jours'),
+    el('div', { className: 'chart-trend-list' }, bars));
+}
+
 async function dashboard(root) {
   const content = el('div', { className: 'stack' });
   const refresh = button('Actualiser les indicateurs', { className: 'button button-secondary', onClick: () => load() });
@@ -85,12 +148,8 @@ async function dashboard(root) {
         metric('Tickets à traiter', count(data.tickets_open_count)),
         metric('Satisfaction', satisfaction === null ? 'Aucun avis' : `${new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 2 }).format(satisfaction)} / 5`),
         metric('Clients inactifs', count(data.customers_inactive_count)));
-      const status = el('section', { className: 'panel stack' }, el('h2', {}, 'Répartition des commandes'));
-      const list = el('dl', { className: 'summary' });
-      for (const [key, label] of Object.entries(ORDER_LABELS)) {
-        list.append(el('div', {}, el('dt', {}, label), el('dd', {}, count(data.order_status_counts?.[key]))));
-      }
-      status.append(list);
+      const charts = el('div', { className: 'dashboard-charts' },
+        statusChart(data.order_status_counts ?? {}), trendChart(data.orders_last_7_days));
       const pending = data.order_status_counts?.pending ?? 0;
       const activity = el('section', { className: 'panel stack admin-activity' },
         el('div', { className: 'section-heading' }, el('h2', {}, 'À traiter'),
@@ -106,7 +165,7 @@ async function dashboard(root) {
           el('a', { href: '/admin-orders.html' }, el('strong', {}, 'GRC opérationnelle'), el('span', {}, 'Commandes et suivi')),
           el('a', { href: '/admin-tickets.html' }, el('strong', {}, 'GRC interactive'), el('span', {}, 'Échanges et SAV')),
           el('a', { href: '/admin-orders.html' }, el('strong', {}, 'Fidélisation'), el('span', {}, 'Points et satisfaction'))));
-      content.replaceChildren(values, activity, process, status);
+      content.replaceChildren(values, activity, charts, process);
       document.getElementById('dashboard-updated').textContent = 'Actualisé à ' + new Intl.DateTimeFormat('fr-FR', { timeStyle: 'short', timeZone: 'Africa/Libreville' }).format(new Date());
       if (automatic && lastPending !== null && pending > lastPending) {
         const message = el('p', { className: 'notice notice-info', role: 'status' },
