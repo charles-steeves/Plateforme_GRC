@@ -400,3 +400,12 @@ details[open] > summary { margin-bottom: 1rem; }
   .panel, .product-card, .order-card, .metric-card { box-shadow: none; break-inside: avoid; }
   .summary { position: static; }
 }
+
+
+/* Product editor: phone gallery upload and compact preview. */
+.product-upload-panel { border: 1px solid var(--line); background: var(--soft-green); border-radius: 12px; padding: 1rem; }
+.product-upload-panel .field { margin-bottom: 0; }
+.product-upload-preview { width: 92px; height: 74px; object-fit: contain; border: 1px solid var(--line); border-radius: 10px; background: white; }
+.product-image-advanced { padding: .25rem 0; }
+.product-image-advanced summary { cursor: pointer; color: var(--muted); font-size: .86rem; }
+.product-image-advanced .field { margin: .8rem 0 0; }
