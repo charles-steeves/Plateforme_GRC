@@ -1,0 +1,18 @@
+# Projet GRC : protéger les données locales et les secrets
+.env
+.env.*
+!.env.example
+/storage/*
+!/storage/.gitkeep
+*.sqlite
+*.sqlite3
+*.sqlite-shm
+*.sqlite-wal
+*.db
+*.log
+/vendor/
+/node_modules/
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
