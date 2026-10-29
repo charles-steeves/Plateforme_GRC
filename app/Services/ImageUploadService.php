@@ -56,8 +56,10 @@ final class ImageUploadService
         }
         $images = Config::root() . '/public/assets/images';
         $imagesReal = realpath($images);
-        if ($imagesReal === false || !is_dir($imagesReal)) {
-            throw new \RuntimeException('Dossier des images publiques introuvable.');
+        $publicReal = realpath(Config::root() . '/public');
+        if ($imagesReal === false || $publicReal === false || !is_dir($imagesReal)
+            || !Config::isWithin($imagesReal, $publicReal)) {
+            throw new \RuntimeException('Dossier des images publiques introuvable ou non sécurisé.');
         }
         $directory = $images . '/uploads';
         if (is_link($directory) || (file_exists($directory) && !is_dir($directory))) {
