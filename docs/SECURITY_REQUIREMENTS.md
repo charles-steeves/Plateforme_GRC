@@ -26,3 +26,6 @@ T7 saisie de HTML/JS dans ticket ne s'exécute pas lors affichage ; T8 prix nég
 T10 deux PATCH delivered ne créditent les points qu'une fois ; T11 tentative de re-livrer cancelled échoue ; T12 après logout endpoints privés => 401.
 T13 trop de tentatives login => 429 ; T14 SQLite/.env/erreurs serveur inaccessibles depuis HTTP ; T15 HTTP local sans tunnel ne devient pas prétendument HTTPS.
 S'il est impossible de réaliser un test faute d'environnement, marquer « NON EXÉCUTÉ » et expliquer ; jamais « conforme » sans preuve.
+
+
+SAV et rafraîchissement passif (29 octobre 2026) : les lectures GET d'auto-actualisation autorisées utilisent le header `X-GRC-Passive: 1` ; **uniquement** pour les routes de lecture SAV et dashboard connues, cette information empêche le renouvellement de `last_seen` dans la session. Aucun bypass de rôle, propriété, CSRF sur les mutations, et aucun re-POST automatique après erreur réseau. Conserver la limite absolue de 8 h et le délai d'inactivité de 30 min indépendamment des timers front-end.
