@@ -2,7 +2,7 @@
 
 **État établi le 29 octobre 2026.** Ce document est un tableau de bord de coordination, pas un contrat normatif ni une garantie de conformité. Les pourcentages sont des **estimations humaines** fondées sur les exigences et les preuves observées ; ils ne proviennent d'aucun compteur GitHub.
 
-## 1. Avancement global estimé : 78 %
+## 1. Avancement global estimé : 80 % (sous réserve de recette Windows)
 
 Méthode : cinq catégories de préparation à la soutenance, pondérées, pour éviter de confondre code écrit et site réellement validé.
 
@@ -11,16 +11,17 @@ Méthode : cinq catégories de préparation à la soutenance, pondérées, pour 
 | Fonctionnalités client, commerce et GRC P0 | 40 % | 90 % | 36 |
 | Backend, SQLite et protections essentielles | 20 % | 90 % | 18 |
 | Tests automatisés et vérifications techniques | 15 % | 80 % | 12 |
-| Ergonomie, responsive et homogénéité visuelle | 15 % | 55 % | 8,25 |
+| Ergonomie, responsive et homogénéité visuelle | 15 % | 65 % | 9,75 |
 | Essais Windows 11, appareils réels et préparation de la présentation | 10 % | 40 % | 4 |
-| **Total arrondi** | **100 %** | **78 %** | **78,25** |
+| **Total arrondi** | **100 %** | **80 %** | **79,75** |
 
-**Interprétation :** les modules fonctionnels P0 sont largement implémentés et un scénario client/admin fonctionne dans les tests CI Linux. La qualité réelle des écrans sur les PC de l'équipe, la recette du Chat C et l'éventuel accès externe sécurisé ne sont pas encore validés. Ce 78 % ne constitue pas une assurance de fonctionnement universel.
+**Interprétation :** les modules fonctionnels P0 sont largement implémentés et un scénario client/admin fonctionne dans les tests CI Linux. La qualité réelle des écrans sur les PC de l'équipe, la recette du Chat C et l'éventuel accès externe sécurisé ne sont pas encore validés. Ce 80 % ne constitue pas une assurance de fonctionnement universel : les améliorations d'interface sont encore à valider sur le navigateur de l'équipe et une erreur HTTP 500 a été signalée en local.
 
 ## 2. État Git constaté à la création de ce document
 
 - PR [#1](https://github.com/Nemsis7036/GRC-Plateforme/pull/1) à [#5](https://github.com/Nemsis7036/GRC-Plateforme/pull/5) : **fusionnées** dans `main`.
-- PR [#6](https://github.com/Nemsis7036/GRC-Plateforme/pull/6) : amélioration de cohérence typographique, navigation responsive et test statique, **ouverte** lors de la rédaction.
+- PR [#6](https://github.com/Nemsis7036/GRC-Plateforme/pull/6) : typographie et navigation responsive, **fusionnée**.
+- PR [#7](https://github.com/Nemsis7036/GRC-Plateforme/pull/7) : formulaire de recherche aligné, textes client plus naturels, simplification des erreurs et diagnostic local PHP/SQLite, **en cours de livraison**. Aucun de ces changements n'est intégré à `main` avant fusion.
 - L'identité commerciale reste **indéterminée** : « Plateforme GRC » est un libellé neutre, et non une marque ; ne pas réintroduire l'ancien nom ni inventer d'entreprise.
 - Les données de soutenance et les commandes restent simulées ; aucun paiement réel ni données personnelles réelles.
 
@@ -40,8 +41,8 @@ Méthode : cinq catégories de préparation à la soutenance, pondérées, pour 
 
 ## 4. Prochaines étapes par priorité
 
-1. **Fusion contrôlée de la PR #6** si ses tests sont verts et ses changements validés ; vérifier ensuite le dernier `main`.
-2. **Recette réelle Windows 11** : confirmer `pdo_sqlite`, exécuter le site, utiliser profils client/admin distincts, parcourir commande → livraison → points → SAV → avis → dashboard. Ne pas réinitialiser une base existante pour réparer une erreur PHP.
+1. **Fusion contrôlée de la PR #7** après réussite de la CI, revue du formulaire catalogue et diagnostic PHP. Vérifier ensuite le dernier `main`.
+2. **Recette réelle Windows 11** : exécuter `php database/doctor.php`, confirmer `pdo_sqlite`, vérifier l'erreur HTTP 500 éventuellement observée, exécuter le site, utiliser profils client/admin distincts, parcourir commande → livraison → points → SAV → avis → dashboard. Ne pas réinitialiser une base existante pour réparer une erreur PHP.
 3. **Retouches visuelles basées sur captures** : anomalies d'alignement, police, accents, tableaux, formulaire, panier, navigation et mobile. La PR #6 corrige une partie structurelle, mais ne constitue pas une revue visuelle exhaustive.
 4. **Chat C / tests indépendants** : compléter `docs/QA_REPORT.md` et `docs/INTEGRATION.md` avec PASS, FAIL et NON EXÉCUTÉ, versions et preuves ; tester permissions, réseau, sécurité et navigations longues.
 5. **Soutenance** : répéter `docs/DEMO.md` (5–8 min) sur le matériel et réseau choisis, sans afficher de mots de passe.
