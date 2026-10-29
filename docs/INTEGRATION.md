@@ -20,6 +20,14 @@ php -r "print_r(PDO::getAvailableDrivers());"
 
 La sortie du dernier appel doit contenir `sqlite`. Si `php database/init.php` signale `could not find driver`, configurer **le php.ini chargé par le CLI** et activer les extensions `pdo_sqlite` et `sqlite3`. Sous Windows, vérifier aussi `extension_dir` et redémarrer le terminal. Ne pas supprimer la base pour résoudre un pilote manquant.
 
+## Diagnostic immédiat en cas d'écran d'erreur
+
+Depuis la racine du projet, exécuter `php database/doctor.php`. Cette commande **ne modifie ni la base ni les comptes** ; elle vérifie les modules PHP et la présence des fichiers de données. Si l'API affiche une erreur générale (par exemple HTTP 500), consulter ensuite `storage/errors.log` localement et le terminal qui exécute le serveur PHP. Ne jamais afficher ce journal sur la page, et ne jamais envoyer le fichier des comptes à des tiers. Vérifier `http://127.0.0.1:8000/api/v1/products` après correction.
+
+## Accéder à la gestion GRC
+
+Ouvrir `http://127.0.0.1:8000/login.html` et se connecter avec le compte admin stocké localement dans `storage/demo-accounts.json`. Après authentification, la redirection mène à `/admin.html` ; on peut également ouvrir cette URL directement. Le menu Administration permet de gérer les produits, commandes, clients, tickets SAV, satisfaction, segmentation et tableau de bord. Une session client ne doit pas pouvoir accéder aux API admin.
+
 ## 2. Mise en route locale sans effacement
 
 1. Cloner ou mettre à jour le dépôt. Rester sur la branche `main` fusionnée et validée.
