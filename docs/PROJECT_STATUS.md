@@ -22,8 +22,9 @@ Méthode : cinq catégories de préparation à la soutenance, pondérées, pour 
 - PR [#1](https://github.com/Nemsis7036/GRC-Plateforme/pull/1) à [#5](https://github.com/Nemsis7036/GRC-Plateforme/pull/5) : **fusionnées** dans `main`.
 - PR [#6](https://github.com/Nemsis7036/GRC-Plateforme/pull/6) : typographie et navigation responsive, **fusionnée**.
 - PR [#7](https://github.com/Nemsis7036/GRC-Plateforme/pull/7) : recherche alignée, textes naturels et diagnostic PHP, **fusionnée**.
-- PR [#8](https://github.com/Nemsis7036/GRC-Plateforme/pull/8) : bleu/cyan, barre latérale admin, KPI épurés, rafraîchissement dashboard HTTP et correspondance cours, **ouverte à la rédaction**.
-- PR [#9](https://github.com/Nemsis7036/GRC-Plateforme/pull/9) : upload sécurisé de photos produits et création facultative d'admins supplémentaires par CLI, **ouverte à la rédaction**. Fusionner dans cet ordre sous réserve des tests et des conflits.
+- PR [#8](https://github.com/Nemsis7036/GRC-Plateforme/pull/8) : design bleu/cyan, barre latérale admin, KPI épurés, rafraîchissement et cours, **fusionnée**.
+- PR [#9](https://github.com/Nemsis7036/GRC-Plateforme/pull/9) : upload sécurisé de photos produits et création facultative d'admins supplémentaires par CLI, **fusionnée**.
+- PR [#10](https://github.com/Nemsis7036/GRC-Plateforme/pull/10) : sidebar boutique et catégories proposées au lieu de saisies, **ouverte à la rédaction**.
 - L'identité commerciale reste **indéterminée** : « Plateforme GRC » est un libellé neutre, et non une marque ; ne pas réintroduire l'ancien nom ni inventer d'entreprise.
 - Les données de soutenance et les commandes restent simulées ; aucun paiement réel ni données personnelles réelles.
 
@@ -43,7 +44,7 @@ Méthode : cinq catégories de préparation à la soutenance, pondérées, pour 
 
 ## 4. Prochaines étapes par priorité
 
-1. **Fusion contrôlée de la PR #8, puis de la PR #9** après réussite des CI sur leurs commits les plus récents ; vérifier après la première fusion que la seconde PR n'a pas de conflit avant de l'intégrer.
+1. **Fusion contrôlée de la PR #10** après réussite de la CI et vérification des liens de navigation ; puis examiner la demande de traduction FR/EN et des équivalents EUR/USD dans des chantiers distincts.
 2. **Recette réelle Windows 11** : les extensions SQLite et l'initialisation ont été confirmées par l'utilisateur ; exécuter le site et vérifier en situation la connexion administrateur, le nouveau menu, l'upload JPG/PNG/WebP et les sessions de plusieurs comptes admin, utiliser profils client/admin distincts, parcourir commande → livraison → points → SAV → avis → dashboard. Ne pas réinitialiser une base existante pour réparer une erreur PHP.
 3. **Retouches visuelles basées sur captures** : anomalies d'alignement, police, accents, tableaux, formulaire, panier, navigation et mobile. La PR #6 corrige une partie structurelle, mais ne constitue pas une revue visuelle exhaustive.
 4. **Chat C / tests indépendants** : compléter `docs/QA_REPORT.md` et `docs/INTEGRATION.md` avec PASS, FAIL et NON EXÉCUTÉ, versions et preuves ; tester permissions, réseau, sécurité et navigations longues.
