@@ -62,6 +62,9 @@ jobs:
       - name: Store sidebar and controlled catalogue category selector
         run: node tests/store-sidebar-categories.mjs
 
+      - name: Storefront colour and admin analytics chart contract
+        run: node tests/visual-design-contract.mjs
+
       - name: Neutral branding and demo disclaimer regression
         run: node tests/branding-neutral.mjs
 
