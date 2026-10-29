@@ -129,7 +129,7 @@ php database/backup.php --to=storage/backup.sqlite
 php database/restore.php --from=storage/backup.sqlite
 ```
 
-La sauvegarde utilise SQLite3::backup, y compris avec une source WAL ouverte, puis vérifie intégrité et clés étrangères. Une destination existante est refusée. Arrêter le serveur avant restauration ; une base existante n'est remplacée qu'avec `--replace` explicite. Les sources/destinations publiques, liens symboliques ou journaux actifs de destination sont refusés. Pour choisir une autre base, utiliser GRC_DB_PATH. Ne pas copier arbitrairement un fichier SQLite actif.
+La sauvegarde utilise SQLite3::backup, y compris avec une source WAL ouverte, puis vérifie intégrité et clés étrangères. Une destination existante est refusée. Arrêter le serveur avant restauration ; une base existante n'est remplacée qu'avec `--replace` explicite. La restauration utilise désormais le même mécanisme de préservation/retour arrière des fichiers privés que l'initialisation : un échec d'installation ne doit pas supprimer silencieusement la base précédente. Les sources/destinations publiques, liens symboliques ou journaux actifs de destination sont refusés. Pour choisir une autre base, utiliser GRC_DB_PATH. Ne pas copier arbitrairement un fichier SQLite actif.
 
 Une sauvegarde SQLite contient les hachages, pas le fichier local de comptes. Conserver les identifiants fictifs correspondant à cette sauvegarde séparément et de façon privée, notamment avant un --reset.
 
