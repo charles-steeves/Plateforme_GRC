@@ -40,7 +40,7 @@ Une fonction n'est « terminée » que si son comportement est relié à une don
 5. Ouvrir un ticket SAV côté client ; y répondre et le traiter côté administrateur ; voir l'historique.
 6. Noter la commande livrée ; afficher satisfaction, clients et commandes sur le tableau de bord.
 7. Expliquer GRC opérationnelle, analytique, interactive, fidélisation et SAV.
-Tous les comptes, commandes, montants et scores sont libellés « Démonstration — données fictives ».
+Les comptes, commandes, montants et scores de soutenance demeurent des données de test, sans transaction financière ni livraison réelle. Leur nature est documentée pour l'équipe et les évaluateurs ; l'interface client n'a pas à multiplier les avertissements techniques et pédagogiques.
 
 ## 5. Structure et règles d'intégration
 - main : documents contractuels et versions intégrées approuvées. Aucun agent ne pousse directement ses développements sur main.
@@ -118,3 +118,7 @@ Cet addendum n'est pas une liste d'autorisations pour ajouter des fonctions P1/P
 ### 9.5 Arbitrage commercial postérieur aux premières livraisons
 
 **Décision confirmée :** ne plus attribuer à la plateforme un nom commercial prédéfini ni qualifier d'avance l'entreprise de fictive. Les formulations des contrats antérieurs impliquant ces choix sont remplacées uniquement sur ces deux points ; toutes les exigences techniques, de GRC, de sécurité et de simulation des paiements restent applicables. Ne pas inventer d'autre nom ou type d'entreprise avant décision. La mention « données fictives » désigne exclusivement les données d'essai ; ce n'est pas une qualification de l'entreprise.
+
+### 9.6 Présentation réaliste de l'interface, à la demande de l'utilisateur
+
+L'utilisateur confirme que les messages répétés « projet universitaire », « données fictives », « aucun paiement réel », « adresse e-mail fictive » et les explications d'implémentation (« 72 octets UTF-8 ») **ne doivent plus polluer les pages client/admin**. Les mêmes garanties restent nécessaires dans le code et documentées pour les développeurs et les évaluateurs. L'inscription conserve la règle de sécurité de longueur du mot de passe, mais l'interface affiche une indication concise (12 caractères minimum) et une erreur compréhensible en cas de dépassement. Le formulaire catalogue est harmonisé sur ordinateur et mobile. L'expérience doit être crédible sans prétendre exécuter un paiement ou une livraison réels. Les prix restent affichés en FCFA, mais sans slogans pédagogiques sur la devise. Aucun changement de marque ni de modèle API n'est autorisé par cette décision.
