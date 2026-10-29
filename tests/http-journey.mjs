@@ -123,7 +123,7 @@ try {
     ok(response.status === 200 && response.headers.get('content-type')?.includes('text/html'),
       'HTML route should be available: ' + page);
     const html = await response.text();
-    ok(html.includes('Plateforme GRC') && html.includes('charset="utf-8"'),
+    ok(html.includes("Junelia's Shop") && html.includes('charset="utf-8"'),
       'Neutral identity and UTF-8 should be present: ' + page);
   }
   const cssResponse = await fetch(base + '/assets/css/site.css', { signal: AbortSignal.timeout(5000) });
