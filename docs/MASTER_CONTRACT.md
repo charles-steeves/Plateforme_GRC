@@ -169,3 +169,11 @@ L'utilisateur a explicitement placé **les créations de commandes et de tickets
 **Extension additive du contrat :** `request_id` optionnel sur les créations de commande/ticket ; clé stable générée par le navigateur, persistée sous empreinte non sensible, comparaison SHA-256 et registre SQLite privé. Les transactions déjà réalisées ne sont pas réinitialisées. Une requête répétée avec la même clé et la même charge renvoie sa ressource existante ; une clé recyclée avec charge différente est refusée (409). La compatibilité des vieux clients sans `request_id` est conservée mais **n'offre pas cette garantie**. Les messages SAV, retours ou notifications restent en dehors de cette extension.
 
 **Sécurité :** l'enregistrement du registre se fait dans la transaction existante avec `BEGIN IMMEDIATE`, par utilisateur et type d'opération. La table est créée de manière non destructive à la première requête idempotente d'une base existante. Les envois ultérieurs après réponse réseau incertaine ne doivent pas recréer d'opération si le navigateur retrouve la même clé. Aucun changement de devise, paiement ou gestion du stock hors transaction.
+
+### 9.12 Sauvegarde complète sans destruction des essais (29 octobre 2026)
+
+L'utilisateur **souhaite pouvoir revenir à zéro uniquement pour sa future présentation**, mais confirme conserver toutes les données actuelles pour continuer les essais de persistance. **Aucune réinitialisation n'est autorisée pendant ce chantier.**
+
+Ajouts CLI strictement locaux : `database/backup-bundle.php --to=<nouveau-dossier-prive>` sauvegarde une copie cohérente de SQLite, les identifiants `demo-accounts.json` et les images administrateur importées, puis vérifie le manifest et les empreintes. `database/restore-bundle.php --from=<dossier> --replace --confirm` vérifie et restaure le tout, après arrêt des connexions. Les sauvegardes sont privées et exclues par `.gitignore` lorsqu'elles sont rangées sous `storage/`. Un `git pull` reste sans effet sur ces données.
+
+Le `--reset` existant de `database/init.php` est **potentiellement destructif**, ne doit pas être lancé maintenant et exige une sauvegarde complète préalablement inspectée lors de la future répétition. Les photos ne sont pas effacées par le reset de base. Aucune promesse de retour automatique à zéro n'est faite.

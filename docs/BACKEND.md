@@ -164,3 +164,23 @@ Aucune correction frontend nécessaire au parcours testé n’est restée bloqua
 ### Protection contre les doublons après une coupure
 
 Les requêtes modernes du navigateur joignent `request_id` à la création d'une commande ou d'un ticket. Le serveur retourne la même ressource sur replay ; une clé utilisée avec un autre contenu renvoie 409. La table `idempotency_requests` est créée automatiquement et sans perte de données lors de la première requête dotée d'une clé sur une base locale antérieure. **Ne pas relancer `database/init.php --reset`.** Les clients API anciens sans clé ne sont pas protégés contre le renvoi d'un POST. Les messages de conversation SAV restent soumis à une vérification d'historique en cas de réponse perdue.
+
+## Sauvegarde complète et restauration pour la soutenance (29 octobre 2026)
+
+Les commandes SQLite seules (`database/backup.php` / `database/restore.php`) ne sauvegardent **ni les mots de passe locaux de démonstration ni les images de produits envoyées**. Utiliser désormais un *dossier de sauvegarde complet* lorsque l'objectif est de revenir exactement à l'état précédent.
+
+1. Arrêter le serveur PHP avec **Ctrl+C** et éviter toute modification depuis un autre appareil.
+2. Depuis la racine du dépôt, utiliser un dossier nouveau et privé :
+   ```powershell
+   php database/backup-bundle.php --to=storage/avant-presentation
+   ```
+   Le dossier `storage/avant-presentation` doit **ne pas encore exister** ; pour une nouvelle sauvegarde, choisir un autre nom. Le script copie `grc.sqlite`, `demo-accounts.json`, les photos de `public/assets/images/uploads/`, et produit `manifest.json` (empreintes SHA-256). Il contrôle l'intégrité SQLite et que les identifiants stockés correspondent au mot de passe haché en base. Aucun fichier préexistant n'est écrasé.
+3. Copier le dossier `storage/avant-presentation` sur un disque privé ou un dossier hors du dépôt, inaccessible aux visiteurs et à GitHub. **Il contient des mots de passe de démonstration en clair.** Ne le projeter ni ne l'envoyer à un tiers.
+4. **Pour repartir à zéro, beaucoup plus tard uniquement :** vérifier la sauvegarde et son emplacement externe, puis, serveur arrêté, `php database/init.php --reset`. Ce reset crée de nouveaux mots de passe et de nouveaux comptes/produits de départ ; il **ne supprime pas automatiquement les images importées**. Cette commande est destructive et ne doit jamais être lancée pour tester un `git pull`.
+5. **Pour revenir à un état sauvegardé :** arrêter toutes les connexions et exécuter :
+   ```powershell
+   php database/restore-bundle.php --from=storage/avant-presentation --replace --confirm
+   ```
+   L'outil refuse toute restauration sans les deux options explicites. Il valide les empreintes, SQLite et la correspondance des comptes, prépare les photos, remplace les fichiers en préservant les originaux lors des erreurs détectées, puis conserve la sauvegarde source. Redémarrer PHP et se reconnecter. Si la sauvegarde a été déplacée, utiliser son nouveau chemin privé.
+   
+**Limites :** serveur arrêté requis pour éviter des modifications simultanées des comptes/photos ; aucune garantie de reprise après coupure électrique au milieu des opérations système de fichiers ; la restauration invalide la cohérence des anciennes sessions de navigateur (utiliser « Se déconnecter » et rouvrir un profil propre). Tester la procédure sur une copie temporaire avant la soutenance. Aucune sauvegarde n'est envoyée automatiquement sur le cloud.

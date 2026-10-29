@@ -44,6 +44,9 @@ jobs:
       - name: Read-only local PHP/SQLite diagnosis
         run: php database/doctor.php
 
+      - name: Isolated full backup and restore with SQLite and uploaded product photo
+        run: node tests/backup-bundle.mjs
+
       - name: Parse all frontend JavaScript modules
         shell: bash
         run: |
