@@ -135,3 +135,21 @@ La vérification automatisée GitHub Actions (`.github/workflows/grc-smoke.yml`)
 - Les contrôles réalisés séparément par les développeurs ne remplacent pas une **recette de bout en bout** avec le frontend et le backend réunis, notamment sous Windows.
 
 En cas d'erreur, commencer par vérifier le terminal PHP, les extensions, l'existence de `storage/grc.sqlite`, puis les erreurs réseau du navigateur. Les réponses HTTP ne doivent jamais afficher de secrets ni de traces PHP internes.
+
+
+## Sauvegarde complète de l'état de démonstration
+
+Pour garder l'état des essais (base SQLite, identifiants privés et photos de produits importées), **arrêter PHP**, puis utiliser un dossier encore inexistant :
+
+```powershell
+php database/backup-bundle.php --to=storage/avant-presentation
+```
+
+Le dossier privé est ignoré par Git. Le copier dans un autre emplacement privé, sans publier les mots de passe. **Aucun reset n'est nécessaire pour mettre à jour le code.** Une éventuelle restauration ne s'effectue que volontairement :
+
+```powershell
+php database/restore-bundle.php --from=storage/avant-presentation --replace --confirm
+```
+
+Ne lancer cette commande que serveur arrêté et après vérification de la source ; elle remplace la base, les comptes et les photos. Le guide complet est dans [docs/BACKEND.md](docs/BACKEND.md).
+
