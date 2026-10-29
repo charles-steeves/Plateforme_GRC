@@ -1,6 +1,6 @@
-# Équateur — Plateforme universitaire de GRC
+# Plateforme de vente en ligne et de GRC
 
-Boutique **fictive** et plateforme de **gestion de la relation client (GRC)** pour un projet pédagogique au Gabon. L'application présente les relations entre vente, suivi des commandes, fidélisation, segmentation, satisfaction et service après-vente.
+Plateforme universitaire de **vente en ligne et de gestion de la relation client (GRC)**, développée au Gabon. L'application présente les relations entre vente, suivi des commandes, fidélisation, segmentation, satisfaction et service après-vente. **Le nom, l'identité et l'activité définitive de l'entreprise seront choisis ultérieurement.** Le catalogue actuellement fourni sert uniquement de jeu d'essai.
 
 > **Démonstration — données fictives.** Aucun paiement, aucune livraison et aucune donnée personnelle réels. Ne pas utiliser comme site de production.
 
@@ -26,7 +26,7 @@ Le navigateur et l'administration utilisent la même API et la même base SQLite
    ```
 
    Dans la liste des modules, vérifier notamment `PDO`, `pdo_sqlite` et `sqlite3`. Si `php` est introuvable ou si les extensions manquent, effectuer la configuration indiquée dans [docs/BACKEND.md](docs/BACKEND.md) avant de poursuivre.
-3. **Depuis la racine du projet**, initialiser une seule fois la base fictive :
+3. **Depuis la racine du projet**, initialiser une seule fois la base de démonstration :
 
    ```sh
    php database/init.php
