@@ -28,7 +28,7 @@ Commencer par `docs/MASTER_CONTRACT.md` **sections 0–9** (la section 9 est un 
 
 **Modifications possibles mais non encore validées comme P0 :** plusieurs administrateurs avec gestion des rôles, upload d'images, choix futur du nom/de l'entreprise/du catalogue, GRC marketing plus poussée, ouverture Internet. Ne pas les inventer. Voir section 9.2 du contrat maître.
 
-**Décision du 29 octobre 2026 à appliquer partout :** retirer « Équateur » et toute affirmation d'« entreprise fictive ». Employer « Plateforme GRC » comme intitulé neutre en attendant un choix explicite du nom, du statut et du secteur de l'entreprise. Les données d'essai et les commandes simulées restent nécessaires à la recette.
+**Décision du 29 octobre 2026 à appliquer partout :** retirer l'ancien nom commercial provisoire et toute affirmation qualifiant l'entreprise de fictive. Employer « Plateforme GRC » comme intitulé neutre en attendant un choix explicite du nom, du statut et du secteur de l'entreprise. Les données d'essai et les commandes simulées restent nécessaires à la recette.
 
 ## 3. Ce qui a été corrigé dans la PR #5
 
