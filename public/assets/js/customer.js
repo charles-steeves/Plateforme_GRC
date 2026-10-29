@@ -147,8 +147,8 @@ async function account(root, user) {
         root.replaceChildren(heading('Mon espace client', 'Connectez-vous avec un compte client pour consulter vos données.'), el('a', { href: '/login.html?next=%2Faccount.html', className: 'button button-primary' }, 'Se connecter'));
         return;
     }
-    const orders = el('section', { className: 'stack', 'aria-label': 'Mes commandes' });
-    const loyalty = el('section', { className: 'panel stack', 'aria-label': 'Mes points de fidélité' });
+    const orders = el('section', { id: 'mes-commandes', className: 'stack', 'aria-label': 'Mes commandes' });
+    const loyalty = el('section', { id: 'ma-fidelite', className: 'panel stack', 'aria-label': 'Mes points de fidélité' });
     root.replaceChildren(
         heading('Bonjour, ' + user.name, 'Suivez vos commandes, vos points et vos demandes au même endroit.'),
         el('section', { className: 'panel stack', 'aria-label': 'Mon profil' },
