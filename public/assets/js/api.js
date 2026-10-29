@@ -55,7 +55,7 @@ async function request(path, { method = 'GET', body, signal, token } = {}) {
         429: 'Trop de tentatives. Patientez avant de réessayer.',
       };
       const message = response.status >= 500
-        ? 'Le service rencontre une erreur. Aucune réussite ne peut être confirmée.'
+        ? 'Une erreur est survenue. Veuillez réessayer dans un instant.'
         : (typeof payload?.error?.message === 'string' ? payload.error.message : fallback[response.status] || 'La requête a échoué.');
       if (response.status === 401 && path !== '/auth/me' && path !== '/auth/login') {
         csrfToken = null;
@@ -69,8 +69,8 @@ async function request(path, { method = 'GET', body, signal, token } = {}) {
   } catch (error) {
     if (error instanceof ApiError) throw error;
     throw new ApiError(controller.signal.aborted
-      ? 'Le service ne répond pas à temps. Le résultat de l’action n’est pas confirmé.'
-      : 'Connexion au service impossible. Le résultat de l’action n’est pas confirmé.');
+      ? 'Le serveur ne répond pas. Vérifiez votre connexion.'
+      : 'Impossible de joindre le serveur. Vérifiez votre connexion.');
   } finally {
     clearTimeout(timer);
     signal?.removeEventListener('abort', onAbort);
