@@ -47,7 +47,7 @@ Le navigateur et l'administration utilisent la même API et la même base SQLite
 Get-Content .\storage\demo-accounts.json
 ```
 
-Il contient les comptes `admin@example.test` et `client1@example.test` à `client8@example.test`, avec leurs mots de passe fictifs propres à votre installation. **Ne jamais publier ni envoyer ce fichier**. Pour tester simultanément le client et l'administrateur, employer deux profils de navigateur distincts, car un même profil partage les cookies de session.
+Il contient les comptes `admin@example.test` et `client1@example.test` à `client8@example.test`, avec leurs mots de passe de connexion propres à votre installation. **Ne jamais publier ni envoyer ce fichier**. Pour tester simultanément le client et l'administrateur, employer deux profils de navigateur distincts, car un même profil partage les cookies de session.
 
 Pour **arrêter le serveur**, revenir au terminal où il fonctionne et appuyer sur **Ctrl+C**. Ne pas relancer `database/init.php` sur une base existante : l'initialiseur refuse volontairement de remplacer les données sans option explicite. `--reset` détruit et recrée les données fictives ; ne l'utiliser qu'après sauvegarde, serveur arrêté et en connaissance de cause.
 
