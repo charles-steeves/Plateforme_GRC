@@ -404,6 +404,10 @@ details[open] > summary { margin-bottom: 1rem; }
 
 /* Administration GRC : navigation verticale claire, repliable, sans librairie externe. */
 body.admin-workspace { --admin-sidebar-width: 244px; }
+/* The sidebar replaces the normal header nav in admin; prevents a double menu
+   and keeps header height stable on all screen widths. */
+body.admin-workspace .site-nav, body.admin-workspace .header-actions,
+body.admin-workspace .menu-toggle { display: none !important; }
 body.admin-workspace.admin-sidebar-collapsed { --admin-sidebar-width: 72px; }
 body.admin-workspace #section-navigation {
   position: fixed; z-index: 29; inset: 89px auto 0 0;
