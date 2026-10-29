@@ -81,6 +81,7 @@ Après avoir installé PHP et ses extensions, on peut effectuer des contrôles s
 
 ```sh
 php tests/storage-recovery.php
+php tests/domain-integration.php
 ```
 
 Pour comparer la validation des images dans les modules PHP et JavaScript, **Node.js 18+ est requis uniquement pour ce test**, pas pour utiliser le site :
