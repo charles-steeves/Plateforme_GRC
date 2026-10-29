@@ -18,9 +18,10 @@ Dépôt privé : [Nemsis7036/GRC-Plateforme](https://github.com/Nemsis7036/GRC-P
 | [#8](https://github.com/Nemsis7036/GRC-Plateforme/pull/8) | Refonte limitée admin bleu/cyan, navigation, cours, polling | **Fusionnée** |
 | [#9](https://github.com/Nemsis7036/GRC-Plateforme/pull/9) | Upload photos + création d'admins CLI | **Fusionnée** |
 | [#10](https://github.com/Nemsis7036/GRC-Plateforme/pull/10) | Menu boutique repliable et catégories sélectionnables administrateur | **Fusionnée** |
-| [#11](https://github.com/Nemsis7036/GRC-Plateforme/pull/11) | En-têtes plus contrastés, cartes catégories et graphiques GRC SQLite | **Ouverte, CI verte** |
+| [#11](https://github.com/Nemsis7036/GRC-Plateforme/pull/11) | En-têtes plus contrastés, cartes catégories et graphiques GRC SQLite | **Fusionnée** |
+| [#12](https://github.com/Nemsis7036/GRC-Plateforme/pull/12) | Actualisation SAV non destructive, expiration inchangée, nom provisoire Junelia's Shop | **Ouverte lors de cette mise à jour** |
 
-Les PR #1 à #10 sont fusionnées dans `main`. La PR #11 (en-têtes plus contrastés, accueil boutique plus vivant et graphiques du tableau de bord issus de SQLite) est ouverte sur sa branche et CI verte. La traduction complète FR/EN et les devises EUR/USD nécessitent une phase distincte afin de ne pas modifier implicitement le contrat XAF des commandes. Ne jamais réinitialiser ni pousser le dossier privé `storage/`. Voir [l'état du projet](PROJECT_STATUS.md) et [l'audit des 93 diapositives](COURSE_IMPLEMENTATION_AUDIT.md).
+Les PR #1 à #11 sont fusionnées dans `main`. La PR #12 (réponses SAV actualisées par lecture passive et identité provisoire Junelia's Shop) est ouverte sur sa branche à cette date. La traduction complète FR/EN et les devises EUR/USD nécessitent une phase distincte afin de ne pas modifier implicitement le contrat XAF des commandes. Ne jamais réinitialiser ni pousser le dossier privé `storage/`. Voir [l'état du projet](PROJECT_STATUS.md) et [l'audit des 93 diapositives](COURSE_IMPLEMENTATION_AUDIT.md).
 
 Les anciennes fiches de passation V1/V2/V3 décrivent des **états historiques** ; leurs passages disant « PR #3/#4 ouvertes » ne sont plus actuels.
 
