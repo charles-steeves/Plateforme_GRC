@@ -100,12 +100,12 @@ async function dashboard(root) {
           el('a', { href: '/admin-tickets.html', className: 'button button-secondary' }, 'Répondre aux clients'),
           el('a', { href: '/admin-customers.html', className: 'button button-secondary' }, 'Connaître mes clients')));
       const process = el('section', { className: 'panel stack crm-process' },
-        el('h2', {}, 'Relation client'),
+        el('h2', {}, 'La GRC en pratique'),
         el('div', { className: 'crm-process-grid' },
-          el('a', { href: '/admin-customers.html' }, el('strong', {}, '01 · Connaître'), el('span', {}, 'Fiches et historiques')),
-          el('a', { href: '/admin-customers.html' }, el('strong', {}, '02 · Différencier'), el('span', {}, 'Segments clients')),
-          el('a', { href: '/admin-tickets.html' }, el('strong', {}, '03 · Dialoguer'), el('span', {}, 'Service client')),
-          el('a', { href: '/admin-orders.html' }, el('strong', {}, '04 · Fidéliser'), el('span', {}, 'Commandes et avantages'))));
+          el('a', { href: '/admin-customers.html' }, el('strong', {}, 'GRC analytique'), el('span', {}, 'Clients et segmentation')),
+          el('a', { href: '/admin-orders.html' }, el('strong', {}, 'GRC opérationnelle'), el('span', {}, 'Commandes et suivi')),
+          el('a', { href: '/admin-tickets.html' }, el('strong', {}, 'GRC interactive'), el('span', {}, 'Échanges et SAV')),
+          el('a', { href: '/admin-orders.html' }, el('strong', {}, 'Fidélisation'), el('span', {}, 'Points et satisfaction'))));
       content.replaceChildren(values, activity, process, status);
       document.getElementById('dashboard-updated').textContent = 'Actualisé à ' + new Intl.DateTimeFormat('fr-FR', { timeStyle: 'short', timeZone: 'Africa/Libreville' }).format(new Date());
       if (automatic && lastPending !== null && pending > lastPending) {
