@@ -103,7 +103,7 @@ function statusChart(counts) {
 function trendChart(rows) {
   if (!Array.isArray(rows) || rows.length !== 7 ||
     rows.some(row => typeof row?.day !== 'string' ||
-      !/^\\d{4}-\\d{2}-\\d{2}$/.test(row.day) ||
+      !/^\d{4}-\d{2}-\d{2}$/.test(row.day) ||
       !Number.isSafeInteger(row.count) || row.count < 0)) {
     throw new Error('L’évolution des commandes reçue est invalide.');
   }
