@@ -52,7 +52,7 @@ export async function mountTickets(root, { user, admin = false }) {
   root.replaceChildren(
     heading(admin ? 'Service après-vente' : 'Mes échanges avec le SAV', admin
       ? 'Traitez les demandes, répondez aux clients et suivez leur résolution.'
-      : 'Une question sur votre commande fictive ? Retrouvez ici vos demandes et les réponses du service client.'),
+      : 'Une question sur votre commande ? Retrouvez ici vos demandes et les réponses du service client.'),
     summaryNotice, createRegion, el('div', { className: 'split' }, listSection, detail));
 
   let tickets = [];
@@ -248,7 +248,7 @@ export async function mountTickets(root, { user, admin = false }) {
           if (selectedId === id && (recorded || !text.isConnected)) await selectTicket(id);
         }
       }).finally(() => syncTicketLock(id));
-    } }, field('Votre message', text, '4 000 caractères maximum. Utilisez uniquement des informations fictives.'), send);
+    } }, field('Votre message', text, '4 000 caractères maximum.'), send);
     detail.append(form, reload);
     syncTicketLock(id);
   }
@@ -354,7 +354,7 @@ export async function mountTickets(root, { user, admin = false }) {
       }).finally(() => { save.disabled = creating || createUncertain; });
     } }, formNotice, verifyCreation, field('Sujet', subject, '160 caractères maximum.'),
     field('Commande concernée (facultatif)', orderSelect), orderNotice,
-    field('Décrivez votre demande', description, '4 000 caractères maximum. Démonstration : ne saisissez aucune donnée personnelle réelle.'), save);
+    field('Décrivez votre demande', description, '4 000 caractères maximum.'), save);
     const disclosure = el('details', { className: 'panel', open: false }, el('summary', {}, 'Ouvrir une nouvelle demande SAV'), form);
     createRegion.replaceChildren(disclosure);
     let orderGeneration = 0;
