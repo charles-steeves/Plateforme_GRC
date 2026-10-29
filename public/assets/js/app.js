@@ -58,13 +58,73 @@ function renderHeader(user, pending = false) {
       el('span', { className: 'brand-mark', 'aria-hidden': 'true' }, 'GRC'),
       el('span', {}, 'Plateforme GRC', el('small', {}, 'Vente & relation client'))), toggle, nav, actions));
 }
-function renderAdminNav() {
+function renderAdminNav(user) {
+  const container = document.getElementById('section-navigation');
   const tabs = [
-    ['admin', 'Vue d’ensemble'], ['admin-products', 'Produits'], ['admin-orders', 'Commandes'],
-    ['admin-customers', 'Clients'], ['admin-tickets', 'Service après-vente'],
+    ['admin', 'Vue d’ensemble', '◫'], ['admin-customers', 'Clients', '♙'],
+    ['admin-orders', 'Commandes', '▤'], ['admin-products', 'Produits', '▦'],
+    ['admin-tickets', 'Service client', '✉'],
   ];
-  document.getElementById('section-navigation').replaceChildren(el('nav', { className: 'admin-nav', 'aria-label': 'Administration GRC' },
-    tabs.map(([key, label]) => navLink(label, `/${key}.html`, page === key))));
+  const nav = el('nav', { className: 'admin-nav', id: 'admin-sidebar-menu', 'aria-label': 'Administration GRC' },
+    tabs.map(([key, label, symbol]) => el('a', {
+      href: `/${key}.html`, title: label,
+      ...(page === key ? { 'aria-current': 'page' } : {}),
+    }, el('span', { className: 'admin-nav-icon', 'aria-hidden': 'true' }, symbol),
+      el('span', { className: 'admin-nav-label' }, label))));
+  const account = el('div', { className: 'admin-sidebar-account' },
+    el('div', { className: 'admin-account-initials', 'aria-hidden': 'true' }, user.name.trim().charAt(0).toUpperCase()),
+    el('div', { className: 'admin-sidebar-account-details' },
+      el('strong', {}, user.name), el('span', {}, user.email)));
+  const signout = button('Se déconnecter', { type: 'button', className: 'admin-sidebar-signout' });
+  signout.addEventListener('click', () => busy(signout, async () => {
+    try {
+      await api('/auth/logout', { method: 'POST', body: {} });
+      location.assign('/login.html?logged_out=1');
+    } catch (error) {
+      status.textContent = error.message;
+      status.className = 'notice notice-error';
+    }
+  }));
+  const sidebar = el('aside', { className: 'admin-sidebar', 'aria-label': 'Espace administration' },
+    el('div', { className: 'admin-sidebar-heading' },
+      el('span', { className: 'admin-sidebar-title' }, 'ESPACE GRC')),
+    nav, el('div', { className: 'admin-sidebar-bottom' }, account, signout));
+  const overlay = el('button', { type: 'button', className: 'admin-sidebar-overlay',
+    'aria-label': 'Fermer le menu administration', hidden: true });
+  const toggle = button('☰ Menu', { type: 'button', className: 'admin-sidebar-toggle button button-secondary',
+    'aria-controls': 'admin-sidebar-menu', 'aria-expanded': 'true' });
+  const mobile = matchMedia('(max-width: 900px)');
+  function update(open) {
+    document.body.classList.toggle('admin-sidebar-open', mobile.matches && open);
+    document.body.classList.toggle('admin-sidebar-collapsed', !mobile.matches && !open);
+    overlay.hidden = !(mobile.matches && open);
+    toggle.setAttribute('aria-expanded', String(open));
+    toggle.textContent = open ? '☰ Réduire' : '☰ Menu';
+  }
+  const savedCollapsed = (() => {
+    try { return sessionStorage.getItem('grc-admin-sidebar-collapsed') === '1'; }
+    catch { return false; }
+  })();
+  update(!mobile.matches && !savedCollapsed);
+  toggle.addEventListener('click', () => {
+    const currentlyOpen = mobile.matches ? document.body.classList.contains('admin-sidebar-open')
+      : !document.body.classList.contains('admin-sidebar-collapsed');
+    update(!currentlyOpen);
+    if (!mobile.matches) {
+      try { sessionStorage.setItem('grc-admin-sidebar-collapsed', currentlyOpen ? '1' : '0'); }
+      catch { /* Navigation remains functional without storage. */ }
+    }
+  });
+  overlay.addEventListener('click', () => { update(false); toggle.focus(); });
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && document.body.classList.contains('admin-sidebar-open')) {
+      update(false); toggle.focus();
+    }
+  });
+  mobile.addEventListener('change', () => update(!mobile.matches && !savedCollapsed));
+  container.replaceChildren(sidebar, overlay);
+  header.querySelector('.header-inner')?.prepend(toggle);
+  document.body.classList.add('admin-workspace');
 }
 function accessMessage(user, error) {
   main.replaceChildren(heading(error ? 'Session indisponible' : user ? 'Accès réservé' : 'Retrouvons votre espace',
@@ -103,6 +163,7 @@ window.addEventListener('grc:unauthorized', () => {
   signedInUser = null;
   renderHeader(null);
   document.getElementById('section-navigation').replaceChildren();
+  document.body.classList.remove('admin-workspace', 'admin-sidebar-open', 'admin-sidebar-collapsed');
   if (isPrivatePage || page === 'cart') accessMessage(null);
   status.textContent = 'Votre session a expiré. Reconnectez-vous pour continuer.';
   status.className = 'notice notice-info';
@@ -132,7 +193,7 @@ async function start() {
     accessMessage(signedInUser, sessionError);
     return;
   }
-  if (isAdminPage) renderAdminNav();
+  if (isAdminPage) renderAdminNav(signedInUser);
   if (earlyPublicPage) await publicLoad;
   else await mount(signedInUser);
 }
