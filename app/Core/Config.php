@@ -50,11 +50,17 @@ final class Config
     public static function ensureStorage(): void
     {
         $dir = self::storagePath();
-        if (!is_dir($dir) && !mkdir($dir, 0700, true) && !is_dir($dir)) {
-            throw new \RuntimeException('Stockage privé indisponible.');
-        }
+        self::ensureDirectory($dir);
         // Check again after directory creation (including previously unresolved parents).
         self::databasePath();
+    }
+
+    public static function ensureDirectory(string $directory): void
+    {
+        // Another PHP process may create it between is_dir() and mkdir().
+        if (!is_dir($directory) && !@mkdir($directory, 0700, true) && !is_dir($directory)) {
+            throw new \RuntimeException('Impossible de créer le dossier privé. Vérifier le chemin et les permissions d’écriture.');
+        }
     }
 
     public static function isHttps(): bool

@@ -20,7 +20,56 @@ L'initialisation crée `storage/grc.sqlite`, 12 produits, 8 clients et 1 adminis
 
 Une seconde initialisation refuse de modifier la base ou les comptes existants. Pour reconstruire volontairement les données fictives, arrêter les serveurs, sauvegarder les données utiles, puis exécuter `php database/init.php --reset`. Cette action remplace les données et génère de nouveaux mots de passe. Aucun reset automatique au démarrage du serveur.
 
-Le frontend relève du Chat A. Dans cette branche backend, `public/index.html` n'existe pas encore : `/` répond donc 404 jusqu'à l'intégration du frontend. L'API fonctionne indépendamment. Le routeur servira les ressources statiques présentes, tout en refusant les sources PHP, fichiers privés et liens sortant de `public/`.
+Le frontend intégré dans `main` est présent : `/` sert `public/index.html`, qui charge les modules JavaScript et les données SQLite par la même API. Les fichiers frontend restent la propriété du Chat A et n'ont pas été modifiés pendant cette finalisation. Le routeur refuse les sources PHP, fichiers privés et liens sortant de `public/`.
+
+## Dépannage de l’initialisation — Windows / PowerShell
+
+Le message signalé « php n’est pas reconnu » vient de PowerShell **avant toute exécution PHP**. Il indique une installation absente ou un dossier PHP absent du PATH du terminal ; il ne prouve pas une erreur SQL. La commande copiée comportait aussi `database/int.php` : le fichier correct est **database/init.php**.
+
+1. Chercher une installation existante avec `Get-Command php -ErrorAction SilentlyContinue` et `where.exe php`. Ne pas écraser un php.ini existant.
+2. Si PHP manque, installer une distribution **PHP 8.2+ x64** depuis [la distribution officielle Windows](https://windows.php.net/download/) (par exemple PHP 8.4 x64), et ses prérequis Microsoft Visual C++ x64 indiqués par cette distribution. Extraire PHP dans un dossier dédié, par exemple `C:\tools\php`.
+3. Vérifier le binaire directement, même sans PATH :
+
+   ```powershell
+   & 'C:\tools\php\php.exe' --version
+   & 'C:\tools\php\php.exe' --ini
+   ```
+
+4. Si aucun php.ini n’est chargé, copier `php.ini-development` vers `php.ini` dans ce dossier. Dans **le php.ini du PHP CLI indiqué par --ini**, définir un extension_dir correspondant à votre installation et activer :
+
+   ```ini
+   extension_dir = "C:\tools\php\ext"
+   extension=pdo_sqlite
+   extension=sqlite3
+   ```
+
+   Adapter le chemin si PHP est installé ailleurs. `PDO`, `session` et `json` doivent aussi figurer dans `php -m` ; ils sont normalement intégrés dans la distribution Windows. Un module activé dans le PHP d’un serveur web ne configure pas nécessairement le PHP du terminal.
+5. Pour la session PowerShell courante seulement :
+
+   ```powershell
+   $env:Path = 'C:\tools\php;' + $env:Path
+   php --version
+   php --ini
+   php -m
+   php database/init.php
+   ```
+
+   Pour rendre le PATH permanent, ajouter le dossier de PHP au **Path utilisateur** dans les variables d’environnement Windows, puis fermer et rouvrir VS Code et son terminal. Le lancement direct `& 'C:\tools\php\php.exe' database/init.php` reste possible sans modifier le PATH.
+
+Sous Debian/Ubuntu, les paquets usuels sont `php-cli` et `php-sqlite3` ; vérifier ensuite la version et les modules du PHP CLI. Sous d’autres distributions, utiliser leurs paquets équivalents.
+
+| Symptôme | Diagnostic / action |
+| --- | --- |
+| `php` non reconnu | Installer PHP ou corriger le PATH ; essayer son exécutable par chemin complet. Aucun script du dépôt ne peut démarrer avant cela. |
+| `Could not open input file` | Se placer à la racine et utiliser `database/init.php`, pas `database/int.php`. |
+| Extension manquante / pilote PDO indisponible | Le contrôle préalable nomme les modules absents, le binaire et le php.ini utilisés ; corriger ce PHP puis relancer. Aucun stockage n’est créé avant ce contrôle. |
+| Base ou comptes existants | Refus volontaire, sans modification : démarrer le serveur avec la base existante. Ne pas supprimer ces fichiers ni ajouter --reset pour contourner un problème d’installation. |
+| Chemin relatif avec --db | Utiliser un chemin absolu privé. Les espaces sont acceptés si l’argument est entre guillemets. |
+| Dossier non accessible en écriture / fichier verrouillé | Arrêter le serveur, vérifier les droits du dossier de stockage et les verrous Windows. Ne pas ouvrir les droits à tous les utilisateurs. |
+| `grc.sqlite` ou `demo-accounts.json` est un dossier/lien | Destination invalide, refus avant remplacement ; préserver son contenu et corriger le chemin. |
+| Installation des fichiers interrompue | Les anciens fichiers sont restaurés après un échec d’écriture. Si la restauration est elle-même empêchée par le système, le message indique les copies privées à récupérer manuellement ; ne pas les supprimer. |
+
+Les options inconnues, répétées ou sans valeur sont désormais refusées ; `php database/init.php --help` reste disponible sans les extensions SQLite. `--reset` reste une action explicite, serveur arrêté. La base et les comptes générés sont préparés avant installation ; une erreur sur le second fichier ne doit plus laisser la base remplacée avec des comptes incohérents.
 
 ## Configuration locale
 
@@ -60,7 +109,7 @@ Origin est vérifié lorsqu'il est fourni ; les mutations `Sec-Fetch-Site: cross
 
 Limites serveur : corps JSON objet de 64 Kio maximum ; 1..30 lignes distinctes, 1..20 unités par ligne ; identifiants/prix/quantités/notes JSON entiers stricts ; booléens active stricts. Les mots de passe d'inscription comportent au moins 12 caractères et au plus 72 octets (limite de bcrypt), appliquée aussi au login pour éviter la troncature. Les champs sensibles injectés sont refusés. Les prix soumis avec une commande sont ignorés conformément au contrat : seuls les prix SQLite font autorité.
 
-Produits : prix 0..1 000 000 000 000 XAF, stock saisi par admin 0..1 000 000 000 ; images vides ou chemins statiques internes contrôlés sous /assets/images/. Pagination catalogue : 12 par défaut, maximum 24. Pagination clients : 20 par défaut, maximum 100. Recherche LIKE littérale avec paramètres liés et échappement des jokers.
+Produits : prix 0..1 000 000 000 000 XAF, stock saisi par admin 0..1 000 000 000 ; images vides ou chemins statiques internes contrôlés sous /assets/images/ (noms de fichiers avec points et extensions en majuscules admis comme dans le frontend ; URL externe, encodage de chemin et traversée refusés). Pagination catalogue : 12 par défaut, maximum 24. Pagination clients : 20 par défaut, maximum 100. Recherche LIKE littérale avec paramètres liés et échappement des jokers.
 
 ## Cohérence et sécurité
 
@@ -84,24 +133,27 @@ La sauvegarde utilise SQLite3::backup, y compris avec une source WAL ouverte, pu
 
 Une sauvegarde SQLite contient les hachages, pas le fichier local de comptes. Conserver les identifiants fictifs correspondant à cette sauvegarde séparément et de façon privée, notamment avant un --reset.
 
-## Vérifications réellement exécutées
+## Finalisation depuis main intégré — vérifications réellement exécutées
 
-Hôte Linux Debian, PHP 8.4.27, SQLite 3.46.1 ; 29 octobre 2026. Aucun frontend n'a été modifié.
+Point de départ : `main` au commit `376f9a627174e30d372c61d74a3239e6767b85bb`, puis branche `feature/backend-finalization`. Hôte Linux Debian, PHP 8.4.27 64 bits, SQLite 3.46.1, Chromium 154 ; 29 octobre 2026. Bases temporaires isolées ; base locale existante préservée.
 
-| Vérification | Résultat |
+| Vérification exécutée pendant cette finalisation | Résultat |
 | --- | --- |
-| Syntaxe de tous les 27 fichiers PHP | PASS |
-| Recette HTTP + schéma sur base isolée, deux processus PHP | 593 assertions PASS, 0 FAIL |
-| Services commandes/SAV/GRC, agrégats et concurrence multiprocessus | 172 assertions PASS |
-| Contraintes/seed/snapshot SQLite supplémentaires | 22 contrôles PASS ; contrôles CLI init/reset/backup/restore exécutés |
-| Revue sécurité, mot de passe 72 octets, routage, sessions et proxy simulé | 22 contrôles PASS |
+| Syntaxe de tous les 29 fichiers PHP | PASS |
+| Régression HTTP et schéma couvrant tous les endpoints P0, deux processus PHP | 593 assertions PASS, 0 FAIL |
+| Initialisation, extensions absentes, options, protections et récupération des fichiers | 21 contrôles PASS |
+| Parcours réel du frontend intégré, profils client et admin séparés dans Chromium | 23 contrôles PASS |
+| Création simultanée du stockage/sessions privés | 12 processus réussis sans erreur de course mkdir |
+| Clone local neuf, init par défaut, refus d’écrasement et démarrage frontend/API | 7 contrôles PASS |
 
-La recette HTTP parcourt tous les endpoints, inscription → login → commande → confirmation/livraison → crédit unique → SAV/messages → avis → segments/dashboard. Elle vérifie notamment l'impossibilité d'accès aux données d'autrui/admin, CSRF/Origin, injection SQL, champs/type malveillants, fixation et rotation de session, expiration, rate-limit partagé, JSON mal formé, annulation répétée, avis unique, fichier privé et erreur 500 sans fuite.
+Le parcours navigateur utilise les formulaires existants : inscription, connexion, fiche produit/panier/commande, confirmation et livraison administratives, affichage des points, avis, ticket lié, réponse et résolution SAV, fiche client/segment, création produit, dashboard et déconnexion. Les charges HTML introduites dans le nom et le ticket restent du texte dans le DOM ; aucun gestionnaire injecté exécuté, aucune exception JavaScript non interceptée ni réponse serveur 500 observée dans ce parcours. Les en-têtes CSP et les modules frontend sont réellement utilisés.
 
-Concurrence : deux processus PHP indépendants partagent la même base et commandent la dernière unité (une réponse 201, une 409, stock final zéro). D'autres courses exécutées en CLI vérifient livraison/crédit unique, avis unique et annulation/restauration unique. Correction après revue : refus au login d'un suffixe après 72 octets ; distinction stricte entre objet JSON indexé et liste de lignes. Régressions incluses dans la recette relancée.
+La régression HTTP vérifie les rôles/propriétaires, CSRF/Origin, rotation et expiration des sessions, injections SQL, limites/types JSON, refus de fichiers privés, erreurs 500 génériques et limiteur SQLite persistant. Elle couvre les prix serveur, stocks, annulation répétée, livraison/crédit unique, transitions SAV, avis unique, segmentation et agrégats. Deux processus PHP commandant la dernière unité obtiennent 201 et 409, stock final zéro. L’initialisation, le reset explicite, la sauvegarde et la restauration sont également exécutés.
 
-Les scripts de validation du Chat B sont conservés **hors checkout** dans /workspace/.grc-environment/backend-validation sur l'instance cloud ; ils ne font pas partie de la PR ni des fichiers tests/ appartenant au Chat C. Le rapport détaillé s'y trouve dans grc-backend-validation-results.json. Le coordinateur/Chat C doit versionner sa recette indépendante dans son périmètre.
+Corrections ciblées : contrôle préalable PHP/extensions, diagnostics d’installation et options strictes, préservation de la paire base/comptes en cas d’échec de remplacement, refus des destinations non ordinaires avant modification, création des dossiers résistante aux courses, validation des images cohérente avec le frontend. Aucun endpoint, table, colonne ou contrat commun modifié.
 
-**NON EXÉCUTÉS** : exécution sous Windows et sous PHP 8.2 exact ; rendu navigateur, responsive et XSS DOM du frontend absent ; vrai terminateur TLS/tunnel HTTPS. Les chemins et outils applicatifs sont du PHP portable, mais cela ne remplace pas ces vérifications.
+Les scripts/rapports de cette finalisation sont conservés hors checkout dans `/workspace/.grc-environment/backend-finalization-validation` sur l’instance cloud, pas dans la PR ni dans les chemins tests/ réservés au Chat C. Cela ne remplace pas sa campagne de recette indépendante.
 
-Aucun changement de contrat, route ou colonne proposé. Aucun commit de base active, compte local, secret, frontend ou fichier réservé au coordinateur/Chat C.
+**NON EXÉCUTÉS** : exécution native Windows, PHP 8.2 exact, campagne responsive/accessibilité exhaustive et vrai terminateur TLS/tunnel HTTPS. L’erreur PowerShell rapportée a été identifiée à partir du message fourni ; Windows n’a pas été simulé comme une exécution réelle. Les diagnostics d’extensions désactivées et d’échec des fichiers ont été reproduits sous Linux.
+
+Aucune correction frontend nécessaire au parcours testé n’est restée bloquante. L’indication de la limite serveur de 72 octets dans le formulaire de mot de passe pourrait être ajoutée par le Chat A : actuellement, le serveur la refuse avec 422, mais le formulaire annonce seulement 12 caractères minimum. Aucun fichier frontend, contrat, README, test du Chat C, base active ou identifiant local n’est modifié/versionné par cette PR.

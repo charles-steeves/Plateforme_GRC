@@ -6,23 +6,26 @@ if (PHP_SAPI !== 'cli') {
     exit;
 }
 
-require dirname(__DIR__) . '/app/bootstrap.php';
-require __DIR__ . '/seed.php';
+require __DIR__ . '/runtime.php';
+require __DIR__ . '/install-files.php';
 
 use App\Core\Config;
-
-$options = getopt('', ['reset', 'db:', 'help']);
-if (isset($options['help'])) {
-    echo "Usage: php database/init.php [--db=private/path/grc.sqlite] [--reset]\n";
-    echo "Démonstration — données fictives. Arrêter le serveur avant --reset.\n";
-    exit(0);
-}
 
 $tempDb = null;
 $tempAccounts = null;
 $lock = null;
 $exitCode = 0;
 try {
+    $options = databaseOptions($argv, ['reset' => false, 'db' => true, 'help' => false]);
+    if (isset($options['help'])) {
+        echo "Usage: php database/init.php [--db=<chemin-absolu-prive>] [--reset]\n";
+        echo "PHP 8.2+ 64 bits, PDO, pdo_sqlite, sqlite3, session et JSON requis.\n";
+        echo "Démonstration — données fictives. Arrêter le serveur avant --reset.\n";
+        exit(0);
+    }
+    requireDatabaseRuntime();
+    require dirname(__DIR__) . '/app/bootstrap.php';
+    require __DIR__ . '/seed.php';
     if (isset($options['db'])) {
         if (!is_string($options['db']) || $options['db'] === '') {
             throw new RuntimeException('Chemin de base invalide.');
@@ -31,8 +34,9 @@ try {
     }
     $dbPath = Config::databasePath();
     $directory = dirname($dbPath);
-    if (!is_dir($directory) && !mkdir($directory, 0700, true) && !is_dir($directory)) {
-        throw new RuntimeException('Impossible de créer le répertoire privé.');
+    Config::ensureDirectory($directory);
+    if (!is_writable($directory)) {
+        throw new RuntimeException('Le répertoire privé n’est pas accessible en écriture. Vérifier ses permissions.');
     }
     // A previously absent parent may resolve through a symlink into public/.
     $dbPath = Config::databasePath();
@@ -48,6 +52,11 @@ try {
     }
     if (is_link($dbPath) || is_link($accountPath)) {
         throw new RuntimeException('Un lien symbolique ne peut pas être remplacé.');
+    }
+    foreach ([$dbPath, $accountPath] as $target) {
+        if (file_exists($target) && !is_file($target)) {
+            throw new RuntimeException('Destination invalide : grc.sqlite et demo-accounts.json doivent être des fichiers, pas des dossiers. Aucune modification.');
+        }
     }
     foreach ([$dbPath . '-wal', $dbPath . '-shm', $dbPath . '-journal'] as $sidecar) {
         if (file_exists($sidecar)) {
@@ -79,20 +88,9 @@ try {
     }
     @chmod($tempDb, 0600);
     @chmod($tempAccounts, 0600);
-    // Windows does not replace a destination with rename: explicit reset is required.
-    if ($reset && file_exists($dbPath) && !unlink($dbPath)) {
-        throw new RuntimeException('Impossible de remplacer la base. Arrêter le serveur.');
-    }
-    if (!rename($tempDb, $dbPath)) {
-        throw new RuntimeException('Impossible d’installer la base générée.');
-    }
+    // Keep both originals recoverable if either rename fails, including on Windows.
+    installDatabaseFiles([$tempDb => $dbPath, $tempAccounts => $accountPath], $reset);
     $tempDb = null;
-    if ($reset && file_exists($accountPath) && !unlink($accountPath)) {
-        throw new RuntimeException('Impossible de remplacer les comptes locaux.');
-    }
-    if (!rename($tempAccounts, $accountPath)) {
-        throw new RuntimeException('Base créée, mais installation des comptes locaux impossible.');
-    }
     $tempAccounts = null;
     echo "Initialisation réussie — Démonstration, données fictives.\n";
     echo "Comptes aléatoires conservés uniquement dans le fichier privé demo-accounts.json, à côté de la base.\n";
