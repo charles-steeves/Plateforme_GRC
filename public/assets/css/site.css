@@ -461,13 +461,13 @@ body.admin-workspace.admin-sidebar-collapsed .admin-sidebar-signout { font-size:
 }
 @media (max-width: 900px) {
   body.admin-workspace #section-navigation { top: 0; z-index: 50; width: min(290px, calc(100% - 50px)); pointer-events: none; }
-  body.admin-workspace .admin-sidebar { transform: translateX(-105%); transition: transform .18s ease; pointer-events: auto; }
+  body.admin-workspace .admin-sidebar { position: relative; z-index: 1; transform: translateX(-105%); transition: transform .18s ease; pointer-events: auto; }
   body.admin-workspace.admin-sidebar-open .admin-sidebar { transform: translateX(0); }
   body.admin-workspace .site-main, body.admin-workspace .site-footer { margin-left: 0; }
   body.admin-workspace .admin-sidebar-overlay {
     position: fixed; display: block; inset: 0; width: 100vw; height: 100vh;
     margin: 0; background: rgb(15 36 56 / 45%); border: 0; border-radius: 0;
-    z-index: -1; pointer-events: auto;
+    z-index: 0; pointer-events: auto;
   }
   body.admin-workspace:not(.admin-sidebar-open) #section-navigation { visibility: hidden; }
   body.admin-workspace.admin-sidebar-open #section-navigation { pointer-events: auto; }
