@@ -41,6 +41,15 @@ jobs:
           test -f storage/demo-accounts.json
           php -r '$db = new PDO("sqlite:storage/grc.sqlite"); $n = (int)$db->query("SELECT COUNT(*) FROM products")->fetchColumn(); if ($n < 12) { throw new RuntimeException("Missing seed products"); } echo "Seed products: $n\n";'
 
+      - name: Parse all frontend JavaScript modules
+        shell: bash
+        run: |
+          set -euo pipefail
+          for file in public/assets/js/*.js; do node --input-type=module --check < "$file"; done
+
+      - name: Unified typography, responsive layout and UTF-8 checks
+        run: node tests/ui-style-contract.mjs
+
       - name: Neutral branding and demo disclaimer regression
         run: node tests/branding-neutral.mjs
 
