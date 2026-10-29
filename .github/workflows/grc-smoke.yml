@@ -59,6 +59,9 @@ jobs:
       - name: Admin workspace and lecture-driven CRM presentation
         run: node tests/admin-workspace.mjs
 
+      - name: Store sidebar and controlled catalogue category selector
+        run: node tests/store-sidebar-categories.mjs
+
       - name: Neutral branding and demo disclaimer regression
         run: node tests/branding-neutral.mjs
 
