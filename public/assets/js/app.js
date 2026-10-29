@@ -54,9 +54,9 @@ function renderHeader(user, pending = false) {
   } else if (!pending) actions.append(el('a', { className: 'button button-primary', href: '/login.html' }, 'Se connecter'));
   else actions.append(el('span', { className: 'muted status-line' }, 'Session…'));
   header.replaceChildren(el('div', { className: 'header-inner' },
-    el('a', { className: 'brand', href: '/', 'aria-label': 'Plateforme GRC — accueil' },
-      el('span', { className: 'brand-mark', 'aria-hidden': 'true' }, 'GRC'),
-      el('span', {}, 'Plateforme GRC', el('small', {}, 'Vente & relation client'))), toggle, nav, actions));
+    el('a', { className: 'brand', href: '/', 'aria-label': 'Junelia's Shop — accueil' },
+      el('span', { className: 'brand-mark', 'aria-hidden': 'true' }, 'JS'),
+      el('span', {}, 'Junelia's Shop', el('small', {}, 'Vente & relation client'))), toggle, nav, actions));
 }
 function renderAdminNav(user) {
   const container = document.getElementById('section-navigation');
