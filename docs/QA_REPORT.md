@@ -4,7 +4,7 @@
 
 ## 1. Périmètre vérifié
 
-Projet universitaire de commerce fictif et de gestion de la relation client, API PHP 8.2+ et base SQLite, frontend HTML/CSS/JS. Scénario de référence : catalogue → commande fictive → traitement admin → livraison → points → SAV → avis → statistiques.
+Projet universitaire de vente en ligne et de gestion de la relation client, API PHP 8.2+ et base SQLite, frontend HTML/CSS/JS. Le nom et l'identité commerciale restent à déterminer ; les transactions actuellement testées sont uniquement simulées. Scénario de référence : catalogue → commande fictive → traitement admin → livraison → points → SAV → avis → statistiques.
 
 ### Preuve GitHub Actions observée
 
