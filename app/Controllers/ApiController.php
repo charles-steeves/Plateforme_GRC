@@ -46,6 +46,7 @@ final class ApiController
             ['PATCH', '/admin/orders/([0-9]+)', 'admin', 200, fn($u, $b, $id) => ['order' => (new OrderService($this->db()))->changeStatus($id, $b)]],
             ['GET', '/admin/tickets', 'admin', 200, fn($u, $b, $id) => ['items' => (new TicketService($this->db()))->adminList()]],
             ['PATCH', '/admin/tickets/([0-9]+)', 'admin', 200, fn($u, $b, $id) => ['ticket' => (new TicketService($this->db()))->changeStatus($id, $b)]],
+            ['GET', '/admin/categories', 'admin', 200, fn($u, $b, $id) => (new ProductService($this->db()))->adminCategories()],
             ['GET', '/admin/products', 'admin', 200, fn($u, $b, $id) => ['items' => (new ProductService($this->db()))->adminList()]],
             ['POST', '/admin/product-image', 'admin', 201, fn($u, $b, $id) => (new ImageUploadService())->upload()],
             ['POST', '/admin/products', 'admin', 201, fn($u, $b, $id) => ['product' => (new ProductService($this->db()))->create($b)]],
