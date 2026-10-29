@@ -12,9 +12,7 @@ final class Security
         Config::expectedOrigin();
         Config::ensureStorage();
         $path = Config::storagePath() . DIRECTORY_SEPARATOR . 'sessions';
-        if (!is_dir($path) && !mkdir($path, 0700, true) && !is_dir($path)) {
-            throw new \RuntimeException('Sessions indisponibles.');
-        }
+        Config::ensureDirectory($path);
         ini_set('session.use_strict_mode', '1');
         ini_set('session.use_only_cookies', '1');
         ini_set('session.use_trans_sid', '0');

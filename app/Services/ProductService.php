@@ -104,7 +104,7 @@ final class ProductService
         }
         // Local, static image path only. Percent escapes, traversal, query strings,
         // protocols, backslashes and hidden path components are deliberately absent.
-        if (!preg_match('~\A/assets/images/(?:[A-Za-z0-9_-]+/)*[A-Za-z0-9_-]+\.(?:svg|png|jpe?g|webp|gif)\z~D', $url)) {
+        if (!preg_match('~\A/assets/images/(?:[A-Za-z0-9_-]+/)*[A-Za-z0-9][A-Za-z0-9_.-]*\.(?:svg|png|jpe?g|webp|gif)\z~iD', $url)) {
             throw new ApiException(422, 'VALIDATION_ERROR', 'L’image doit être un fichier statique interne sous /assets/images/.');
         }
     }
