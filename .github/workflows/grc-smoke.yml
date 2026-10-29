@@ -39,6 +39,9 @@ jobs:
       - name: Cross-language safe image path regression
         run: node tests/image-path-contract.mjs
 
+      - name: Isolated SQLite snapshot and restore regression
+        run: php tests/storage-recovery.php
+
       - name: Start local server and check public/private HTTP behavior
         shell: bash
         run: |
