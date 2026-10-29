@@ -68,7 +68,7 @@ export async function busy(control, task) {
   }
 }
 export function isLocalImagePath(path) {
-  return typeof path === 'string' && (path === '' || /^\/assets\/images\/(?:[A-Za-z0-9_-]+\/)*[A-Za-z0-9_-]+\.(?:svg|png|jpe?g|webp|gif)$/.test(path));
+  return typeof path === 'string' && (path === '' || /^\/assets\/images\/(?:[A-Za-z0-9_-]+\/)*[A-Za-z0-9][A-Za-z0-9_.-]*\.(?:svg|png|jpe?g|webp|gif)$/i.test(path));
 }
 export function productImage(product) {
   const fallback = '/assets/images/product-placeholder.svg';

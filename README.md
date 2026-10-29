@@ -1,6 +1,6 @@
-# Équateur — Plateforme universitaire de GRC
+# Plateforme de vente en ligne et de GRC
 
-Boutique **fictive** et plateforme de **gestion de la relation client (GRC)** pour un projet pédagogique au Gabon. L'application présente les relations entre vente, suivi des commandes, fidélisation, segmentation, satisfaction et service après-vente.
+Plateforme universitaire de **vente en ligne et de gestion de la relation client (GRC)**, développée au Gabon. L'application présente les relations entre vente, suivi des commandes, fidélisation, segmentation, satisfaction et service après-vente. **Le nom, l'identité et l'activité définitive de l'entreprise seront choisis ultérieurement.** Le catalogue actuellement fourni sert uniquement de jeu d'essai.
 
 > **Démonstration — données fictives.** Aucun paiement, aucune livraison et aucune donnée personnelle réels. Ne pas utiliser comme site de production.
 
@@ -26,7 +26,7 @@ Le navigateur et l'administration utilisent la même API et la même base SQLite
    ```
 
    Dans la liste des modules, vérifier notamment `PDO`, `pdo_sqlite` et `sqlite3`. Si `php` est introuvable ou si les extensions manquent, effectuer la configuration indiquée dans [docs/BACKEND.md](docs/BACKEND.md) avant de poursuivre.
-3. **Depuis la racine du projet**, initialiser une seule fois la base fictive :
+3. **Depuis la racine du projet**, initialiser une seule fois la base de démonstration :
 
    ```sh
    php database/init.php
@@ -74,6 +74,26 @@ Le client ne doit jamais pouvoir consulter les données d'un autre client ni eff
 | `docs/` | Contrats d'architecture, API, sécurité et cours de GRC |
 
 Documents de référence : [contrat maître](docs/MASTER_CONTRACT.md), [architecture](docs/ARCHITECTURE.md), [contrat API](docs/API_CONTRACT.md), [modèle de données](docs/DATA_MODEL.md), [exigences de sécurité](docs/SECURITY_REQUIREMENTS.md), [correspondance avec le cours](docs/COURSE_MAPPING.md), [guide backend](docs/BACKEND.md), [guide frontend](docs/FRONTEND.md).
+
+Guides de validation et de reprise : [recette d'intégration](docs/INTEGRATION.md), [scénario de soutenance](docs/DEMO.md), [état des tests](docs/QA_REPORT.md), [passation de coordination](docs/COORDINATION_HANDOFF.md).
+
+## Vérifications rapides avant la soutenance
+
+Après avoir installé PHP et ses extensions, on peut effectuer des contrôles sans modifier la base locale active :
+
+```sh
+php tests/storage-recovery.php
+php tests/domain-integration.php
+```
+
+Pour comparer les validations d'images et rejouer un parcours complet avec des comptes et une base **temporaires et isolés**, **Node.js 18+ est requis uniquement pour ces tests**, pas pour utiliser le site :
+
+```sh
+node tests/image-path-contract.mjs
+node tests/http-journey.mjs
+```
+
+La vérification automatisée GitHub Actions (`.github/workflows/grc-smoke.yml`) exécute sur un environnement Linux isolé des contrôles de syntaxe, d'initialisation SQLite, d'images, de sauvegarde/restauration et quelques requêtes HTTP publiques/privées. **Elle ne remplace pas les tests interactifs complets du Chat C ni un essai Windows 11 réel**.
 
 ## Sécurité et limites de la démonstration
 
