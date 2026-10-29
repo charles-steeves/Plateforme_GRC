@@ -25,8 +25,9 @@ Méthode : cinq catégories de préparation à la soutenance, pondérées, pour 
 - PR [#8](https://github.com/Nemsis7036/GRC-Plateforme/pull/8) : design bleu/cyan, barre latérale admin, KPI épurés, rafraîchissement et cours, **fusionnée**.
 - PR [#9](https://github.com/Nemsis7036/GRC-Plateforme/pull/9) : upload sécurisé de photos produits et création facultative d'admins supplémentaires par CLI, **fusionnée**.
 - PR [#10](https://github.com/Nemsis7036/GRC-Plateforme/pull/10) : sidebar boutique et catégories proposées au lieu de saisies, **fusionnée**.
-- PR [#11](https://github.com/Nemsis7036/GRC-Plateforme/pull/11) : palette plus contrastée, catégories visuelles et graphiques GRC basés sur les commandes SQLite, **ouverte, CI verte, revue visuelle en attente**.
-- L'identité commerciale reste **indéterminée** : « Plateforme GRC » est un libellé neutre, et non une marque ; ne pas réintroduire l'ancien nom ni inventer d'entreprise.
+- PR [#11](https://github.com/Nemsis7036/GRC-Plateforme/pull/11) : palette plus contrastée, catégories visuelles et graphiques GRC basés sur SQLite, **fusionnée**.
+- PR [#12](https://github.com/Nemsis7036/GRC-Plateforme/pull/12) : tickets SAV actualisés automatiquement sans perte de brouillon, sessions passives et nom provisoire Junelia's Shop, **ouverte lors de cette mise à jour**.
+- Le nom temporaire **Junelia's Shop** a été choisi par l'utilisateur pour l'interface ; la nature commerciale et la marque définitive restent à préciser.
 - Les données de soutenance et les commandes restent simulées ; aucun paiement réel ni données personnelles réelles.
 
 **Consulter GitHub de nouveau** avant toute reprise ou fusion, car cet état est un instantané daté.
@@ -45,12 +46,12 @@ Méthode : cinq catégories de préparation à la soutenance, pondérées, pour 
 
 ## 4. Prochaines étapes par priorité
 
-1. **Revue visuelle et fusion contrôlée de la PR #11**, dont la CI est verte ; confirmer sur Windows 11 et petit écran l'en-tête contrasté, la lisibilité des graphiques et la boutique. Étudier ensuite la demande de traduction FR/EN et des équivalents EUR/USD dans des chantiers distincts.
+1. **Recette et fusion contrôlée de la PR #12**, après CI, puis essai des réponses SAV entre deux sessions distinctes sans actualisation manuelle ; vérifier que les brouillons et les statuts sont préservés.
 2. **Recette réelle Windows 11** : les extensions SQLite et l'initialisation ont été confirmées par l'utilisateur ; exécuter le site et vérifier en situation la connexion administrateur, le nouveau menu, l'upload JPG/PNG/WebP et les sessions de plusieurs comptes admin, utiliser profils client/admin distincts, parcourir commande → livraison → points → SAV → avis → dashboard. Ne pas réinitialiser une base existante pour réparer une erreur PHP.
 3. **Retouches visuelles basées sur captures** : anomalies d'alignement, police, accents, tableaux, formulaire, panier, navigation et mobile. La PR #6 corrige une partie structurelle, mais ne constitue pas une revue visuelle exhaustive.
 4. **Chat C / tests indépendants** : compléter `docs/QA_REPORT.md` et `docs/INTEGRATION.md` avec PASS, FAIL et NON EXÉCUTÉ, versions et preuves ; tester permissions, réseau, sécurité et navigations longues.
 5. **Soutenance** : répéter `docs/DEMO.md` (5–8 min) sur le matériel et réseau choisis, sans afficher de mots de passe.
-6. **Nouvelles fonctionnalités uniquement après décision** : comptes administrateurs multiples, import de fichiers images, GRC enrichie, nom et activité commerciale, exposition distante, etc.
+6. **À arbitrer ensuite, sans refonte UI** : idempotence des POST après coupure réseau, administration des mots de passe/comptes, sauvegarde conjointe SQLite + photos, profil FR/EN et équivalents EUR/USD, GRC marketing plus poussée, ouverture distante sécurisée. L'upload d'images et l'outil d'ajout d'administrateurs existent déjà.
 
 ## 5. Limites et règles communes
 
