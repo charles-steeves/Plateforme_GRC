@@ -12,9 +12,10 @@ Dépôt privé : [Nemsis7036/GRC-Plateforme](https://github.com/Nemsis7036/GRC-P
 | [#2](https://github.com/Nemsis7036/GRC-Plateforme/pull/2) | Frontend client/admin initial | Fusionnée |
 | [#3](https://github.com/Nemsis7036/GRC-Plateforme/pull/3) | Finalisation frontend / intégration réelle | Fusionnée |
 | [#4](https://github.com/Nemsis7036/GRC-Plateforme/pull/4) | Finalisation backend / installation | Fusionnée |
-| [#5](https://github.com/Nemsis7036/GRC-Plateforme/pull/5) | Fiabilisation intermodules et régressions automatisées | **Ouverte à la rédaction de ce document** |
+| [#5](https://github.com/Nemsis7036/GRC-Plateforme/pull/5) | Fiabilisation intermodules, harmonisation du nom et régressions | **Fusionnée** |
+| [#6](https://github.com/Nemsis7036/GRC-Plateforme/pull/6) | Typographie, navigation responsive et contrôles UI | **Ouverte à la rédaction de cette mise à jour** |
 
-La PR #5 a sa branche isolée `feature/coordination-hardening-20261029`. **Ne pas supposer que son contenu est déjà intégré à `main`** tant que GitHub ne confirme pas la fusion.
+La PR #5 est déjà fusionnée dans `main`. Les nouvelles corrections visuelles et documentaires sont dans `feature/ui-consistency-responsive-20261029` (PR #6), pas encore intégrées à `main` à la date de cette mise à jour. Voir [l'état du projet](PROJECT_STATUS.md) pour l'estimation pondérée d'avancement et les prochaines étapes.
 
 Les anciennes fiches de passation V1/V2/V3 décrivent des **états historiques** ; leurs passages disant « PR #3/#4 ouvertes » ne sont plus actuels.
 
