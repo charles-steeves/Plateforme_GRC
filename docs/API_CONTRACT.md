@@ -52,3 +52,16 @@ Le frontend se base exclusivement sur ces formats ; les faux objets de développ
 ## Mise à jour passive des conversations et des indicateurs — 29 octobre 2026
 
 Les endpoints GET existants `/tickets/me`, `/tickets/{id}`, `/admin/tickets` et `/admin/dashboard` acceptent le header facultatif `X-GRC-Passive: 1` pour le polling de lecture. Ce header ne donne **aucun droit supplémentaire** et ne contourne ni l'authentification, ni le rôle, ni les règles d'accès au ticket. Il empêche uniquement ces lectures périodiques, côté serveur, de remettre à zéro le délai de 30 minutes d'inactivité de la session. Tout autre endpoint et toute action de mutation continuent à appliquer la gestion ordinaire des sessions. Aucun nouvel endpoint ni changement du corps JSON des tickets.
+
+
+## Créations rejouables — commandes et tickets (29 octobre 2026)
+
+Les deux routes existantes `POST /orders` et `POST /tickets` acceptent un champ JSON supplémentaire facultatif `request_id` (16–80 caractères ASCII lettres/chiffres/underscore/tiret). Le navigateur fournit automatiquement une valeur aléatoire et stable pour une opération donnée, y compris si une réponse HTTP est perdue. Le serveur vérifie dans la **même transaction SQLite** le triplet (utilisateur authentifié, type d'opération, identifiant de requête).
+
+- Premier envoi valide : création normale `201`.
+- Même `request_id` et même contenu normalisé : `201` avec la même commande ou le même ticket déjà créé, **sans nouvelle ligne ni nouvelle réservation de stock**.
+- Même `request_id` mais contenu différent : `409 REQUEST_KEY_REUSED`, aucun changement.
+- Identifiant absent : compatibilité legacy, le serveur se comporte comme auparavant, sans garantie de déduplication.
+- Le serveur calcule l'empreinte SHA-256 canonique à partir des données validées ; les comptes et tickets d'utilisateurs distincts sont isolés.
+
+La table privée `idempotency_requests` est créée à l'initialisation d'une nouvelle base et, pour les bases existantes, **à la première création munie de request_id** dans une transaction SQLite protégée ; aucune remise à zéro ni migration destructive. Les messages SAV (`POST /tickets/{id}/messages`) et les autres endpoints ne bénéficient pas encore de ce mécanisme : ne pas leur promettre l'idempotence.
