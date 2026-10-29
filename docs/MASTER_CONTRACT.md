@@ -162,6 +162,14 @@ Les conversations SAV côté client et administration sont relues automatiquemen
 **Après cette livraison :** gel progressif de l'interface et audit des fonctions restantes avant de décider d'un nouvel ajout. Les taux de change et la traduction complète restent des chantiers distincts non implémentés.
 
 
+### 9.11 Stabilisation après coupure réseau : commandes et tickets (29 octobre 2026)
+
+L'utilisateur a explicitement placé **les créations de commandes et de tickets résistantes aux renvois après coupure** parmi les premières priorités, avant l'internationalisation ou des améliorations supplémentaires d'interface.
+
+**Extension additive du contrat :** `request_id` optionnel sur les créations de commande/ticket ; clé stable générée par le navigateur, persistée sous empreinte non sensible, comparaison SHA-256 et registre SQLite privé. Les transactions déjà réalisées ne sont pas réinitialisées. Une requête répétée avec la même clé et la même charge renvoie sa ressource existante ; une clé recyclée avec charge différente est refusée (409). La compatibilité des vieux clients sans `request_id` est conservée mais **n'offre pas cette garantie**. Les messages SAV, retours ou notifications restent en dehors de cette extension.
+
+**Sécurité :** l'enregistrement du registre se fait dans la transaction existante avec `BEGIN IMMEDIATE`, par utilisateur et type d'opération. La table est créée de manière non destructive à la première requête idempotente d'une base existante. Les envois ultérieurs après réponse réseau incertaine ne doivent pas recréer d'opération si le navigateur retrouve la même clé. Aucun changement de devise, paiement ou gestion du stock hors transaction.
+
 ### 9.12 Sauvegarde complète sans destruction des essais (29 octobre 2026)
 
 L'utilisateur **souhaite pouvoir revenir à zéro uniquement pour sa future présentation**, mais confirme conserver toutes les données actuelles pour continuer les essais de persistance. **Aucune réinitialisation n'est autorisée pendant ce chantier.**
