@@ -149,3 +149,14 @@ L'utilisateur exprime également une préférence pour le changement de langue (
 **GRC analytique montrée par les données :** distribution des statuts de commandes et série de commandes journalières réelles sur sept jours issue de SQLite. Le nouvel attribut `orders_last_7_days` est un ajout compatible à la réponse existante du tableau de bord (sans migration ni table nouvelle) et doit être protégé comme les autres mesures administrateur. Ne pas produire de chiffres fictifs côté client, ni prétendre calculer des ventes réelles ou le profit.
 
 **Comptes administrateurs :** l'installation initiale conserve un seul admin ; `database/add-admin.php` permet d'ajouter d'autres comptes en CLI locale sans réinitialiser ni fusionner les utilisateurs existants. Un `git pull` n'exécute pas ce script et ne modifie pas `storage/demo-accounts.json`.
+
+
+### 9.10 Nom commercial provisoire, conversations SAV et expiration des sessions (29 octobre 2026)
+
+**Décisions confirmées par l'utilisateur :** le nom commercial provisoire affiché par le site est désormais **Junelia's Shop**. Le dépôt GitHub, les chemins, les routes d'API, le nom du projet universitaire GRC et les données SQLite ne sont pas renommés. Les douze pages et le bandeau commun adoptent ce nom ; la marque définitive reste à valider.
+
+Les conversations SAV côté client et administration sont relues automatiquement par HTTP toutes les **10 secondes** lorsque la page est visible et la connexion disponible. Ce n'est pas un chat instantané WebSocket : les nouvelles réponses arrivent à la prochaine lecture. L'actualisation ne déclenche jamais de mutation, ne réessaie pas un envoi incertain et n'écrase pas un brouillon en cours. Si le statut change pendant une édition, les anciennes actions sont bloquées jusqu'à une vérification.
+
+**Session :** refuser l'enregistrement du mot de passe Chrome n'empêche pas l'utilisation d'un cookie de session HTTP ; un redémarrage du serveur ne révoque pas les sessions PHP stockées. Expiration actuelle : 30 minutes d'inactivité / 8 heures absolues. Les lectures périodiques passives (SAV et tableau de bord) sont signalées par `X-GRC-Passive: 1` et ne prolongent pas le délai de 30 minutes ; le contrôle du rôle reste obligatoire. Un clic normal et la déconnexion conservent leurs comportements actuels. Pas de modification de base, de comptes ou de mots de passe.
+
+**Après cette livraison :** gel progressif de l'interface et audit des fonctions restantes avant de décider d'un nouvel ajout. Les taux de change et la traduction complète restent des chantiers distincts non implémentés.
