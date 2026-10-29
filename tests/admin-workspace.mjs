@@ -20,6 +20,9 @@ assert.match(css, /\.admin-sidebar-overlay/);
 assert.match(css, /@media \(max-width: 900px\)/);
 assert.match(admin, /function metric\(label, value\)/);
 assert.doesNotMatch(admin, /Comptes clients, administrateurs exclus\.|Commandes non annulées\.|Les indicateurs reflètent les commandes et les échanges enregistrés\./);
+for (const dimension of ['GRC analytique', 'GRC opérationnelle', 'GRC interactive', 'Fidélisation']) {
+  assert.ok(admin.includes(dimension), 'Missing lecture dimension: ' + dimension);
+}
 assert.match(admin, /const timer = setInterval/);
 assert.match(admin, /}, 12000\)/);
 assert.match(admin, /document\.visibilityState === 'visible'/);
