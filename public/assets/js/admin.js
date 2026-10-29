@@ -171,7 +171,14 @@ async function products(root) {
     const original = product ? { ...product, active: Boolean(product.active) } : null;
     const name = el('input', { id: 'product-name', name: 'name', type: 'text', required: true, maxLength: 120, value: product?.name ?? '' });
     const description = el('textarea', { id: 'product-description', name: 'description', rows: 4, maxLength: 4000 }, product?.description ?? '');
-    const category = el('input', { id: 'product-category', name: 'category', type: 'text', required: true, maxLength: 120, value: product?.category ?? '' });
+    const category = el('input', { id: 'product-category', name: 'category', type: 'text',
+      list: 'product-category-options', required: true, maxLength: 120, value: product?.category ?? '' });
+    const categoryOptions = el('datalist', { id: 'product-category-options' });
+    void api('/admin/categories').then(data => {
+      if (!Array.isArray(data?.items) || !categoryOptions.isConnected) return;
+      categoryOptions.replaceChildren(...data.items.filter(item => typeof item?.name === 'string')
+        .map(item => el('option', { value: item.name })));
+    }).catch(() => { /* A new group can still be entered without suggestions. */ });
     const price = integerControl('price_xaf', product?.price_xaf ?? 0, 'Prix (FCFA)');
     const stock = integerControl('stock_quantity', product?.stock_quantity ?? 0, 'Quantité disponible');
     const image = el('input', { id: 'product-image', name: 'image_url', type: 'text', maxLength: 500, value: product?.image_url ?? '/assets/images/product-placeholder.svg', placeholder: '/assets/images/product-placeholder.svg' });
@@ -210,7 +217,8 @@ async function products(root) {
     const message = el('div', { 'aria-live': 'polite' });
     const save = button(product ? 'Enregistrer les modifications' : 'Créer le produit', { type: 'submit', className: 'button button-primary' });
     const form = el('form', { className: 'stack' },
-      field('Nom du produit', name), field('Description', description), field('Catégorie', category),
+      field('Nom du produit', name), field('Description', description),
+      field('Groupe de produits', category, 'Choisissez un groupe existant ou saisissez un nouveau nom.'), categoryOptions,
       price.field, stock.field,
       el('div', { className: 'product-upload-panel stack' },
         field('Photo du produit', imageFile, 'Sélectionnez une image depuis votre appareil (JPG, PNG, WebP ; 1,9 Mo maximum).'),

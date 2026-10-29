@@ -139,6 +139,15 @@ try {
   const catalogue = await visitor.get('/products');
   ok(catalogue.status === 200 && catalogue.data.items.length === 12, 'public catalogue from SQLite');
 
+  const categoriesBefore = await visitor.get('/products/categories');
+  ok(categoriesBefore.status === 200 && Array.isArray(categoriesBefore.data.items)
+    && categoriesBefore.data.items.length >= 4
+    && categoriesBefore.data.items.every(group => typeof group.name === 'string'
+      && Number.isSafeInteger(group.count) && group.count > 0),
+    'public categories are generated from products without schema changes');
+  ok((await client.get('/admin/categories')).status === 401,
+    'unauthenticated visitor cannot read private admin category management');
+ 
   const clientUser = await client.login(clientAccounts[0]);
   ok(clientUser.role === 'client', 'client role from session');
   const adminUser = await admin.login(account('admin'));
@@ -148,6 +157,11 @@ try {
   const colleagueUser = await colleague.login(secondAdmin);
   ok(colleagueUser.role === 'admin', 'independent colleague admin can log in');
   ok((await colleague.get('/admin/dashboard')).status === 200, 'colleague admin accesses same dashboard');
+  const adminGroups = await admin.get('/admin/categories');
+  ok(adminGroups.status === 200 && adminGroups.data.items.length === categoriesBefore.data.items.length,
+    'administrators can see complete list of defined categories');
+  ok((await client.get('/admin/categories')).status === 403,
+    'clients cannot query admin category groups');
 
   // Real HTTP multipart image: same CSRF and RBAC as other admin mutations.
   function imageForm(bytes, type) {
@@ -219,6 +233,21 @@ try {
   ok((await admin.patch('/admin/tickets/' + ticketId, { status: 'closed' })).status === 200, 'admin closed ticket');
   ok((await client.post('/tickets/' + ticketId + '/messages', { body: 'Nouveau message' })).status === 409, 'closed ticket refuses message');
   ok((await outsider.get('/admin/customers')).status === 403, 'other client refused admin listing');
+
+  // Group labels originate from the product administrator, never visitor input.
+  // This uses only the disposable test DB, not the Windows demo user's DB.
+  const moved = await admin.patch('/admin/products/1', { category: 'Smartphones et tablettes' });
+  ok(moved.status === 200 && moved.data.product.category === 'Smartphones et tablettes',
+    'administrator defines a new group by assigning it to a product');
+  const newGroups = await visitor.get('/products/categories');
+  ok(newGroups.data.items.some(group => group.name === 'Smartphones et tablettes'),
+    'new admin-defined group appears in public selector');
+  const filteredGroup = await visitor.get('/products?category=' + encodeURIComponent('Smartphones et tablettes'));
+  ok(filteredGroup.status === 200 && filteredGroup.data.total === 1
+    && filteredGroup.data.items[0].id === 1,
+    'visitor filters catalogue by selected group');
+  ok((await visitor.get('/admin/categories')).status === 401,
+    'admin group list remains private to unauthenticated visitors');
 
   console.log('OK — ' + passed + ' checks: real PHP HTTP + disposable SQLite, distinct admin/client sessions');
 } finally {

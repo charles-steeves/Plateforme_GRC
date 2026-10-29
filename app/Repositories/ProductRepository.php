@@ -41,6 +41,32 @@ final class ProductRepository
         return ['items' => array_map(self::serialize(...), $statement->fetchAll(PDO::FETCH_ASSOC)), 'total' => (int) $count->fetchColumn()];
     }
 
+    /** Categories are defined by administrators when creating/editing products.
+     *  Only currently available product groups are shown to visitors.
+     *  This is read-only and works with already initialized SQLite files.
+     */
+    public function activeCategories(): array
+    {
+        $rows = $this->pdo->query(
+            "SELECT category, COUNT(*) AS total FROM products WHERE active = 1
+             GROUP BY category ORDER BY category COLLATE NOCASE"
+        )->fetchAll(PDO::FETCH_ASSOC);
+        return array_map(static fn(array $row): array => [
+            'name' => $row['category'], 'count' => (int)$row['total'],
+        ], $rows);
+    }
+
+    public function allCategories(): array
+    {
+        $rows = $this->pdo->query(
+            "SELECT category, COUNT(*) AS total FROM products
+             GROUP BY category ORDER BY category COLLATE NOCASE"
+        )->fetchAll(PDO::FETCH_ASSOC);
+        return array_map(static fn(array $row): array => [
+            'name' => $row['category'], 'count' => (int)$row['total'],
+        ], $rows);
+    }
+
     public function find(int $id, bool $publicOnly = false): ?array
     {
         $statement = $this->pdo->prepare('SELECT ' . self::COLUMNS . ' FROM products WHERE id = :id' . ($publicOnly ? ' AND active = 1' : ''));

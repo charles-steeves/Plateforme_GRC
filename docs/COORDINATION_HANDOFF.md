@@ -15,10 +15,11 @@ Dépôt privé : [Nemsis7036/GRC-Plateforme](https://github.com/Nemsis7036/GRC-P
 | [#5](https://github.com/Nemsis7036/GRC-Plateforme/pull/5) | Fiabilisation intermodules, harmonisation du nom et régressions | **Fusionnée** |
 | [#6](https://github.com/Nemsis7036/GRC-Plateforme/pull/6) | Typographie, navigation responsive et contrôles UI | **Fusionnée** |
 | [#7](https://github.com/Nemsis7036/GRC-Plateforme/pull/7) | Textes naturels et diagnostic PHP | **Fusionnée** |
-| [#8](https://github.com/Nemsis7036/GRC-Plateforme/pull/8) | Refonte limitée admin bleu/cyan, navigation, cours, polling | **Ouverte lors de cette mise à jour** |
-| [#9](https://github.com/Nemsis7036/GRC-Plateforme/pull/9) | Upload photos + création d'admins CLI | **Ouverte lors de cette mise à jour** |
+| [#8](https://github.com/Nemsis7036/GRC-Plateforme/pull/8) | Refonte limitée admin bleu/cyan, navigation, cours, polling | **Fusionnée** |
+| [#9](https://github.com/Nemsis7036/GRC-Plateforme/pull/9) | Upload photos + création d'admins CLI | **Fusionnée** |
+| [#10](https://github.com/Nemsis7036/GRC-Plateforme/pull/10) | Menu boutique repliable et catégories sélectionnables administrateur | **Ouverte à la rédaction** |
 
-Les PR #1 à #7 ont été fusionnées dans `main`. Les PR #8 (admin, design, cours, rafraîchissement) et #9 (upload sécurisé, comptes admin locaux) sont ouvertes sur **deux branches isolées** à la date de ce document, et doivent être fusionnées après revue et CI dans cet ordre. Ne jamais réinitialiser ni pousser le dossier privé `storage/`. Voir [l'état du projet](PROJECT_STATUS.md) et [l'audit des 93 diapositives](COURSE_IMPLEMENTATION_AUDIT.md).
+Les PR #1 à #9 sont fusionnées dans `main`. La PR #10 (barre latérale boutique, catégories choisies dans la liste des produits) est ouverte sur sa branche. La traduction complète FR/EN et les devises EUR/USD nécessitent une phase distincte afin de ne pas modifier implicitement le contrat XAF des commandes. Ne jamais réinitialiser ni pousser le dossier privé `storage/`. Voir [l'état du projet](PROJECT_STATUS.md) et [l'audit des 93 diapositives](COURSE_IMPLEMENTATION_AUDIT.md).
 
 Les anciennes fiches de passation V1/V2/V3 décrivent des **états historiques** ; leurs passages disant « PR #3/#4 ouvertes » ne sont plus actuels.
 

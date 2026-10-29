@@ -130,6 +130,73 @@ function renderAdminNav(user) {
   header.querySelector('.header-inner')?.prepend(toggle);
   document.body.classList.add('admin-workspace');
 }
+function renderStoreNav(user) {
+  const container = document.getElementById('section-navigation');
+  const sections = [
+    ['/', 'Accueil', '⌂', page === 'index'],
+    ['/index.html#catalogue-filters', 'Catégories', '▦', false],
+    ['/cart.html', 'Panier', '▤', page === 'cart'],
+    ...(user?.role === 'client' ? [
+      ['/account.html#mes-commandes', 'Mes commandes', '▣', page === 'account'],
+      ['/account.html#ma-fidelite', 'Ma fidélité', '★', false],
+      ['/tickets.html', 'Service client', '✉', page === 'tickets'],
+    ] : []),
+    ...(user?.role === 'admin' ? [['/admin.html', 'Administration', '◫', false]] : []),
+  ];
+  const nav = el('nav', { id: 'store-sidebar-menu', className: 'store-sidebar-nav', 'aria-label': 'Navigation boutique' },
+    sections.map(([href, label, symbol, selected]) => el('a', {
+      href, title: label, ...(selected ? { 'aria-current': 'page' } : {}),
+    }, el('span', { className: 'store-nav-icon', 'aria-hidden': 'true' }, symbol),
+      el('span', { className: 'store-nav-label' }, label))));
+  const account = user
+    ? el('div', { className: 'store-sidebar-account' },
+      el('span', { className: 'store-account-avatar', 'aria-hidden': 'true' }, user.name.trim().charAt(0).toUpperCase()),
+      el('div', { className: 'store-account-details' }, el('strong', {}, user.name),
+        el('a', { href: user.role === 'admin' ? '/admin.html' : '/account.html' },
+          user.role === 'admin' ? 'Administration' : 'Mon compte')))
+    : el('div', { className: 'store-sidebar-visitor' },
+      el('a', { className: 'button button-primary', href: '/login.html' }, 'Se connecter'),
+      el('a', { href: '/register.html' }, 'Créer un compte'));
+  const sidebar = el('aside', { className: 'store-sidebar', 'aria-label': 'Menu de la boutique' },
+    el('p', { className: 'store-sidebar-heading' }, 'EXPLORER'),
+    nav, el('div', { className: 'store-sidebar-bottom' }, account));
+  const overlay = button('Fermer le menu', { type: 'button', className: 'store-sidebar-overlay', hidden: true });
+  const toggle = button('☰ Menu', { type: 'button', className: 'store-sidebar-toggle button button-secondary',
+    'aria-expanded': 'true', 'aria-controls': 'store-sidebar-menu' });
+  const mobile = matchMedia('(max-width: 900px)');
+  function show(open) {
+    document.body.classList.toggle('store-sidebar-open', mobile.matches && open);
+    document.body.classList.toggle('store-sidebar-collapsed', !mobile.matches && !open);
+    overlay.hidden = !(mobile.matches && open);
+    toggle.setAttribute('aria-expanded', String(open));
+    toggle.textContent = open ? '☰ Réduire' : '☰ Menu';
+  }
+  function savedCollapsed() {
+    try { return sessionStorage.getItem('grc-store-sidebar-collapsed') === '1'; }
+    catch { return false; }
+  }
+  show(!mobile.matches && !savedCollapsed());
+  toggle.addEventListener('click', () => {
+    const opened = mobile.matches ? document.body.classList.contains('store-sidebar-open')
+      : !document.body.classList.contains('store-sidebar-collapsed');
+    show(!opened);
+    if (!mobile.matches) {
+      try { sessionStorage.setItem('grc-store-sidebar-collapsed', opened ? '1' : '0'); }
+      catch { /* Navigation works without browser storage. */ }
+    }
+  });
+  overlay.addEventListener('click', () => { show(false); toggle.focus(); });
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && document.body.classList.contains('store-sidebar-open')) {
+      show(false); toggle.focus();
+    }
+  });
+  mobile.addEventListener('change', () => show(!mobile.matches && !savedCollapsed()));
+  container.replaceChildren(sidebar, overlay);
+  header.querySelector('.header-inner')?.prepend(toggle);
+  document.body.classList.add('store-workspace');
+}
+
 function accessMessage(user, error) {
   main.replaceChildren(heading(error ? 'Session indisponible' : user ? 'Accès réservé' : 'Retrouvons votre espace',
     error ? 'La session n’a pas pu être vérifiée. Aucune donnée privée n’a été chargée.'
@@ -168,6 +235,8 @@ window.addEventListener('grc:unauthorized', () => {
   renderHeader(null);
   document.getElementById('section-navigation').replaceChildren();
   document.body.classList.remove('admin-workspace', 'admin-sidebar-open', 'admin-sidebar-collapsed');
+  document.body.classList.remove('store-workspace', 'store-sidebar-open', 'store-sidebar-collapsed');
+  if (!isAdminPage) renderStoreNav(null);
   if (isPrivatePage || page === 'cart') accessMessage(null);
   status.textContent = 'Votre session a expiré. Reconnectez-vous pour continuer.';
   status.className = 'notice notice-info';
@@ -198,6 +267,7 @@ async function start() {
     return;
   }
   if (isAdminPage) renderAdminNav(signedInUser);
+  else renderStoreNav(signedInUser);
   if (earlyPublicPage) await publicLoad;
   else await mount(signedInUser);
 }

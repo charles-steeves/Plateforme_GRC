@@ -10,6 +10,7 @@ GET /api/v1/auth/csrf [tous] : data {"csrf_token":"<aléatoire>"} ; établit une
 ## Endpoints publics
 GET /products?search=&category=&page=1&per_page=12 : data {"items":[Product],"page":1,"per_page":12,"total":0}; bornes page>=1, per_page 1..24 ; filtres par nom/description et catégorie, produits actifs uniquement.
 GET /products/{id} : data {"product":Product}; Product={id,name,description,category,price_xaf,stock_quantity,image_url,active} ; public seulement si active.
+GET /products/categories : data {"items":[{"name":"Téléphonie","count":2}]} ; liste des groupes non vides définis par les catégories des produits actifs ; tri alphabétique, aucun texte libre côté visiteur. Les noms réels sont ceux enregistrés par l'administrateur, sans valeurs prédéfinies forcées.
 POST /auth/register body {"name":"Aminata","email":"fictif@example.test","password":"<secret>"} -> 201 data {"user":User} ; crée rôle client exclusivement, ne renvoie jamais password_hash.
 POST /auth/login body {"email":"...","password":"..."} -> 200 data {"user":User}; régénération ID session et CSRF.
 POST /auth/logout body {} -> 200 data {"logged_out":true}.
@@ -32,6 +33,7 @@ PATCH /admin/orders/{id} body {"status":"confirmed"} -> data {"order":OrderAdmin
 GET /admin/tickets -> data {"items":[TicketAdmin]} ; TicketAdmin=Ticket + customer_name.
 PATCH /admin/tickets/{id} body {"status":"in_progress"} -> data {"ticket":TicketAdmin}.
 GET /admin/products -> data {"items":[Product]} ; inclut inactifs.
+GET /admin/categories -> data {"items":[{"name":"Téléphonie","count":2}]} ; liste des groupes existants sur tous produits (actifs et inactifs) pour suggérer les libellés à l'administrateur. Pour créer un nouveau groupe, l'admin attribue un nouveau nom à au moins un produit. Pas de nouvelle table, migration ni endpoint de suppression.
 POST /admin/products body {"name":"Produit","description":"...","category":"Téléphonie","price_xaf":12500,"stock_quantity":10,"image_url":"/assets/images/p1.svg","active":true} -> 201 data {"product":Product}.
 PATCH /admin/products/{id} body champ(s) parmi {name,description,category,price_xaf,stock_quantity,image_url,active} -> data {"product":Product}. Changement stock par admin = quantité absolue validée ; éviter course avec commande par transaction. Suppression physique hors P0, désactiver par active=false.
 ## Extension validée par l'utilisateur : upload photo administrateur (2026-10-29)

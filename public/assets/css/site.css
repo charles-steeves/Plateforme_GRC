@@ -494,3 +494,73 @@ body.admin-workspace.admin-sidebar-collapsed .admin-sidebar-signout { font-size:
 @media (prefers-reduced-motion: reduce) {
   body.admin-workspace .admin-sidebar { transition: none; }
 }
+
+
+/* Boutique : menu lateral compact et repliable pour visiteurs et clients. */
+body.store-workspace { --store-sidebar-width: 208px; }
+body.store-workspace.store-sidebar-collapsed { --store-sidebar-width: 66px; }
+body.store-workspace .site-nav, body.store-workspace .menu-toggle { display: none !important; }
+body.store-workspace #section-navigation {
+  position: fixed; inset: 88px auto 0 0; z-index: 29; width: var(--store-sidebar-width);
+  max-width: none; margin: 0; padding: 0;
+}
+body.store-workspace .site-main, body.store-workspace .site-footer { margin-left: var(--store-sidebar-width); }
+body.store-workspace .site-main { max-width: 1400px; }
+body.store-workspace .header-inner { max-width: none; }
+.store-sidebar {
+  height: 100%; overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column;
+  border-right: 1px solid var(--line); background: white;
+  box-shadow: 5px 2px 24px rgb(25 72 110 / 5%);
+}
+.store-sidebar-heading { margin: 1.1rem 1rem .4rem; color: var(--muted); font-size: .69rem; font-weight: 700; letter-spacing: .13em; }
+.store-sidebar-nav { display: flex; flex-direction: column; align-items: stretch; gap: .2rem; padding: .55rem; }
+.store-sidebar-nav a {
+  display: flex; align-items: center; gap: .75rem; min-height: 46px; padding: .68rem .65rem;
+  border-radius: 10px; white-space: nowrap; text-decoration: none; color: var(--body); font-weight: 550; font-size: .88rem;
+}
+.store-sidebar-nav a:hover { background: var(--soft-green); color: var(--green-dark); }
+.store-sidebar-nav a[aria-current="page"] { background: #d9f0ff; color: var(--green-dark); }
+.store-nav-icon { display: inline-grid; flex: 0 0 27px; place-items: center; font-size: 1.18rem; }
+.store-sidebar-bottom { margin-top: auto; border-top: 1px solid var(--line); padding: .8rem; }
+.store-sidebar-account { display: flex; gap: .55rem; align-items: center; }
+.store-account-avatar { flex: 0 0 36px; width: 36px; height: 36px; display: grid; place-items: center; background: #d9f0ff; color: var(--green-dark); border-radius: 11px; font-weight: 700; }
+.store-account-details { min-width: 0; display: grid; gap: .1rem; font-size: .8rem; }
+.store-account-details strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.store-account-details a { color: var(--green); font-size: .76rem; }
+.store-sidebar-visitor { display: flex; flex-direction: column; gap: .65rem; text-align: center; }
+.store-sidebar-visitor .button { font-size: .8rem; padding: .5rem; }
+.store-sidebar-visitor > a:not(.button) { font-size: .82rem; }
+.store-sidebar-toggle.button { min-height: 42px; white-space: nowrap; }
+body.store-sidebar-collapsed .store-sidebar-heading, body.store-sidebar-collapsed .store-nav-label,
+body.store-sidebar-collapsed .store-account-details, body.store-sidebar-collapsed .store-sidebar-visitor > a:not(.button) { display: none; }
+body.store-sidebar-collapsed .store-sidebar-nav a { justify-content: center; padding-inline: .25rem; }
+body.store-sidebar-collapsed .store-sidebar-account { justify-content: center; }
+body.store-sidebar-collapsed .store-sidebar-visitor .button { font-size: .66rem; overflow-wrap: anywhere; padding: .4rem; }
+.store-sidebar-overlay { display: none; }
+#catalogue-filters, #mes-commandes, #ma-fidelite { scroll-margin-top: 110px; }
+@media (max-width: 900px) {
+  body.store-workspace #section-navigation {
+    inset: 0 auto 0 0; width: min(280px, calc(100% - 54px)); z-index: 51;
+    pointer-events: none;
+  }
+  body.store-workspace .store-sidebar { position: relative; z-index: 1; pointer-events: auto; transform: translateX(-105%); transition: transform .18s ease; }
+  body.store-workspace.store-sidebar-open .store-sidebar { transform: translateX(0); }
+  body.store-workspace .site-main, body.store-workspace .site-footer { margin-left: 0; }
+  body.store-workspace .store-sidebar-overlay {
+    position: fixed; inset: 0; display: block; width: 100vw; height: 100vh;
+    background: rgb(15 36 56 / 45%); border: 0; border-radius: 0; z-index: 0; pointer-events: auto;
+  }
+  body.store-workspace:not(.store-sidebar-open) #section-navigation { visibility: hidden; }
+  body.store-workspace.store-sidebar-open #section-navigation { pointer-events: auto; }
+}
+@media (max-width: 540px) {
+  body.store-workspace .header-inner { gap: .35rem; }
+  body.store-workspace .store-sidebar-toggle.button { padding: .5rem .6rem; font-size: .85rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  body.store-workspace .store-sidebar { transition: none; }
+}
+@media print {
+  body.store-workspace #section-navigation, body.store-workspace .store-sidebar-toggle { display: none !important; }
+  body.store-workspace .site-main { margin-left: auto; }
+}
