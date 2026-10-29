@@ -141,6 +141,9 @@ $check($grc->dashboard()['customers_count'] === 9, 'dashboard recalculé depuis 
 
 // Same request, even if replayed after a response was lost, must not change
 // stock or recreate an order. Conflicting body with same key must be refused.
+// Simulate an EXISTING pre-feature database: the additive table must be
+// created safely on the first keyed write without resetting business data.
+$pdo->exec('DROP TABLE idempotency_requests');
 $keyedOrder = ['request_id' => 'test-order-repeat-001', 'items' => [['product_id' => 2, 'quantity' => 1]]];
 $stockBeforeKeyed = (int)$pdo->query('SELECT stock_quantity FROM products WHERE id=2')->fetchColumn();
 $firstOrder = $orders->create($client, $keyedOrder);
