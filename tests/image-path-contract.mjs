@@ -33,13 +33,13 @@ const samples = [
 
 const phpCode = String.raw`
 require 'app/bootstrap.php';
-$service = (new ReflectionClass(App\\Services\\ProductService::class))->newInstanceWithoutConstructor();
-$method = (new ReflectionClass(App\\Services\\ProductService::class))->getMethod('validateImage');
+$service = (new ReflectionClass(App\Services\ProductService::class))->newInstanceWithoutConstructor();
+$method = (new ReflectionClass(App\Services\ProductService::class))->getMethod('validateImage');
 $cases = json_decode($argv[1], true, 512, JSON_THROW_ON_ERROR);
 $actual = [];
 foreach ($cases as $path) {
   try { $method->invoke($service, $path); $actual[] = true; }
-  catch (App\\Core\\ApiException $e) { $actual[] = false; }
+  catch (App\Core\ApiException $e) { $actual[] = false; }
 }
 echo json_encode($actual, JSON_THROW_ON_ERROR);
 `;
