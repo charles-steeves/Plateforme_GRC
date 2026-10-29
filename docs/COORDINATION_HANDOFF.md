@@ -14,9 +14,11 @@ Dépôt privé : [Nemsis7036/GRC-Plateforme](https://github.com/Nemsis7036/GRC-P
 | [#4](https://github.com/Nemsis7036/GRC-Plateforme/pull/4) | Finalisation backend / installation | Fusionnée |
 | [#5](https://github.com/Nemsis7036/GRC-Plateforme/pull/5) | Fiabilisation intermodules, harmonisation du nom et régressions | **Fusionnée** |
 | [#6](https://github.com/Nemsis7036/GRC-Plateforme/pull/6) | Typographie, navigation responsive et contrôles UI | **Fusionnée** |
-| [#7](https://github.com/Nemsis7036/GRC-Plateforme/pull/7) | Présentation commerciale naturelle, recherche alignée et diagnostic PHP | **Préparée sur sa branche ; à fusionner après tests** |
+| [#7](https://github.com/Nemsis7036/GRC-Plateforme/pull/7) | Textes naturels et diagnostic PHP | **Fusionnée** |
+| [#8](https://github.com/Nemsis7036/GRC-Plateforme/pull/8) | Refonte limitée admin bleu/cyan, navigation, cours, polling | **Ouverte lors de cette mise à jour** |
+| [#9](https://github.com/Nemsis7036/GRC-Plateforme/pull/9) | Upload photos + création d'admins CLI | **Ouverte lors de cette mise à jour** |
 
-La PR #5 et la PR #6 sont fusionnées dans `main`. Les retouches de textes, le formulaire de recherche et le diagnostic SQLite sont sur `feature/ux-natural-language-grc-20261029` (PR #7), non intégrées à `main` avant fusion. Voir [l'état du projet](PROJECT_STATUS.md) pour les estimations et les tâches restantes.
+Les PR #1 à #7 ont été fusionnées dans `main`. Les PR #8 (admin, design, cours, rafraîchissement) et #9 (upload sécurisé, comptes admin locaux) sont ouvertes sur **deux branches isolées** à la date de ce document, et doivent être fusionnées après revue et CI dans cet ordre. Ne jamais réinitialiser ni pousser le dossier privé `storage/`. Voir [l'état du projet](PROJECT_STATUS.md) et [l'audit des 93 diapositives](COURSE_IMPLEMENTATION_AUDIT.md).
 
 Les anciennes fiches de passation V1/V2/V3 décrivent des **états historiques** ; leurs passages disant « PR #3/#4 ouvertes » ne sont plus actuels.
 
@@ -28,7 +30,7 @@ Commencer par `docs/MASTER_CONTRACT.md` **sections 0–9** (la section 9 est un 
 
 **Architecture figée v1 :** frontend HTML/CSS/JS ; PHP 8.2+ ; PDO/SQLite local privé. Un backend, une base ; Windows 11 et Linux. Aucun service distant/nom de domaine/abonnement de codage obligatoire.
 
-**Modifications possibles mais non encore validées comme P0 :** plusieurs administrateurs avec gestion des rôles, upload d'images, choix futur du nom/de l'entreprise/du catalogue, GRC marketing plus poussée, ouverture Internet. Ne pas les inventer. Voir section 9.2 du contrat maître.
+**Décisions nouvelles validées (29 octobre 2026) :** possibilité d'ajouter des administrateurs par commande locale privilégiée sans migration ni reset ; import sécurisé de photos de produits depuis un sélecteur de fichiers administrateur. **Reste non validé :** gestion des rôles par interface, choix futur du nom/de l'entreprise/du catalogue, GRC marketing plus poussée, ouverture Internet. Ne pas les inventer. Voir section 9.2 du contrat maître.
 
 **Décisions du 29 octobre 2026 à appliquer partout :** retirer l'ancien nom commercial provisoire et toute affirmation qualifiant l'entreprise de fictive. En outre, éviter les avertissements répétitifs « projet universitaire / données fictives / aucun paiement réel » et les détails techniques du mot de passe dans l'interface visible ; conserver ces restrictions dans les contrats et le backend. Employer « Plateforme GRC » comme intitulé neutre en attendant un choix explicite du nom, du statut et du secteur de l'entreprise. Les données d'essai et les commandes simulées restent nécessaires à la recette.
 

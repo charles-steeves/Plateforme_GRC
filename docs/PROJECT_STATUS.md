@@ -21,7 +21,9 @@ Méthode : cinq catégories de préparation à la soutenance, pondérées, pour 
 
 - PR [#1](https://github.com/Nemsis7036/GRC-Plateforme/pull/1) à [#5](https://github.com/Nemsis7036/GRC-Plateforme/pull/5) : **fusionnées** dans `main`.
 - PR [#6](https://github.com/Nemsis7036/GRC-Plateforme/pull/6) : typographie et navigation responsive, **fusionnée**.
-- PR [#7](https://github.com/Nemsis7036/GRC-Plateforme/pull/7) : formulaire de recherche aligné, textes client plus naturels, simplification des erreurs et diagnostic local PHP/SQLite, **en cours de livraison**. Aucun de ces changements n'est intégré à `main` avant fusion.
+- PR [#7](https://github.com/Nemsis7036/GRC-Plateforme/pull/7) : recherche alignée, textes naturels et diagnostic PHP, **fusionnée**.
+- PR [#8](https://github.com/Nemsis7036/GRC-Plateforme/pull/8) : bleu/cyan, barre latérale admin, KPI épurés, rafraîchissement dashboard HTTP et correspondance cours, **ouverte à la rédaction**.
+- PR [#9](https://github.com/Nemsis7036/GRC-Plateforme/pull/9) : upload sécurisé de photos produits et création facultative d'admins supplémentaires par CLI, **ouverte à la rédaction**. Fusionner dans cet ordre sous réserve des tests et des conflits.
 - L'identité commerciale reste **indéterminée** : « Plateforme GRC » est un libellé neutre, et non une marque ; ne pas réintroduire l'ancien nom ni inventer d'entreprise.
 - Les données de soutenance et les commandes restent simulées ; aucun paiement réel ni données personnelles réelles.
 
@@ -41,8 +43,8 @@ Méthode : cinq catégories de préparation à la soutenance, pondérées, pour 
 
 ## 4. Prochaines étapes par priorité
 
-1. **Fusion contrôlée de la PR #7** après réussite de la CI, revue du formulaire catalogue et diagnostic PHP. Vérifier ensuite le dernier `main`.
-2. **Recette réelle Windows 11** : exécuter `php database/doctor.php`, confirmer `pdo_sqlite`, vérifier l'erreur HTTP 500 éventuellement observée, exécuter le site, utiliser profils client/admin distincts, parcourir commande → livraison → points → SAV → avis → dashboard. Ne pas réinitialiser une base existante pour réparer une erreur PHP.
+1. **Fusion contrôlée de la PR #8, puis de la PR #9** après réussite des CI sur leurs commits les plus récents ; vérifier après la première fusion que la seconde PR n'a pas de conflit avant de l'intégrer.
+2. **Recette réelle Windows 11** : les extensions SQLite et l'initialisation ont été confirmées par l'utilisateur ; exécuter le site et vérifier en situation la connexion administrateur, le nouveau menu, l'upload JPG/PNG/WebP et les sessions de plusieurs comptes admin, utiliser profils client/admin distincts, parcourir commande → livraison → points → SAV → avis → dashboard. Ne pas réinitialiser une base existante pour réparer une erreur PHP.
 3. **Retouches visuelles basées sur captures** : anomalies d'alignement, police, accents, tableaux, formulaire, panier, navigation et mobile. La PR #6 corrige une partie structurelle, mais ne constitue pas une revue visuelle exhaustive.
 4. **Chat C / tests indépendants** : compléter `docs/QA_REPORT.md` et `docs/INTEGRATION.md` avec PASS, FAIL et NON EXÉCUTÉ, versions et preuves ; tester permissions, réseau, sécurité et navigations longues.
 5. **Soutenance** : répéter `docs/DEMO.md` (5–8 min) sur le matériel et réseau choisis, sans afficher de mots de passe.

@@ -54,22 +54,23 @@ function mutationMessage(error) {
     : error.message;
 }
 
-function metric(label, value, description) {
+function metric(label, value) {
   return el('article', { className: 'panel metric-card' },
     el('p', { className: 'muted' }, label),
-    el('p', { className: 'metric-value' }, value),
-    el('p', { className: 'muted' }, description));
+    el('p', { className: 'metric-value' }, value));
 }
 
 async function dashboard(root) {
   const content = el('div', { className: 'stack' });
   const refresh = button('Actualiser les indicateurs', { className: 'button button-secondary', onClick: () => load() });
-  root.replaceChildren(heading('Tableau de bord GRC', 'Les indicateurs proviennent exclusivement des données enregistrées par le serveur.'), refresh, content);
+  root.replaceChildren(heading('Tableau de bord GRC', 'Clients, commandes et qualité de service.'),
+    el('div', { className: 'cluster' }, refresh, el('span', { className: 'muted', role: 'status', id: 'dashboard-updated' }, '')), content);
   let generation = 0;
-  async function load() {
+  let lastPending = null;
+  async function load(automatic = false) {
     const request = ++generation;
     refresh.disabled = true;
-    loading(content, 'Chargement des indicateurs…');
+    if (!automatic) loading(content, 'Chargement des indicateurs…');
     try {
       const data = await api('/admin/dashboard');
       if (request !== generation) return;
@@ -78,25 +79,43 @@ async function dashboard(root) {
         throw new Error('La moyenne de satisfaction reçue est invalide.');
       }
       const values = el('div', { className: 'metrics' },
-        metric('Clients', count(data.customers_count), 'Comptes clients, administrateurs exclus.'),
-        metric('Commandes', count(data.orders_count), 'Commandes non annulées.'),
-        metric('Chiffre d’affaires', money(data.ca_simule_xaf), 'Montant des commandes livrées uniquement.'),
-        metric('Tickets à traiter', count(data.tickets_open_count), 'Tickets ouverts ou en cours.'),
-        metric('Satisfaction', satisfaction === null ? 'Aucun avis' : `${new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 2 }).format(satisfaction)} / 5`, 'Notes reçues après livraison.'),
-        metric('Clients inactifs', count(data.customers_inactive_count), 'Dernier achat datant de plus de 90 jours.'));
+        metric('Clients', count(data.customers_count)),
+        metric('Commandes', count(data.orders_count)),
+        metric('Chiffre d’affaires', money(data.ca_simule_xaf)),
+        metric('Tickets à traiter', count(data.tickets_open_count)),
+        metric('Satisfaction', satisfaction === null ? 'Aucun avis' : `${new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 2 }).format(satisfaction)} / 5`),
+        metric('Clients inactifs', count(data.customers_inactive_count)));
       const status = el('section', { className: 'panel stack' }, el('h2', {}, 'Répartition des commandes'));
       const list = el('dl', { className: 'summary' });
       for (const [key, label] of Object.entries(ORDER_LABELS)) {
         list.append(el('div', {}, el('dt', {}, label), el('dd', {}, count(data.order_status_counts?.[key]))));
       }
       status.append(list);
-      content.replaceChildren(values, status,
-        el('p', { className: 'muted' }, 'Les indicateurs reflètent les commandes et les échanges enregistrés.'),
+      const pending = data.order_status_counts?.pending ?? 0;
+      const activity = el('section', { className: 'panel stack admin-activity' },
+        el('div', { className: 'section-heading' }, el('h2', {}, 'À traiter'),
+          el('span', { className: 'badge badge-pending' }, `${count(pending)} commande${pending > 1 ? 's' : ''} en attente`)),
         el('div', { className: 'cluster' },
-          el('a', { href: '/admin-orders.html', className: 'button button-secondary' }, 'Gérer les commandes'),
-          el('a', { href: '/admin-tickets.html', className: 'button button-secondary' }, 'Traiter le SAV')));
+          el('a', { href: '/admin-orders.html', className: 'button button-primary' }, 'Suivre les commandes'),
+          el('a', { href: '/admin-tickets.html', className: 'button button-secondary' }, 'Répondre aux clients'),
+          el('a', { href: '/admin-customers.html', className: 'button button-secondary' }, 'Connaître mes clients')));
+      const process = el('section', { className: 'panel stack crm-process' },
+        el('h2', {}, 'La GRC en pratique'),
+        el('div', { className: 'crm-process-grid' },
+          el('a', { href: '/admin-customers.html' }, el('strong', {}, 'GRC analytique'), el('span', {}, 'Clients et segmentation')),
+          el('a', { href: '/admin-orders.html' }, el('strong', {}, 'GRC opérationnelle'), el('span', {}, 'Commandes et suivi')),
+          el('a', { href: '/admin-tickets.html' }, el('strong', {}, 'GRC interactive'), el('span', {}, 'Échanges et SAV')),
+          el('a', { href: '/admin-orders.html' }, el('strong', {}, 'Fidélisation'), el('span', {}, 'Points et satisfaction'))));
+      content.replaceChildren(values, activity, process, status);
+      document.getElementById('dashboard-updated').textContent = 'Actualisé à ' + new Intl.DateTimeFormat('fr-FR', { timeStyle: 'short', timeZone: 'Africa/Libreville' }).format(new Date());
+      if (automatic && lastPending !== null && pending > lastPending) {
+        const message = el('p', { className: 'notice notice-info', role: 'status' },
+          `${pending - lastPending} nouvelle${pending - lastPending > 1 ? 's' : ''} commande${pending - lastPending > 1 ? 's' : ''} en attente`);
+        content.prepend(message);
+      }
+      lastPending = pending;
     } catch (error) {
-      if (request === generation) renderError(content, error, load);
+      if (request === generation && !automatic) renderError(content, error, load);
     } finally {
       if (request === generation) {
         content.removeAttribute('aria-busy');
@@ -105,6 +124,12 @@ async function dashboard(root) {
     }
   }
   await load();
+  // Refresh discreetly while the administrator is on this screen. No WebSocket
+  // and no polling while offline/in the background; source of truth remains SQLite.
+  const timer = setInterval(() => {
+    if (document.visibilityState === 'visible' && navigator.onLine && !refresh.disabled && root.isConnected) void load(true);
+  }, 12000);
+  window.addEventListener('pagehide', () => clearInterval(timer), { once: true });
 }
 
 function integerControl(name, value, label) {
