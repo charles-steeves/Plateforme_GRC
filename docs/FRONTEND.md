@@ -144,8 +144,9 @@ ou endpoint supplémentaire n'a été inventé.
   n'est tronqué silencieusement.
 - Produits : prix maximal 1 000 000 000 000 XAF, stock maximal 1 000 000 000,
   description 4 000 caractères, catégorie 120, image 500. La validation locale des
-  chemins image reprend la grammaire du backend, y compris noms avec `_`/`-`, sans
-  noms à plusieurs points ni extension en majuscules refusée par PHP.
+  chemins image doit suivre exactement la grammaire du backend : noms sûrs avec
+  lettres, chiffres, `_`, `-` et points internes, extensions avec casse variable ;
+  chemins traversants, encodés et URL externes restent interdits.
 - Réseau : une panne CSRF avant POST ne bloque plus à tort le formulaire comme si
   l'action avait pu réussir. Les brouillons et champs restent utilisables après
   rétablissement, sans envoi automatique. Une véritable réponse POST perdue après
