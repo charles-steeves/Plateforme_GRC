@@ -22,11 +22,13 @@ Les anciennes fiches de passation V1/V2/V3 décrivent des **états historiques**
 
 Commencer par `docs/MASTER_CONTRACT.md` **sections 0–9** (la section 9 est un addendum, non une réécriture), puis `PROJECT_BRIEF.md`, `ARCHITECTURE.md`, `API_CONTRACT.md`, `DATA_MODEL.md`, `SECURITY_REQUIREMENTS.md` et `COURSE_MAPPING.md`.
 
-**P0 approuvé :** boutique fictive d'une entreprise gabonaise ; produits, comptes, sessions, panier, commande enregistrée, stock, historique, espace client/admin, fiches et segmentation, SAV avec messages, fidélité à livraison une seule fois, satisfaction, tableau de bord et sécurité. Une vraie base partagée, mais **ni transaction financière réelle ni données personnelles réelles**.
+**P0 approuvé :** plateforme de vente en ligne et GRC, identité et nature de l'entreprise à décider ; produits, comptes, sessions, panier, commande enregistrée, stock, historique, espace client/admin, fiches et segmentation, SAV avec messages, fidélité à livraison une seule fois, satisfaction, tableau de bord et sécurité. Une vraie base partagée, mais **ni transaction financière réelle ni données personnelles réelles**.
 
 **Architecture figée v1 :** frontend HTML/CSS/JS ; PHP 8.2+ ; PDO/SQLite local privé. Un backend, une base ; Windows 11 et Linux. Aucun service distant/nom de domaine/abonnement de codage obligatoire.
 
-**Modifications possibles mais non encore validées comme P0 :** plusieurs administrateurs avec gestion des rôles, upload d'images, changement de nom « Équateur »/catalogue, GRC marketing plus poussée, ouverture Internet. Ne pas les inventer. Voir section 9.2 du contrat maître.
+**Modifications possibles mais non encore validées comme P0 :** plusieurs administrateurs avec gestion des rôles, upload d'images, choix futur du nom/de l'entreprise/du catalogue, GRC marketing plus poussée, ouverture Internet. Ne pas les inventer. Voir section 9.2 du contrat maître.
+
+**Décision du 29 octobre 2026 à appliquer partout :** retirer « Équateur » et toute affirmation d'« entreprise fictive ». Employer « Plateforme GRC » comme intitulé neutre en attendant un choix explicite du nom, du statut et du secteur de l'entreprise. Les données d'essai et les commandes simulées restent nécessaires à la recette.
 
 ## 3. Ce qui a été corrigé dans la PR #5
 
