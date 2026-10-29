@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 480" fill="none">
+  <title>Illustration générique d’appareils électroniques</title>
+  <desc>Un ordinateur portable, un téléphone et un casque dessinés dans des tons verts et dorés. Visuel indicatif, sans marque.</desc>
+  <defs>
+    <linearGradient id="screen" x1="192" y1="119" x2="427" y2="296" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#3D7866"/>
+      <stop offset="1" stop-color="#163F35"/>
+    </linearGradient>
+    <linearGradient id="phone" x1="415" y1="193" x2="485" y2="351" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#DAE7D4"/>
+      <stop offset="1" stop-color="#A9C3A6"/>
+    </linearGradient>
+    <filter id="shadow" x="63" y="72" width="531" height="367" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="13"/>
+    </filter>
+  </defs>
+  <rect width="640" height="480" rx="24" fill="#F1F3EB"/>
+  <circle cx="322" cy="225" r="155" fill="#E5ECDD"/>
+  <circle cx="483" cy="132" r="30" fill="#EBDCB3"/>
+  <path d="M116 365C192 339 424 337 531 366" stroke="#CAD4C0" stroke-width="2"/>
+  <ellipse cx="332" cy="364" rx="199" ry="20" fill="#173F33" opacity=".1" filter="url(#shadow)"/>
+  <path d="M173 127C173 117 181 109 191 109H429C439 109 447 117 447 127V307H173V127Z" fill="#244E40"/>
+  <rect x="183" y="120" width="254" height="176" rx="5" fill="url(#screen)"/>
+  <path d="M183 256L263 155L336 248L384 185L437 247V291C437 294 435 296 432 296H188C185 296 183 294 183 291V256Z" fill="#467D5C"/>
+  <path d="M280 296L383 166L437 239V291C437 294 435 296 432 296H280Z" fill="#74A276"/>
+  <circle cx="370" cy="151" r="13" fill="#E5C876"/>
+  <path d="M173 307H447L486 340C490 344 487 351 481 351H139C133 351 130 344 134 340L173 307Z" fill="#BACABC"/>
+  <path d="M173 307H447L475 333H145L173 307Z" fill="#D1DBC9"/>
+  <path d="M272 316H348L360 330H259L272 316Z" fill="#A8B9A9"/>
+  <path d="M139 343H482" stroke="#6B8B75" stroke-width="3" stroke-linecap="round"/>
+  <rect x="411" y="188" width="88" height="169" rx="13" fill="#244E40"/>
+  <rect x="417" y="194" width="76" height="157" rx="9" fill="url(#phone)"/>
+  <path d="M438 194H472V200C472 203 470 205 467 205H443C440 205 438 203 438 200V194Z" fill="#244E40"/>
+  <path d="M417 318L444 279L463 302L493 256V342C493 347 489 351 484 351H426C421 351 417 347 417 342V318Z" fill="#6D996C"/>
+  <circle cx="468" cy="232" r="10" fill="#F1D88B"/>
+  <path d="M117 266V242C117 210 141 186 171 186C201 186 225 210 225 242V266" stroke="#315F4B" stroke-width="16" stroke-linecap="round"/>
+  <path d="M121 238C121 211 143 190 171 190C199 190 221 211 221 238" stroke="#C5D1BC" stroke-width="6" stroke-linecap="round"/>
+  <rect x="105" y="245" width="28" height="64" rx="12" fill="#204D3A"/>
+  <rect x="112" y="251" width="23" height="52" rx="10" fill="#75966F"/>
+  <rect x="209" y="245" width="28" height="64" rx="12" fill="#204D3A"/>
+  <rect x="207" y="251" width="23" height="52" rx="10" fill="#75966F"/>
+  <path d="M152 386H489" stroke="#D9E0D2" stroke-width="2" stroke-linecap="round"/>
+  <path d="M522 234V250M514 242H530" stroke="#D3B569" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="133" cy="141" r="4" fill="#B3C5A8"/>
+  <circle cx="521" cy="324" r="4" fill="#B3C5A8"/>
+</svg>
