@@ -60,6 +60,13 @@ function metric(label, value) {
     el('p', { className: 'metric-value' }, value));
 }
 
+function svgPart(tag, attributes, ...children) {
+  const node = document.createElementNS('http://www.w3.org/2000/svg', tag);
+  for (const [name, value] of Object.entries(attributes)) node.setAttribute(name, String(value));
+  node.append(...children.flat());
+  return node;
+}
+
 function statusChart(counts) {
   const entries = Object.entries(ORDER_LABELS).map(([key, label]) => ({
     key, label, value: counts[key],
@@ -72,9 +79,9 @@ function statusChart(counts) {
   let offset = 0;
   const rings = entries.map(row => {
     const portion = total > 0 ? row.value / total * circumference : 0;
-    const element = el('circle', {
+    const element = svgPart('circle', {
       cx: '65', cy: '65', r: '46', fill: 'none', 'stroke-width': '17',
-      className: `chart-ring chart-ring-${row.key}`,
+      class: `chart-ring chart-ring-${row.key}`,
       'stroke-dasharray': `${portion} ${circumference - portion}`,
       'stroke-dashoffset': String(-offset),
     });
@@ -90,11 +97,11 @@ function statusChart(counts) {
     el('h2', {}, 'État des commandes'),
     el('div', { className: 'chart-donut-layout' },
       el('div', { className: 'chart-donut' },
-        el('svg', { viewBox: '0 0 130 130', role: 'img',
+        svgPart('svg', { viewBox: '0 0 130 130', role: 'img',
           'aria-label': `${total} commandes réparties par statut` },
-          el('circle', { cx: '65', cy: '65', r: '46', fill: 'none',
+          svgPart('circle', { cx: '65', cy: '65', r: '46', fill: 'none',
             stroke: '#e7edf4', 'stroke-width': '17' }),
-          el('g', { transform: 'rotate(-90 65 65)' }, rings)),
+          svgPart('g', { transform: 'rotate(-90 65 65)' }, rings)),
         el('div', { className: 'chart-donut-center', 'aria-hidden': 'true' },
           el('strong', {}, count(total)), el('span', {}, 'total'))),
       legend));
