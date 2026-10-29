@@ -10,7 +10,7 @@ use App\Core\Config;
 
 $opts = getopt('', ['from:', 'replace', 'confirm', 'help']);
 if (isset($opts['help'])) {
-    echo "Usage: php database/restore-bundle.php --from=storage/backups/avant-presentation --replace --confirm\n";
+    echo "Usage: php database/restore-bundle.php --from=storage/avant-presentation --replace --confirm\n";
     echo "ATTENTION : arrêter le serveur PHP. Remplace la base, les comptes et les photos importées.\n";
     exit(0);
 }
