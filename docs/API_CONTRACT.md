@@ -34,6 +34,12 @@ PATCH /admin/tickets/{id} body {"status":"in_progress"} -> data {"ticket":Ticket
 GET /admin/products -> data {"items":[Product]} ; inclut inactifs.
 POST /admin/products body {"name":"Produit","description":"...","category":"Téléphonie","price_xaf":12500,"stock_quantity":10,"image_url":"/assets/images/p1.svg","active":true} -> 201 data {"product":Product}.
 PATCH /admin/products/{id} body champ(s) parmi {name,description,category,price_xaf,stock_quantity,image_url,active} -> data {"product":Product}. Changement stock par admin = quantité absolue validée ; éviter course avec commande par transaction. Suppression physique hors P0, désactiver par active=false.
+## Extension validée par l'utilisateur : upload photo administrateur (2026-10-29)
+
+**Exception unique au corps JSON :** `POST /api/v1/admin/product-image`, rôle `admin`, `multipart/form-data` avec un champ fichier nommé `image`, jeton `X-CSRF-Token` et même cookie de session que les autres mutations. Réponse `201` sous l'enveloppe commune avec `data: {"image_url":"/assets/images/uploads/<nom-aléatoire>.jpg|png|webp"}`. Formats JPG/PNG/WebP validés d'après le contenu, fichier de moins de 1,9 Mo, dimensions au plus 4096 × 4096 et 12 M pixels ; nom de fichier aléatoire et chemin strictement sous les images publiques. Fichiers exécutables/SVG/URL externes refusés. Cet endpoint ne crée **pas** un produit : le client l'associe par l'API normale `POST/PATCH /admin/products`, qui conserve toutes ses validations. Aucun upload client et aucun upload arbitraire.
+
+**Création de plusieurs administrateurs :** uniquement par la commande locale privilégiée `php database/add-admin.php --name="..." --email=...`, qui ajoute un compte sans changer les rôles des clients ni les autres données. Aucun endpoint HTTP de promotion de rôle.
+
 ## Validation commune
 Entiers stricts (pas string numérique ni float pour prix/quantité), limites de taille (name 1..120, subject 1..160, commentaire 0..1500, description ticket 1..4000, message 1..4000, email <=254, mot de passe >=12 caractères en démo). Refuser champs sensibles inconnus role, user_id, total_xaf fournis par client pour déterminer l'autorité. Contrôler bornes serveur, filtrer paramètres page/per_page, ne pas utiliser de SQL concaténé.
 ## Contrat frontend et tests

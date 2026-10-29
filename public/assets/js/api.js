@@ -32,12 +32,13 @@ async function request(path, { method = 'GET', body, signal, token } = {}) {
   let response;
   try {
     const headers = { Accept: 'application/json' };
-    if (body !== undefined) headers['Content-Type'] = 'application/json';
+    const multipart = body instanceof FormData;
+    if (body !== undefined && !multipart) headers['Content-Type'] = 'application/json';
     if (token) headers['X-CSRF-Token'] = token;
     response = await fetch(url, {
       method, headers, credentials: 'same-origin', redirect: 'error',
       cache: 'no-store', signal: controller.signal,
-      ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
+      ...(body !== undefined ? { body: multipart ? body : JSON.stringify(body) } : {}),
     });
     const jsonType = response.headers.get('content-type') || '';
     if (!jsonType.toLowerCase().includes('application/json')) {

@@ -3,7 +3,7 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Core\{ApiException, Database, Request, Response, Security};
-use App\Services\{AuthService, ProductService, OrderService, TicketService, GrcService};
+use App\Services\{AuthService, ProductService, OrderService, TicketService, GrcService, ImageUploadService};
 use PDO;
 
 final class ApiController
@@ -46,6 +46,7 @@ final class ApiController
             ['GET', '/admin/tickets', 'admin', 200, fn($u, $b, $id) => ['items' => (new TicketService($this->db()))->adminList()]],
             ['PATCH', '/admin/tickets/([0-9]+)', 'admin', 200, fn($u, $b, $id) => ['ticket' => (new TicketService($this->db()))->changeStatus($id, $b)]],
             ['GET', '/admin/products', 'admin', 200, fn($u, $b, $id) => ['items' => (new ProductService($this->db()))->adminList()]],
+            ['POST', '/admin/product-image', 'admin', 201, fn($u, $b, $id) => (new ImageUploadService())->upload()],
             ['POST', '/admin/products', 'admin', 201, fn($u, $b, $id) => ['product' => (new ProductService($this->db()))->create($b)]],
             ['PATCH', '/admin/products/([0-9]+)', 'admin', 200, fn($u, $b, $id) => ['product' => (new ProductService($this->db()))->update($id, $b)]],
         ];
@@ -73,7 +74,11 @@ final class ApiController
             $body = [];
             if (in_array($method, ['POST', 'PATCH'], true)) {
                 Security::mutation();
-                $body = Request::json();
+                // Image upload is the sole multipart exception to the JSON API.
+                // Same admin role, Origin and CSRF protections still apply.
+                if (!($method === 'POST' && $relative === '/admin/product-image')) {
+                    $body = Request::json();
+                }
             }
             Response::ok($handler($user, $body, $id), $status);
         }

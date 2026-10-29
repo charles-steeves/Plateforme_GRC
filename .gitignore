@@ -16,3 +16,6 @@
 Thumbs.db
 .vscode/*
 !.vscode/extensions.json
+
+# Images envoyées depuis l'administration, conservées localement (aucun push Git)
+/public/assets/images/uploads/

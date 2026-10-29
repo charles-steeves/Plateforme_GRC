@@ -246,3 +246,8 @@ concurrence multiprocessus et recette complète du limiteur de connexion.
 L'idempotence de création à travers une fermeture/recharge complète reste une
 limite du contrat, qui ne fournit pas de clé d'idempotence. Après une réponse perdue,
 consulter l'historique avant toute nouvelle création.
+
+
+## Upload d'images de produits depuis la galerie
+
+> Upload de photos demandé le 29 octobre 2026 : l'administrateur peut choisir une image de sa galerie (sélecteur natif de fichiers), cliquer sur « Importer l’image » et enfin enregistrer le produit. Le navigateur envoie un FormData avec jeton CSRF à `/admin/product-image` ; le backend renvoie un chemin local validé. Les images ne sont ni importées de l'extérieur ni poussées sur Git. Accès depuis un smartphone uniquement si le serveur est correctement accessible sur un réseau privé de confiance ; `127.0.0.1` sur le téléphone ne désigne pas le PC.
