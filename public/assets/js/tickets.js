@@ -114,7 +114,7 @@ export async function mountTickets(root, { user, admin = false }) {
       if (!listReady) list.replaceChildren(el('p', { className: 'muted' }, 'Chargement des tickets…'));
     }
     try {
-      const result = items(await api(admin ? '/admin/tickets' : '/tickets/me'));
+      const result = items(await api(admin ? '/admin/tickets' : '/tickets/me', silent ? { passive: true } : {}));
       if (generation !== listGeneration) return;
       tickets = result;
       listReady = true;
@@ -200,7 +200,7 @@ export async function mountTickets(root, { user, admin = false }) {
     const id = selectedId;
     const generation = detailGeneration;
     if (!id || pendingTickets.size || uncertainTickets.has(id) || detail.dataset.ticketId !== String(id)) return;
-    const data = await api(`/tickets/${id}`);
+    const data = await api(`/tickets/${id}`, { passive: true });
     if (generation !== detailGeneration || id !== selectedId || !detail.isConnected
       || pendingTickets.has(id) || uncertainTickets.has(id)) return;
     if (!data?.ticket || validId(data.ticket.id) !== id || !Array.isArray(data.messages)
