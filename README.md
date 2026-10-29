@@ -51,6 +51,21 @@ Il contient les comptes `admin@example.test` et `client1@example.test` à `clien
 
 Pour **arrêter le serveur**, revenir au terminal où il fonctionne et appuyer sur **Ctrl+C**. Ne pas relancer `database/init.php` sur une base existante : l'initialiseur refuse volontairement de remplacer les données sans option explicite. `--reset` détruit et recrée les données fictives ; ne l'utiliser qu'après sauvegarde, serveur arrêté et en connaissance de cause.
 
+## Images de produits et plusieurs administrateurs
+
+Les utilisateurs administrateurs peuvent sélectionner une photo depuis leur PC ou leur galerie de smartphone dans **Administration → Produits → Nouveau produit / Modifier → Photo du produit**, cliquer sur **Importer l'image**, vérifier l'aperçu puis **Enregistrer**. JPG, PNG et WebP uniquement, jusqu'à 1,9 Mo. Les fichiers sont enregistrés sur le PC serveur sous `public/assets/images/uploads/` et **ignorés par Git**. Sauvegarder aussi ce dossier si les photos doivent être conservées avec le catalogue ; une sauvegarde SQLite seule ne contient pas les images.
+
+Pour créer **un deuxième puis un troisième administrateur**, sans modifier les comptes ou commandes existants :
+
+```powershell
+php database/add-admin.php --name="Collègue 2" --email="admin2@example.test"
+php database/add-admin.php --name="Collègue 3" --email="admin3@example.test"
+```
+
+Choisir vos propres noms/adresses distincts. Les nouveaux mots de passe générés sont ajoutés dans `storage/demo-accounts.json` **sur l'ordinateur hébergeant SQLite**, sans être poussés sur Git. Conserver le fichier privé et ne pas le projeter devant la classe. Les sessions de chaque navigateur sont indépendantes, mais deux personnes modifiant simultanément la **même fiche produit** doivent vérifier le résultat après sauvegarde.
+
+**Depuis un smartphone :** ouvrir une URL réseau pointant vers l'adresse LAN du PC serveur, et non `127.0.0.1` sur le téléphone. Le serveur doit être configuré pour le réseau privé de confiance, avec `GRC_ORIGIN` réglé sur l'origine exacte et le pare-feu autorisant uniquement ce réseau. Ne pas exposer directement `php -S` sur Internet. Voir `docs/BACKEND.md`.
+
 ## Accès à l'administration GRC
 
 Après démarrage du serveur, ouvrez `http://127.0.0.1:8000/login.html`. Connectez-vous avec l'adresse et le mot de passe **administrateur** indiqués dans `storage/demo-accounts.json` sur votre machine. Vous serez dirigé vers `http://127.0.0.1:8000/admin.html`, où se trouvent le tableau de bord, les clients, les produits, les commandes et le SAV. Utilisez un autre profil de navigateur pour la session client.
