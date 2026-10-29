@@ -10,7 +10,7 @@ use App\Core\Config;
 
 $opts = getopt('', ['to:', 'help']);
 if (isset($opts['help'])) {
-    echo "Usage: php database/backup-bundle.php --to=storage/backups/avant-presentation\n";
+    echo "Usage: php database/backup-bundle.php --to=storage/avant-presentation\n";
     echo "Sauvegarder ensuite cette copie dans un dossier privé hors du dépôt. Arrêter PHP de préférence.\n";
     exit(0);
 }
