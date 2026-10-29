@@ -150,6 +150,23 @@ try {
  
   const clientUser = await client.login(clientAccounts[0]);
   ok(clientUser.role === 'client', 'client role from session');
+  // Passive refresh must not reset the user idle timer. Test on disposable
+  // PHP session files, never on the owner's real storage directory.
+  const cookieId = client.cookie.slice('GRCSESSID='.length);
+  ok(/^[A-Za-z0-9,-]+$/.test(cookieId), 'session cookie ID is opaque and safe to inspect');
+  const sessionFile = join(folder, 'sessions', 'sess_' + cookieId);
+  const beforePassive = readFileSync(sessionFile, 'utf8');
+  await sleep(1200);
+  const passiveRead = await fetch(base + '/api/v1/tickets/me', {
+    headers: { cookie: client.cookie, 'X-GRC-Passive': '1' },
+    signal: AbortSignal.timeout(5000),
+  });
+  ok(passiveRead.status === 200, 'passive ticket list still authenticates client');
+  ok(readFileSync(sessionFile, 'utf8') === beforePassive,
+    'passive ticket polling never refreshes last_seen');
+  ok((await client.get('/tickets/me')).status === 200, 'regular ticket list read is authorized');
+  ok(readFileSync(sessionFile, 'utf8') !== beforePassive,
+    'interactive ticket navigation refreshes last_seen');
   const adminUser = await admin.login(account('admin'));
   ok(adminUser.role === 'admin', 'admin role from session');
   await outsider.login(clientAccounts[1]);
