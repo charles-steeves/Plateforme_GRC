@@ -40,6 +40,11 @@ final class ProductService
         return ['items' => $this->products->activeCategories()];
     }
 
+    public function adminCategories(): array
+    {
+        return ['items' => $this->products->allCategories()];
+    }
+
     public function detail(int $id): array
     {
         return $this->products->find($id, true) ?? throw new ApiException(404, 'NOT_FOUND', 'Ressource introuvable.');
