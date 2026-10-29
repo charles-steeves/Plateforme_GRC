@@ -24,7 +24,7 @@ Le frontend intégré dans `main` est présent : `/` sert `public/index.html`, q
 
 ## Dépannage de l’initialisation — Windows / PowerShell
 
-Le message signalé « php n’est pas reconnu » vient de PowerShell **avant toute exécution PHP**. Il indique une installation absente ou un dossier PHP absent du PATH du terminal ; il ne prouve pas une erreur SQL. La commande copiée comportait aussi `database/int.php` : le fichier correct est **database/init.php**.
+**Incident effectivement rapporté sur Windows :** `php database/init.php` a répondu `Initialisation refusée : could not find driver`. PHP était donc bien exécuté ; ce message indique que **le pilote PDO SQLite n'était pas disponible dans le PHP du terminal** (souvent l'extension `pdo_sqlite` inactive ou un `php.ini` différent). Ce n'est ni une preuve de panne SQL du projet, ni une commande `php` introuvable. La commande correcte est `php database/init.php`. Si un autre terminal affiche « php n'est pas reconnu », il s'agit d'un problème distinct de PATH.
 
 1. Chercher une installation existante avec `Get-Command php -ErrorAction SilentlyContinue` et `where.exe php`. Ne pas écraser un php.ini existant.
 2. Si PHP manque, installer une distribution **PHP 8.2+ x64** depuis [la distribution officielle Windows](https://windows.php.net/download/) (par exemple PHP 8.4 x64), et ses prérequis Microsoft Visual C++ x64 indiqués par cette distribution. Extraire PHP dans un dossier dédié, par exemple `C:\tools\php`.
