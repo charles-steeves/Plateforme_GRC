@@ -88,3 +88,17 @@ CREATE INDEX idx_loyalty_user ON loyalty_transactions(user_id);
 CREATE INDEX idx_feedback_user ON feedback(user_id);
 CREATE INDEX idx_login_attempts_subject_time ON login_attempts(subject_hash, attempted_at);
 CREATE INDEX idx_products_category_active ON products(category, active);
+
+
+-- Optional at-most-once replay keys for client order/ticket creation.
+-- Existing databases acquire this table lazily in a transaction on first keyed write.
+CREATE TABLE IF NOT EXISTS idempotency_requests (
+    id INTEGER PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id),
+    action TEXT NOT NULL CHECK (action IN ('order', 'ticket')),
+    request_key TEXT NOT NULL,
+    request_hash TEXT NOT NULL,
+    resource_id INTEGER NOT NULL,
+    created_at TEXT NOT NULL,
+    UNIQUE(user_id, action, request_key)
+);

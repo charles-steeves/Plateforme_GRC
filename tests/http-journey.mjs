@@ -234,10 +234,17 @@ try {
       && Number.isSafeInteger(row.count) && row.count >= 0),
     'dashboard trend is a seven-day real SQLite series');
   const trendBefore = firstDashboard.orders_last_7_days.reduce((sum, item) => sum + item.count, 0);
-  const orderResponse = await client.post('/orders', { items: [{ product_id: 1, quantity: 1 }] });
+  const orderBody = { request_id: 'journey-order-key-001', items: [{ product_id: 1, quantity: 1 }] };
+  const orderResponse = await client.post('/orders', orderBody);
   ok(orderResponse.status === 201, 'created order through real HTTP API');
   const order = orderResponse.data.order;
   ok(order.status === 'pending' && order.total_xaf === 95000, 'server computes integer order amount');
+  const repeatOrder = await client.post('/orders', orderBody);
+  ok(repeatOrder.status === 201 && repeatOrder.data.order.id === order.id,
+    'repeated order HTTP POST replays same order instead of creating duplicate');
+  ok((await client.post('/orders', { ...orderBody,
+    items: [{ product_id: 1, quantity: 2 }] })).status === 409,
+    'same order key with different items is refused');
   const trendAfter = (await admin.get('/admin/dashboard')).data.orders_last_7_days;
   ok(trendAfter.reduce((sum, row) => sum + row.count, 0) === trendBefore + 1,
     'admin order history graph updates when a customer orders');
@@ -255,11 +262,18 @@ try {
   ok(comment.status === 201, 'feedback after delivered');
   ok((await client.post('/feedback', { order_id: order.id, rating: 5 })).status === 409, 'duplicate review refused');
 
-  const ticketResult = await client.post('/tickets', {
+  const ticketBody = {
+    request_id: 'journey-ticket-key-001',
     order_id: order.id, subject: 'Assistance démonstration', description: 'Demande fictive', category: 'sav',
-  });
+  };
+  const ticketResult = await client.post('/tickets', ticketBody);
   ok(ticketResult.status === 201, 'ticket opened with own order');
   const ticketId = ticketResult.data.ticket.id;
+  const repeatTicket = await client.post('/tickets', ticketBody);
+  ok(repeatTicket.status === 201 && repeatTicket.data.ticket.id === ticketId,
+    'repeated ticket creation returns same ticket on HTTP replay');
+  ok((await client.post('/tickets', { ...ticketBody, description: 'Different complaint' })).status === 409,
+    'ticket ID with a different body is refused');
   ok((await outsider.get('/tickets/' + ticketId)).status === 404, 'foreign ticket hidden');
   ok((await admin.post('/tickets/' + ticketId + '/messages', { body: 'Réponse fictive du support' })).status === 201, 'admin replied');
   const detail = await client.get('/tickets/' + ticketId);

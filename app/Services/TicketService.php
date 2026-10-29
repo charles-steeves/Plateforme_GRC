@@ -7,6 +7,7 @@ use App\Core\ApiException;
 use App\Core\Database;
 use App\Core\Validation;
 use App\Repositories\TicketRepository;
+use App\Repositories\IdempotencyRepository;
 use PDO;
 
 final class TicketService
@@ -23,12 +24,25 @@ final class TicketService
         if (($user['role'] ?? null) !== 'client') {
             throw new ApiException(403, 'FORBIDDEN', 'Accès réservé aux clients.');
         }
-        Validation::fields($input, ['order_id', 'subject', 'description', 'category']);
+        Validation::fields($input, ['order_id', 'subject', 'description', 'category', 'request_id']);
+        $requestKey = IdempotencyRepository::key($input);
         $subject = Validation::text($input, 'subject', 1, 160);
         $description = Validation::text($input, 'description', 1, 4000);
         $category = Validation::text($input, 'category', 1, 80, 'sav');
         $orderId = ($input['order_id'] ?? null) === null ? null : Validation::integer($input, 'order_id', 1, PHP_INT_MAX);
-        return Database::write($this->pdo, function () use ($user, $subject, $description, $category, $orderId): array {
+        $fingerprint = hash('sha256', json_encode([$orderId, $subject, $description, $category], JSON_THROW_ON_ERROR));
+        return Database::write($this->pdo, function () use ($user, $subject, $description, $category, $orderId, $requestKey, $fingerprint): array {
+            $requestLog = null;
+            if ($requestKey !== null) {
+                $requestLog = new IdempotencyRepository($this->pdo);
+                $requestLog->ensureTable();
+                $oldId = $requestLog->previous((int)$user['id'], 'ticket', $requestKey, $fingerprint);
+                if ($oldId !== null) {
+                    $previous = $this->tickets->find($oldId);
+                    if ($previous === null) throw new \RuntimeException('Ticket précédent introuvable.');
+                    return $previous;
+                }
+            }
             if ($orderId !== null) {
                 $statement = $this->pdo->prepare('SELECT id FROM orders WHERE id=:id AND user_id=:user_id');
                 $statement->execute(['id' => $orderId, 'user_id' => $user['id']]);
@@ -39,7 +53,11 @@ final class TicketService
             $now = gmdate('Y-m-d\TH:i:s\Z');
             $statement = $this->pdo->prepare("INSERT INTO tickets(user_id, order_id, subject, description, category, status, created_at, updated_at) VALUES (:user_id, :order_id, :subject, :description, :category, 'open', :created, :updated)");
             $statement->execute(['user_id' => $user['id'], 'order_id' => $orderId, 'subject' => $subject, 'description' => $description, 'category' => $category, 'created' => $now, 'updated' => $now]);
-            return $this->tickets->find((int) $this->pdo->lastInsertId());
+            $ticketId = (int)$this->pdo->lastInsertId();
+            if ($requestLog !== null) {
+                $requestLog->remember((int)$user['id'], 'ticket', $requestKey, $fingerprint, $ticketId);
+            }
+            return $this->tickets->find($ticketId);
         });
     }
 

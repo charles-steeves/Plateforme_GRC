@@ -1,3 +1,4 @@
+import { requestId, completeRequest } from './request-id.js';
 import { api, isUncertainMutation } from './api.js';
 import {
   el, money, notice, field, button, heading, empty,
@@ -388,9 +389,9 @@ async function mountCart(root, user) {
           await busy(submit, async () => {
             notice(messages, 'Enregistrement de votre commande…', 'info');
             try {
-              const data = await api('/orders', { method: 'POST', body: {
-                items: cart.map(item => ({ product_id: item.product_id, quantity: item.quantity })),
-              } });
+              const payload = { items: cart.map(item => ({ product_id: item.product_id, quantity: item.quantity })) };
+              const key = requestId('order', user.id, [...payload.items].sort((a, b) => a.product_id - b.product_id));
+              const data = await api('/orders', { method: 'POST', body: { ...payload, request_id: key } });
               const order = data?.order;
               if (!validOrder(order)) {
                 const malformed = new Error('La réponse de confirmation est incomplète.');
@@ -406,6 +407,7 @@ async function mountCart(root, user) {
                 cartChanged = !sameCart(cart, getCart());
                 if (!cartChanged) clearCart();
               } catch { cartCleared = false; }
+              if (cartCleared && !cartChanged) completeRequest('order', user.id);
               root.replaceChildren(heading('Commande enregistrée',
                 'Votre commande a bien été enregistrée.'),
               el('section', { className: 'order-confirmation stack', role: 'status' },
