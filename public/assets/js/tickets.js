@@ -1,3 +1,4 @@
+import { requestId, completeRequest } from './request-id.js';
 import { api, isUncertainMutation as uncertainMutation } from './api.js';
 import { el, date, badge, notice, field, button, heading, empty, renderError, busy } from './ui.js';
 
@@ -417,11 +418,14 @@ export async function mountTickets(root, { user, admin = false }) {
         description.disabled = true;
         orderSelect.disabled = true;
         try {
-          const data = await api('/tickets', { method: 'POST', body: {
+          const payload = {
             order_id: orderId, subject: subject.value.trim(), description: description.value.trim(), category: 'sav',
-          } });
+          };
+          const key = requestId('ticket', user.id, payload);
+          const data = await api('/tickets', { method: 'POST', body: { ...payload, request_id: key } });
           const id = validId(data?.ticket?.id);
           if (!id) throw new Error('La confirmation du ticket est invalide. Actualisez la liste avant de réessayer.');
+          completeRequest('ticket', user.id);
           form.reset();
           notice(formNotice, `Votre ticket #${id} a été enregistré.`, 'success');
           await loadList();
