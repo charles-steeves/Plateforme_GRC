@@ -56,6 +56,9 @@ jobs:
       - name: Natural storefront copy and catalogue filter layout
         run: node tests/ux-copy.mjs
 
+      - name: Admin workspace and lecture-driven CRM presentation
+        run: node tests/admin-workspace.mjs
+
       - name: Neutral branding and demo disclaimer regression
         run: node tests/branding-neutral.mjs
 
