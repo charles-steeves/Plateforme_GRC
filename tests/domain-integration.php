@@ -139,4 +139,32 @@ $customer = $grc->customer(2);
 $check($customer['customer']['id'] === 2 && count($customer['orders']) > 0, 'fiche GRC avec historique');
 $check($grc->dashboard()['customers_count'] === 9, 'dashboard recalculé depuis les vrais comptes');
 
+// Same request, even if replayed after a response was lost, must not change
+// stock or recreate an order. Conflicting body with same key must be refused.
+$keyedOrder = ['request_id' => 'test-order-repeat-001', 'items' => [['product_id' => 2, 'quantity' => 1]]];
+$stockBeforeKeyed = (int)$pdo->query('SELECT stock_quantity FROM products WHERE id=2')->fetchColumn();
+$firstOrder = $orders->create($client, $keyedOrder);
+$duplicateOrder = $orders->create($client, $keyedOrder);
+$check($firstOrder['id'] === $duplicateOrder['id'], 'one order per client and request ID');
+$check((int)$pdo->query('SELECT stock_quantity FROM products WHERE id=2')->fetchColumn()
+    === $stockBeforeKeyed - 1, 'duplicate order does not reduce stock twice');
+$reject(fn() => $orders->create($client, [
+    'request_id' => 'test-order-repeat-001', 'items' => [['product_id' => 2, 'quantity' => 2]],
+]), 409, 'same id with changed cart refused');
+$otherOrder = $orders->create($otherClient, $keyedOrder);
+$check($otherOrder['id'] !== $firstOrder['id'], 'different customer is not cross-deduplicated');
+
+$keyedTicket = [
+    'request_id' => 'test-ticket-repeat-001',
+    'order_id' => null, 'subject' => 'Rappel', 'description' => 'Réclamation conservée', 'category' => 'sav',
+];
+$ticketA = $tickets->create($client, $keyedTicket);
+$ticketB = $tickets->create($client, $keyedTicket);
+$check($ticketA['id'] === $ticketB['id'], 'retry of ticket creation returns existing ticket');
+$reject(fn() => $tickets->create($client, array_replace($keyedTicket, [
+    'description' => 'Autre demande',
+])), 409, 'ticket key used for changed message refused');
+$check((int)$pdo->query("SELECT COUNT(*) FROM idempotency_requests")->fetchColumn() === 3,
+    'only successful keyed creations persisted');
+
 echo "OK — {$checks} assertions métier SQLite isolées ; aucun fichier de démonstration touché\n";
