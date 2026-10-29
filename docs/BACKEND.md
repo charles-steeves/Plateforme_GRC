@@ -144,6 +144,7 @@ Point de départ : `main` au commit `376f9a627174e30d372c61d74a3239e6767b85bb`, 
 | Initialisation, extensions absentes, options, protections et récupération des fichiers | 21 contrôles PASS |
 | Parcours réel du frontend intégré, profils client et admin séparés dans Chromium | 23 contrôles PASS |
 | Création simultanée du stockage/sessions privés | 12 processus réussis sans erreur de course mkdir |
+| Clone local neuf, init par défaut, refus d’écrasement et démarrage frontend/API | 7 contrôles PASS |
 
 Le parcours navigateur utilise les formulaires existants : inscription, connexion, fiche produit/panier/commande, confirmation et livraison administratives, affichage des points, avis, ticket lié, réponse et résolution SAV, fiche client/segment, création produit, dashboard et déconnexion. Les charges HTML introduites dans le nom et le ticket restent du texte dans le DOM ; aucun gestionnaire injecté exécuté, aucune exception JavaScript non interceptée ni réponse serveur 500 observée dans ce parcours. Les en-têtes CSP et les modules frontend sont réellement utilisés.
 
