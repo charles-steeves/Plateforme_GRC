@@ -8,6 +8,11 @@ on:
 permissions:
   contents: read
 
+# Save CI minutes while several commits are pushed to the same PR.
+concurrency:
+  group: grc-smoke-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   smoke:
     runs-on: ubuntu-24.04
