@@ -45,6 +45,9 @@ jobs:
       - name: In-memory GRC business logic regression
         run: php tests/domain-integration.php
 
+      - name: Complete client/admin journey with isolated PHP and SQLite
+        run: node tests/http-journey.mjs
+
       - name: Start local server and check public/private HTTP behavior
         shell: bash
         run: |
