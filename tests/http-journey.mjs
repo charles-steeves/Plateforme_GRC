@@ -6,12 +6,13 @@
  */
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { spawn, spawnSync } from 'node:child_process';
 import { createServer } from 'node:net';
 import assert from 'node:assert/strict';
 
-const root = resolve(new URL('..', import.meta.url).pathname);
+const root = fileURLToPath(new URL('..', import.meta.url));
 const folder = mkdtempSync(join(tmpdir(), 'grc-http-'));
 const dbPath = join(folder, 'grc.sqlite');
 let server = null;
@@ -41,8 +42,8 @@ class Session {
       signal: AbortSignal.timeout(5000),
     });
     const setCookie = response.headers.get('set-cookie') || '';
-    const match = setCookie.match(/GRCSESSID=[^;]*/);
-    if (match) this.cookie = match[0];
+    const matches = [...setCookie.matchAll(/GRCSESSID=[^;,]*/g)];
+    if (matches.length) this.cookie = matches[matches.length - 1][0];
     const payload = await response.json();
     return { status: response.status, payload, data: payload.data };
   }
