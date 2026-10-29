@@ -29,6 +29,7 @@ final class ApiController
             }],
             ['GET', '/auth/me', 'authenticated', 200, fn($u, $b, $id) => ['user' => $u]],
             ['GET', '/products', null, 200, fn($u, $b, $id) => (new ProductService($this->db()))->listing($_GET)],
+            ['GET', '/products/categories', null, 200, fn($u, $b, $id) => (new ProductService($this->db()))->categories()],
             ['GET', '/products/([0-9]+)', null, 200, fn($u, $b, $id) => ['product' => (new ProductService($this->db()))->detail($id)]],
             ['POST', '/orders', 'client', 201, fn($u, $b, $id) => ['order' => (new OrderService($this->db()))->create($u, $b)]],
             ['GET', '/orders/me', 'client', 200, fn($u, $b, $id) => ['items' => (new OrderService($this->db()))->mine($u['id'])]],
