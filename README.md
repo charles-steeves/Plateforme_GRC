@@ -84,10 +84,11 @@ php tests/storage-recovery.php
 php tests/domain-integration.php
 ```
 
-Pour comparer la validation des images dans les modules PHP et JavaScript, **Node.js 18+ est requis uniquement pour ce test**, pas pour utiliser le site :
+Pour comparer les validations d'images et rejouer un parcours complet avec des comptes et une base **temporaires et isolés**, **Node.js 18+ est requis uniquement pour ces tests**, pas pour utiliser le site :
 
 ```sh
 node tests/image-path-contract.mjs
+node tests/http-journey.mjs
 ```
 
 La vérification automatisée GitHub Actions (`.github/workflows/grc-smoke.yml`) exécute sur un environnement Linux isolé des contrôles de syntaxe, d'initialisation SQLite, d'images, de sauvegarde/restauration et quelques requêtes HTTP publiques/privées. **Elle ne remplace pas les tests interactifs complets du Chat C ni un essai Windows 11 réel**.
