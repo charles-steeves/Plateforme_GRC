@@ -1,0 +1,59 @@
+name: GRC - syntaxe, SQLite et contrat images
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install PHP CLI and SQLite (test environment only)
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y php-cli php-sqlite3
+
+      - name: Check runtime and syntax
+        run: |
+          php -v
+          php -m
+          php -r 'if (PHP_VERSION_ID < 80200 || PHP_INT_SIZE !== 8 || !in_array("sqlite", PDO::getAvailableDrivers(), true)) { exit(1); }'
+          find app database public -type f -name '*.php' -print0 | xargs -0 -n 1 php -l
+
+      - name: Initialize a fresh fictional SQLite database
+        run: |
+          php database/init.php --help
+          php database/init.php
+          test -f storage/grc.sqlite
+          test -f storage/demo-accounts.json
+          php -r '$db = new PDO("sqlite:storage/grc.sqlite"); $n = (int)$db->query("SELECT COUNT(*) FROM products")->fetchColumn(); if ($n < 12) { throw new RuntimeException("Missing seed products"); } echo "Seed products: $n\n";'
+
+      - name: Cross-language safe image path regression
+        run: node tests/image-path-contract.mjs
+
+      - name: Start local server and check public/private HTTP behavior
+        shell: bash
+        run: |
+          set -euo pipefail
+          php -S 127.0.0.1:8000 -t public public/router.php >/tmp/grc-server.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          ready=0
+          for attempt in {1..40}; do
+            if curl -fsS http://127.0.0.1:8000/api/v1/products >/tmp/grc-products.json; then ready=1; break; fi
+            sleep 0.2
+          done
+          if [[ "$ready" != 1 ]]; then cat /tmp/grc-server.log; exit 1; fi
+          php -r '$j=json_decode(file_get_contents("/tmp/grc-products.json"),true,512,JSON_THROW_ON_ERROR); if (($j["success"]??false)!==true || count($j["data"]["items"]??[]) < 12) { exit(1); }'
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8000/)" = 200
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8000/api/v1/admin/dashboard)" = 401
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8000/.env)" = 404
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8000/router.php)" = 404
