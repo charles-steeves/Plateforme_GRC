@@ -75,6 +75,8 @@ Le client ne doit jamais pouvoir consulter les données d'un autre client ni eff
 
 Documents de référence : [contrat maître](docs/MASTER_CONTRACT.md), [architecture](docs/ARCHITECTURE.md), [contrat API](docs/API_CONTRACT.md), [modèle de données](docs/DATA_MODEL.md), [exigences de sécurité](docs/SECURITY_REQUIREMENTS.md), [correspondance avec le cours](docs/COURSE_MAPPING.md), [guide backend](docs/BACKEND.md), [guide frontend](docs/FRONTEND.md).
 
+Guides de validation et de reprise : [recette d'intégration](docs/INTEGRATION.md), [scénario de soutenance](docs/DEMO.md), [état des tests](docs/QA_REPORT.md), [passation de coordination](docs/COORDINATION_HANDOFF.md).
+
 ## Vérifications rapides avant la soutenance
 
 Après avoir installé PHP et ses extensions, on peut effectuer des contrôles sans modifier la base locale active :
