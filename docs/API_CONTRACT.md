@@ -25,7 +25,8 @@ GET /tickets/{id} [propriétaire ou admin] -> data {"ticket":Ticket,"messages":[
 POST /tickets/{id}/messages body {"body":"Merci pour votre retour"} -> 201 data {"message":TicketMessage} ; auteur dérivé de la session.
 POST /feedback body {"order_id":1,"rating":5,"comment":"Très bien"} -> 201 data {"feedback":{"id":1,"order_id":1,"rating":5,"comment":"Très bien","created_at":"..."}} ; commande delivered appartenant à l'utilisateur, UNIQUE order_id.
 ## Endpoints admin (session role admin)
-GET /admin/dashboard -> data {"customers_count":0,"orders_count":0,"ca_simule_xaf":0,"tickets_open_count":0,"satisfaction_avg":null,"customers_inactive_count":0,"order_status_counts":{"pending":0,"confirmed":0,"delivered":0,"cancelled":0}}.
+GET /admin/dashboard -> data {"customers_count":0,"orders_count":0,"ca_simule_xaf":0,"tickets_open_count":0,"satisfaction_avg":null,"customers_inactive_count":0,"order_status_counts":{"pending":0,"confirmed":0,"delivered":0,"cancelled":0},"orders_last_7_days":[{"day":"2026-10-23","count":0},...]}.
+Le tableau `orders_last_7_days` contient exactement sept jours consécutifs (UTC, plus ancien en premier), avec les commandes enregistrées ce jour-là (y compris annulées), 0 lorsque aucune commande n’est présente. Les jours précis varient selon la date réelle du serveur. Ces valeurs sont agrégées dans SQLite, jamais inventées dans le navigateur.
 GET /admin/customers?search=&page=1&per_page=20 -> data {"items":[Customer],"page":1,"per_page":20,"total":0}; Customer={id,name,email,created_at,segment,orders_count,total_delivered_xaf,last_order_at}; pas de hash.
 GET /admin/customers/{id} -> data {"customer":Customer,"orders":[Order],"tickets":[Ticket],"loyalty_balance":0}; clients role=client seulement.
 GET /admin/orders -> data {"items":[OrderAdmin]} ; OrderAdmin = Order + user_id,customer_name,customer_email.
