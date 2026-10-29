@@ -82,7 +82,7 @@ async function mountCatalogue(root) {
   const categoryInput = el('select', { id: 'catalogue-category', name: 'category' },
     el('option', { value: '' }, 'Toutes les catégories'));
   if (category) categoryInput.append(el('option', { value: category, selected: true }, category));
-  const form = el('form', { className: 'panel catalogue-toolbar', action: '/index.html', method: 'get',
+  const form = el('form', { id: 'catalogue-filters', className: 'panel catalogue-toolbar', action: '/index.html', method: 'get',
     role: 'search', 'aria-label': 'Rechercher dans le catalogue' },
   field('Rechercher un produit', searchInput),
   field('Catégorie', categoryInput),
