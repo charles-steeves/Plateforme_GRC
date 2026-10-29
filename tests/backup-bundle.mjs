@@ -47,6 +47,16 @@ try {
   assert.ok(manifest.files['uploads/' + imageName]);
   call(['database/backup-bundle.php', '--to=' + bundle], false);
   call(['database/restore-bundle.php', '--from=' + bundle], false);
+  // A damaged private snapshot must be rejected before an existing database
+  // or credentials are changed; the backup remains recoverable afterwards.
+  const savedManifest = readFileSync(join(bundle, 'manifest.json'), 'utf8');
+  writeFileSync(join(bundle, 'manifest.json'), savedManifest.replace('grc-bundle-v1', 'altered-bundle'));
+  const liveBeforeReject = readFileSync(database);
+  const accountsBeforeReject = readFileSync(join(dbFolder, 'demo-accounts.json'));
+  call(['database/restore-bundle.php', '--from=' + bundle, '--replace', '--confirm'], false);
+  assert.deepEqual(readFileSync(database), liveBeforeReject);
+  assert.deepEqual(readFileSync(join(dbFolder, 'demo-accounts.json')), accountsBeforeReject);
+  writeFileSync(join(bundle, 'manifest.json'), savedManifest);
   call(['database/init.php', '--db=' + database, '--reset']);
   assert.notEqual(readFileSync(join(dbFolder, 'demo-accounts.json'), 'utf8'), initial);
   rmSync(photoPath);
