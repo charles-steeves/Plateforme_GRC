@@ -89,6 +89,7 @@ async function mountCatalogue(root) {
   el('div', { className: 'catalogue-toolbar-actions' },
     button('Rechercher', { type: 'submit', className: 'button button-primary' }),
     el('a', { href: '/index.html', className: 'button button-secondary' }, 'Effacer les filtres')));
+  const categoryBrowse = el('section', { className: 'category-browse', 'aria-label': 'Rayons de la boutique' });
   const results = el('section', { className: 'stack', 'aria-label': 'Résultats du catalogue',
     'aria-busy': 'true' }, el('p', { role: 'status' }, 'Chargement des produits…'));
   root.replaceChildren(
@@ -99,10 +100,12 @@ async function mountCatalogue(root) {
         el('p', { className: 'hero-description' },
           'Parcourez les produits, préparez votre panier et retrouvez notre service client au même endroit.'),
         el('div', { className: 'hero-facts' }, el('span', {}, 'Suivi des commandes'),
-          el('span', {}, 'Service client'), el('span', {}, 'Programme de fidélité'))),
+          el('span', {}, 'Service client'), el('span', {}, 'Programme de fidélité')),
+        el('a', { className: 'button hero-shop-action', href: '#catalogue-filters' },
+          'Explorer le catalogue')),
       el('div', { className: 'hero-art', 'aria-hidden': 'true' },
         el('img', { src: '/assets/images/product-placeholder.svg', alt: '', width: 480, height: 360 }))),
-    form, results);
+    categoryBrowse, form, results);
   // Administrator-defined categories are derived from product data, never free
   // text entered by a visitor. Keep the catalogue usable if this lookup fails.
   void api('/products/categories').then(data => {
@@ -118,6 +121,18 @@ async function mountCatalogue(root) {
     if (category && !present) options.push(el('option', { value: category }, category));
     categoryInput.replaceChildren(...options);
     categoryInput.value = category;
+    if (rows.length) {
+      categoryBrowse.replaceChildren(
+        el('div', { className: 'category-browse-heading' },
+          el('h2', {}, 'Explorez nos catégories'),
+          el('a', { href: '#catalogue-filters' }, 'Toutes les catégories')),
+        el('div', { className: 'category-browse-grid' },
+          rows.slice(0, 6).map(row =>
+            el('a', { className: 'category-browse-card', href: catalogueURL({ category: row.name }) },
+              el('span', { className: 'category-browse-symbol', 'aria-hidden': 'true' }, '↗'),
+              el('strong', {}, row.name),
+              el('small', {}, `${row.count} article${row.count > 1 ? 's' : ''}`)))));
+    }
   }).catch(() => { /* Products can still load if the category list is unavailable. */ });
   try {
     const query = new URLSearchParams({ search, category, page: String(page), per_page: String(PER_PAGE) });

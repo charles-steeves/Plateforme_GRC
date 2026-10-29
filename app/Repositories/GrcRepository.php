@@ -128,6 +128,24 @@ SQL);
         foreach (['pending', 'confirmed', 'delivered', 'cancelled'] as $status) {
             $result['order_status_counts'][$status] = (int) $row[$status];
         }
+        // Aggregate recent orders by UTC calendar day; include days with zero
+        // orders so the dashboard never invents an interpolated series.
+        $firstDay = (new \DateTimeImmutable('today', new \DateTimeZone('UTC')))->modify('-6 days');
+        $statement = $this->pdo->prepare(
+            "SELECT substr(created_at, 1, 10) AS order_day, COUNT(*) AS total
+             FROM orders WHERE created_at >= :start
+             GROUP BY substr(created_at, 1, 10)"
+        );
+        $statement->execute(['start' => $firstDay->format('Y-m-d\T00:00:00\Z')]);
+        $counts = [];
+        foreach ($statement->fetchAll(PDO::FETCH_ASSOC) as $item) {
+            $counts[$item['order_day']] = (int)$item['total'];
+        }
+        $result['orders_last_7_days'] = [];
+        for ($offset = 0; $offset < 7; $offset++) {
+            $day = $firstDay->modify('+' . $offset . ' days')->format('Y-m-d');
+            $result['orders_last_7_days'][] = ['day' => $day, 'count' => $counts[$day] ?? 0];
+        }
         return $result;
     }
 
