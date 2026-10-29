@@ -56,6 +56,17 @@ final class ProductRepository
         ], $rows);
     }
 
+    public function allCategories(): array
+    {
+        $rows = $this->pdo->query(
+            "SELECT category, COUNT(*) AS total FROM products
+             GROUP BY category ORDER BY category COLLATE NOCASE"
+        )->fetchAll(PDO::FETCH_ASSOC);
+        return array_map(static fn(array $row): array => [
+            'name' => $row['category'], 'count' => (int)$row['total'],
+        ], $rows);
+    }
+
     public function find(int $id, bool $publicOnly = false): ?array
     {
         $statement = $this->pdo->prepare('SELECT ' . self::COLUMNS . ' FROM products WHERE id = :id' . ($publicOnly ? ' AND active = 1' : ''));
