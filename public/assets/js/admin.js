@@ -150,13 +150,48 @@ async function products(root) {
     const price = integerControl('price_xaf', product?.price_xaf ?? 0, 'Prix (FCFA)');
     const stock = integerControl('stock_quantity', product?.stock_quantity ?? 0, 'Quantité disponible');
     const image = el('input', { id: 'product-image', name: 'image_url', type: 'text', maxLength: 500, value: product?.image_url ?? '/assets/images/product-placeholder.svg', placeholder: '/assets/images/product-placeholder.svg' });
+    const imageFile = el('input', { id: 'product-image-file', type: 'file', accept: 'image/jpeg,image/png,image/webp' });
+    const uploadMessage = el('div', { 'aria-live': 'polite', role: 'status' });
+    const preview = el('img', { className: 'product-upload-preview',
+      src: isLocalImagePath(image.value) && image.value ? image.value : '/assets/images/product-placeholder.svg',
+      alt: 'Aperçu du produit' });
+    let uploadedSelection = false;
+    const upload = button('Importer l’image', { className: 'button button-secondary', type: 'button' });
+    imageFile.addEventListener('change', () => { uploadedSelection = false; uploadMessage.replaceChildren(); });
+    upload.addEventListener('click', async () => {
+      const selected = imageFile.files?.[0];
+      if (!selected) { notice(uploadMessage, 'Choisissez une photo dans votre appareil.'); return; }
+      if (selected.size > 1_900_000 || !['image/jpeg', 'image/png', 'image/webp'].includes(selected.type)) {
+        notice(uploadMessage, 'Formats acceptés : JPG, PNG ou WebP, 1,9 Mo maximum.'); return;
+      }
+      const data = new FormData();
+      data.append('image', selected, selected.name);
+      imageFile.disabled = true;
+      try {
+        await busy(upload, async () => {
+          const result = await api('/admin/product-image', { method: 'POST', body: data });
+          if (!result || typeof result.image_url !== 'string' || !isLocalImagePath(result.image_url)) {
+            throw new Error('Le fichier n’a pas pu être validé. Réessayez.');
+          }
+          image.value = result.image_url;
+          preview.src = result.image_url;
+          uploadedSelection = true;
+          notice(uploadMessage, 'Image importée. Enregistrez le produit pour l’associer.', 'success');
+        });
+      } catch (error) { notice(uploadMessage, error.message || 'Impossible d’importer cette image.'); }
+      finally { imageFile.disabled = false; }
+    });
     const active = el('input', { id: 'product-active', name: 'active', type: 'checkbox', checked: product ? Boolean(product.active) : true });
     const message = el('div', { 'aria-live': 'polite' });
     const save = button(product ? 'Enregistrer les modifications' : 'Créer le produit', { type: 'submit', className: 'button button-primary' });
     const form = el('form', { className: 'stack' },
       field('Nom du produit', name), field('Description', description), field('Catégorie', category),
       price.field, stock.field,
-      field('Image locale', image, 'Chemin sous /assets/images/ uniquement. Un champ vide utilise le visuel de remplacement.'),
+      el('div', { className: 'product-upload-panel stack' },
+        field('Photo du produit', imageFile, 'Sélectionnez une image depuis votre appareil (JPG, PNG, WebP ; 1,9 Mo maximum).'),
+        el('div', { className: 'cluster' }, upload, preview), uploadMessage),
+      el('details', { className: 'product-image-advanced' },
+        el('summary', {}, 'Utiliser une image déjà disponible'), field('Chemin de l’image', image)),
       el('label', { htmlFor: 'product-active', className: 'cluster' }, active, 'Visible dans la boutique'),
       el('p', { className: 'muted' }, 'Le stock est une quantité absolue. Un produit désactivé reste dans les commandes passées.'),
       message, save);
@@ -171,6 +206,7 @@ async function products(root) {
           price_xaf: readInteger(price.input, 'Le prix'), stock_quantity: readInteger(stock.input, 'Le stock'),
           image_url: image.value.trim(), active: active.checked,
         };
+        if (imageFile.files?.length && !uploadedSelection) throw new Error('Importez la photo sélectionnée avant d’enregistrer le produit.');
         if (!payload.name || !payload.category) throw new Error('Le nom et la catégorie ne peuvent pas être vides.');
         if (!isLocalImagePath(payload.image_url)) {
           image.focus();
