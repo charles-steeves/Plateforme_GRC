@@ -75,6 +75,22 @@ Le client ne doit jamais pouvoir consulter les données d'un autre client ni eff
 
 Documents de référence : [contrat maître](docs/MASTER_CONTRACT.md), [architecture](docs/ARCHITECTURE.md), [contrat API](docs/API_CONTRACT.md), [modèle de données](docs/DATA_MODEL.md), [exigences de sécurité](docs/SECURITY_REQUIREMENTS.md), [correspondance avec le cours](docs/COURSE_MAPPING.md), [guide backend](docs/BACKEND.md), [guide frontend](docs/FRONTEND.md).
 
+## Vérifications rapides avant la soutenance
+
+Après avoir installé PHP et ses extensions, on peut effectuer des contrôles sans modifier la base locale active :
+
+```sh
+php tests/storage-recovery.php
+```
+
+Pour comparer la validation des images dans les modules PHP et JavaScript, **Node.js 18+ est requis uniquement pour ce test**, pas pour utiliser le site :
+
+```sh
+node tests/image-path-contract.mjs
+```
+
+La vérification automatisée GitHub Actions (`.github/workflows/grc-smoke.yml`) exécute sur un environnement Linux isolé des contrôles de syntaxe, d'initialisation SQLite, d'images, de sauvegarde/restauration et quelques requêtes HTTP publiques/privées. **Elle ne remplace pas les tests interactifs complets du Chat C ni un essai Windows 11 réel**.
+
 ## Sécurité et limites de la démonstration
 
 - La base et les comptes de démonstration restent **hors de `public/`** et ne doivent pas être ajoutés à Git.
