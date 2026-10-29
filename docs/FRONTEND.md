@@ -1,6 +1,9 @@
 # Frontend GRC — Équateur
 
-Implémentation du chantier A sur `feature/frontend`, à partir des contrats v3.0.
+Finalisation du chantier A sur `feature/frontend-finalization`, créée depuis
+`main` au commit `376f9a627174e30d372c61d74a3239e6767b85bb`, après fusion des
+premiers développements frontend et backend. Contrats v3.0 relus et conservés.
+Le design existant est conservé : aucun HTML ni CSS n'a été refait.
 Périmètre : `public/*.html`, `public/assets/**` et ce document uniquement.
 Aucun routeur PHP, schéma SQL, contrat partagé ou fichier du chantier QA n'est modifié.
 
@@ -10,20 +13,33 @@ Les pages utilisent HTML, CSS et JavaScript ES modules, sans dépendance externe
 CDN, compilation ou installation npm. Les prix sont des entiers XAF, affichés en
 FCFA ; les dates sont affichées dans le fuseau du Gabon (`Africa/Libreville`).
 
-Après intégration du backend B et initialisation de sa base selon sa documentation,
+Après initialisation de la base fictive selon `docs/BACKEND.md`,
 depuis la racine du dépôt, sous Linux comme sous Windows avec PHP dans le PATH :
 
 ```sh
 php -S 127.0.0.1:8000 -t public public/router.php
 ```
 
-Cette commande est celle du contrat ; elle n'a pas pu être exécutée avec le backend
-GRC pendant cette livraison, car `public/router.php`, `app/` et `database/` sont
-absents de `main` au commit de base `0df7a0cd67ac1ac40b6d6d44e6a234a4300dfc96`.
-Une dernière consultation distante pendant le développement ne montrait que main.
-Un serveur statique suffit à examiner les pages et leurs erreurs d'indisponibilité,
-mais ne permet pas de commander, s'authentifier ou enregistrer des données.
-Ne pas ouvrir les fichiers par `file://`, ni servir la racine du dépôt.
+Le véritable routeur PHP, les services métier et SQLite sont maintenant intégrés.
+La commande de démarrage a été exécutée sur loopback pendant la recette navigateur,
+avec `GRC_DB_PATH` pointant vers une nouvelle base fictive hors du dépôt. La base
+locale de démonstration éventuellement présente n'a pas été réinitialisée ni modifiée.
+Un serveur statique ne remplace pas cette API. Ne pas ouvrir les pages par
+`file://`, ni servir la racine du dépôt.
+
+Pour préparer une base **neuve et isolée** sous Linux :
+
+```sh
+grc_test_dir=$(mktemp -d)
+php database/init.php --db="$grc_test_dir/grc.sqlite"
+GRC_DB_PATH="$grc_test_dir/grc.sqlite" php -S 127.0.0.1:8000 -t public public/router.php
+```
+
+Les comptes fictifs sont générés dans `demo-accounts.json`, à côté de cette base.
+Les consulter localement, sans publier ni copier leurs mots de passe dans Git.
+Utiliser deux profils de navigateur distincts pour le client et l'administrateur.
+Sous Windows, suivre le démarrage de README/BACKEND et fournir un chemin absolu
+privé distinct via `GRC_DB_PATH` ; l'exécution Windows reste à vérifier.
 
 Dans l'environnement cloud préparé précédemment, activer PHP avec :
 
@@ -62,7 +78,10 @@ Ces gardes d'interface ne remplacent jamais les permissions/contrôles de propri
   Chaque POST/PATCH obtient un token via `/auth/csrf` et transmet `X-CSRF-Token`.
   Le token est rechargé après login et invalidé au logout. Si sa relecture échoue
   après une connexion réussie, la mutation suivante exige une nouvelle récupération.
-  Aucun POST/PATCH n'est rejoué automatiquement.
+  Aucun POST/PATCH n'est rejoué automatiquement. Une erreur de récupération CSRF
+  est identifiée **avant envoi** : aucune mutation n'a été envoyée, et l'action reste
+  réessayable. Après envoi, une réponse perdue ou invalide est traitée comme incertaine.
+  Cette distinction est partagée par commande, produits, transitions et SAV.
 - `ui.js` : construction DOM par `createElement` et nœuds texte. Aucun contenu API
   n'est inséré avec `innerHTML`, aucune évaluation de code. Les chemins d'images
   sont limités à `/assets/images/` avec une extension de fichier image autorisée ;
@@ -77,7 +96,8 @@ Ces gardes d'interface ne remplacent jamais les permissions/contrôles de propri
 - `shop.js`, `customer.js`, `tickets.js`, `admin.js` : parcours fonctionnels séparés.
 - Chaque page déclare une CSP limitant scripts, styles, images et connexions à
   l'origine locale ; aucun gestionnaire JS inline ni chargement distant.
-  Les en-têtes HTTP `nosniff`, `frame-ancestors`, etc. restent à envoyer par PHP.
+  Le routeur PHP envoie également `nosniff`, `frame-ancestors 'none'`, etc. : ces
+  en-têtes ont été conservés et les scripts externes fonctionnent avec cette CSP.
 
 Le panier envoie exclusivement `{items:[{product_id,quantity}]}`. Le serveur est
 l'autorité pour prix, montants, stocks, utilisateur et rôle. Aucun paiement réel,
@@ -97,85 +117,125 @@ Si la réponse à une mutation est perdue ou invalide, l'interface indique un r�
 incertain et bloque les envois concernés. Pour SAV et administration, une relecture
 GET réussie est nécessaire avant une nouvelle action ; aucun nouvel envoi n'est
 automatique. Pour une commande, consulter l'historique avant toute nouvelle tentative.
-Le panier n'est vidé qu'après confirmation cohérente du serveur.
+Le panier n'est vidé qu'après confirmation cohérente du serveur, et seulement s'il
+n'a pas changé depuis l'envoi. Une modification dans un autre onglet avant le POST
+impose de recharger les quantités ; une modification pendant le POST est conservée
+et signalée sur le reçu. La commande créée reste celle de l'instantané envoyé.
 
 Le contrat ne fournit pas de clé d'idempotence de création de commande/ticket :
 une fermeture, navigation ou recharge complète pendant une requête peut perdre
 les gardes en mémoire. Ne pas relancer une création sans vérifier les données
-serveur. Les transactions, autorisations et contraintes d'unicité restent à tester
-sur le backend ; le JavaScript ne garantit pas à lui seul l'absence de doublon.
+serveur. La recette actuelle vérifie les autorisations, les effets SQLite et
+l'unicité des points/avis sur le parcours testé ; le JavaScript ne garantit pas
+l'idempotence d'une création après fermeture ou rechargement complet de la page.
 
 L'API n'expose ni édition du profil, ni lecture des avis déjà déposés. Le profil
 reste donc consultable seulement ; le formulaire d'avis apparaît pour les commandes
 livrées et explique le conflit 409 si le serveur refuse un nouvel avis. Aucun champ
 ou endpoint supplémentaire n'a été inventé.
 
+## Corrections de finalisation
+
+- Mot de passe : validation d'inscription sur **12 caractères Unicode minimum** et
+  **72 octets UTF-8 maximum**, conformément au PHP/bcrypt livré. Les emojis ne sont
+  plus comptés seulement comme unités UTF-16 ; la longueur est vérifiée aussi avant
+  envoi. La connexion n'impose pas une nouvelle règle de longueur minimale aux
+  identifiants existants, mais conserve la borne PHP de 72 octets. Aucun mot de passe
+  n'est tronqué silencieusement.
+- Produits : prix maximal 1 000 000 000 000 XAF, stock maximal 1 000 000 000,
+  description 4 000 caractères, catégorie 120, image 500. La validation locale des
+  chemins image reprend la grammaire du backend, y compris noms avec `_`/`-`, sans
+  noms à plusieurs points ni extension en majuscules refusée par PHP.
+- Réseau : une panne CSRF avant POST ne bloque plus à tort le formulaire comme si
+  l'action avait pu réussir. Les brouillons et champs restent utilisables après
+  rétablissement, sans envoi automatique. Une véritable réponse POST perdue après
+  écriture SQLite continue de bloquer les renvois et dirige vers les données serveur.
+- Panier multi-onglet : détection avant envoi et conservation des changements reçus
+  pendant l'envoi, avec avertissement explicite et reçu serveur inchangé.
+- Retour après authentification : conservation du paramètre de ticket dans le lien
+  privé, sans assouplir la liste des destinations autorisées de `customer.js`.
+
 ## Vérifications de cette livraison
 
-La syntaxe des huit modules JS a été contrôlée avec `node --check` ; les fichiers
-HTML ont été inspectés pour liens, ressources locales, CSP, langue et structure.
-Le SVG local a été parsé comme XML. `git diff --check` est utilisé avant commit.
+Hôte Linux Debian 13, PHP 8.4.27, SQLite 3.46.1, Node 24.19.0 et Chromium
+154.0.8037.57 via Playwright ; 29 octobre 2026.
 
-Des essais Chromium/Playwright ont été exécutés avec un serveur local et des
-fixtures **MOCK réservées aux tests**, hors dépôt dans
-`/workspace/scratch/frontend-checks/`. Il n'existe aucun mode mock, fixture ou
-fallback simulé dans les fichiers applicatifs livrés. Ces essais vérifient le
-frontend et le contrat des requêtes, pas l'implémentation PHP/SQLite.
-
-Commandes du harnais temporaire dans cette machine :
+Les harnais sont conservés hors du checkout dans
+`/workspace/scratch/frontend-finalization/`. Chaque exécution initialise une nouvelle
+base dans un répertoire `run-*`, lance le **véritable routeur PHP** avec cette base,
+utilise des contextes navigateur client/admin/autre client distincts, puis arrête
+le serveur. Aucune base ou donnée de test, aucun compte et aucun secret ne sont livrés.
+Les vérifications SQL en lecture confirment les effets de l'API sur cette base.
 
 ```sh
-node /workspace/scratch/frontend-checks/browser-check.cjs
+node /workspace/scratch/frontend-finalization/real-backend.cjs
+node /workspace/scratch/frontend-finalization/edge-cases.cjs
+```
+
+**Résultats : 27 scénarios d'intégration réelle PASS, 0 FAIL**
+(13 groupes de parcours complet et 14 groupes de cas limites).
+
+| Vérification avec le véritable backend | Preuve observée |
+| --- | --- |
+| Catalogue/recherche/catégorie/vide et pagination après création du 13e produit | Données SQLite réelles, 12 puis 1 produit affiché, liens précédent/suivant fonctionnels |
+| Inscription, connexion client/admin et déconnexion | Client créé en base, pas de login implicite, cookie HttpOnly/SameSite=Lax et session révoquée au logout |
+| Panier → commande simulée | Prix et stock lus depuis PHP, 190 000 XAF pour deux articles, stock décrémenté et panier vidé après confirmation |
+| Confirmation/livraison → fidélité | Une seule ligne de crédit de 190 points malgré un second PATCH delivered, solde visible côté client |
+| Annulation administrative | Stock restauré une seule fois, répétition idempotente, livraison ultérieure refusée 409 |
+| Avis sur commande livrée | Note conservée en SQLite, second avis refusé 409 |
+| SAV client/admin | Commande liée, messages des deux rôles, résolution/fermeture, refus 409 de message sur ticket fermé |
+| Produits admin | Création, PATCH des seuls champs changés, désactivation et 404 public du produit inactif |
+| Connaissance client/analytique | Fiche et historique réels ; cinq segments présents ; CA, satisfaction, compte clients comparés aux requêtes SQLite |
+| Permissions et expiration | Admin refusé au client 403, ticket d'autrui masqué 404, retrait du profil après vraie réponse 401 |
+| Réseau/CSRF | Offline avant CSRF : zéro écriture, champs conservés, reprise explicite ; token obsolète : 403 sans mutation puis reprise réussie |
+| Perte de réponse après POST réel | Commande présente une seule fois en SQLite ; résultat incertain affiché et envoi supplémentaire bloqué |
+| Multi-onglet | Changement avant commande : zéro POST jusqu'à relecture ; changement pendant POST conservé après le reçu |
+| Limites de saisie | Mots de passe invalides refusés localement ; inscription/login réels avec 18 emojis = 72 octets ; limites produit et chemins image alignés PHP |
+| Rendu et XSS | 12 pages à 360 px sans débordement ni exception JS ; messages HTML/JS conservés comme texte côté client et admin |
+
+Rapports de la dernière exécution :
+
+- Parcours : `/workspace/scratch/frontend-finalization/run-K1CFDg/report.json` (13 PASS).
+- Cas limites : `/workspace/scratch/frontend-finalization/run-CYkCDd/report.json` (14 PASS).
+- Les rapports consignent chemin/méthode/statut des réponses API sans mot de passe,
+  cookie ou valeur de token ; les comptes générés restent dans le répertoire privé.
+- Avant correction, les trois tests ciblés de validation mot de passe, limite produit
+  et panne CSRF échouaient réellement (`run-SOYZzF/report.json`) ; ils passent après
+  correction. Les autres parcours déjà fonctionnels ont été conservés.
+
+Les coupures réseau utilisent le mode hors connexion de Chromium. Deux essais
+interceptent seulement le transport d'un **vrai POST PHP** : l'un retarde sa réponse
+pour modifier le panier dans l'autre onglet, l'autre la perd après écriture SQLite.
+Ils ne fabriquent aucun JSON ni succès métier.
+
+Une régression complémentaire des JSON incorrects et cas difficiles utilise
+l'ancien harnais **MOCK explicite**, distinct de la recette réelle :
+
+```sh
+CHECK_FILTER='^(checkout|customer)' node /workspace/scratch/frontend-checks/browser-check.cjs
 node /workspace/scratch/frontend-checks/support-uncertainty.cjs
 ```
 
-Les rapports/captures de cette session restent hors des chemins possédés par
-l'agent C ; la suite durable `tests/**` est à intégrer par le chantier QA.
-Résultats finaux au 29 octobre 2026 : **72 contrôles navigateur réussis**
-(65 scénarios distincts du harnais principal et de sa passe ciblée, plus 7 contrôles
-SAV indépendants), sans échec applicatif restant. Environnement : Node 24.19.0,
-Playwright et Chromium 154.0.8037.57, Linux Debian 13.
+Les **24 contrôles complémentaires PASS** (17 cas commande/compte et 7 cas SAV)
+restent des tests MOCK, distincts des 27 scénarios d'intégration réelle.
 
-Couverture réellement exécutée :
+Ces scripts et leurs rapports ne sont pas versionnés dans la PR : la suite durable
+`tests/**` appartient au chantier QA. Les commandes ci-dessus sont celles réellement
+exécutées dans cette machine, pas une dépendance nécessaire au site.
 
-- Chargement des 12 pages, absence d'exception JS et rendu des champs API ;
-  contrôle du débordement à 360 px sur cinq écrans et à 320 px sur les 12 pages.
-- Menu mobile, navigation clavier, fermeture Échap et restitution du focus.
-- Inscription, login, rotation CSRF, déconnexion et refus des redirections externes.
-- Catalogue/recherche/catégorie, identifiant invalide, panier, payload de commande
-  sans prix ni utilisateur, stock insuffisant et reçu confirmé.
-- Refus 409, réseau coupé, 500, JSON incorrect, réponse non JSON HTTP 200 et
-  confirmation incomplète : aucun faux succès, panier conservé, pas de double envoi,
-  pas de réactivation par rerendu local. Contrôles bloqués pendant un POST retardé.
-- Profil, commandes et fidélité, avis livré, champs préservés après conflit.
-- Création/message/fermeture SAV, brouillon conservé après réponse incertaine,
-  GET échoué sans déblocage puis GET réussi sans POST automatique.
-- Dashboard, création/édition produit avec PATCH limité aux champs modifiés,
-  confirmation/livraison de commande, recherche/fiche client/segmentation.
-- Garde de rôle, expiration de session, panne API ; charges HTML/JS rendues comme
-  texte et URL d'image malveillante remplacée par le visuel local.
-- Serveur statique réel sans interception API : affichage explicite de
-  l'indisponibilité, aucun produit ou résultat de commande inventé.
+### Limites et points à transmettre au coordinateur
 
-Les cinq premiers échecs de la passe checkout provenaient d'une attente du harnais
-qui précédait la fin du chargement ; l'attente a été corrigée vers le DOM attendu
-et les cinq scénarios ciblés ont ensuite réussi. Les rapports intermédiaires ont
-été conservés, sans convertir artificiellement des échecs en réussites.
-Le rapport final courant est `report-final.json` ; les 7 contrôles SAV ont leur
-sortie dédiée `support-uncertainty.cjs`. Les captures ont été examinées pour corriger
-le hero, le menu bureau et les tables mobiles. La passe ciblée est reproductible
-avec la commande suivante (filtre des seuls scénarios ajoutés ou corrigés) :
+Aucune correction backend nécessaire au parcours testé n'a été identifiée ; aucun
+fichier PHP, schéma ou contrat n'a été modifié. Le profil reste en lecture seule et
+les avis existants ne peuvent pas être lus individuellement avec l'API actuelle ;
+le conflit 409 évite de prétendre enregistrer un second avis. Il n'est pas proposé
+de modifier le contrat pour ces limites connues. La mention historique de
+`docs/BACKEND.md` indiquant l'absence de `index.html` est devenue obsolète après la
+fusion ; son propriétaire pourra l'actualiser, sans modification ici.
 
-```sh
-CHECK_FILTER='^(extra |checkout (network|server500|malformed-json|non-json-200|malformed-order))' node /workspace/scratch/frontend-checks/browser-check.cjs
-```
-
-### Recette réelle après intégration B, puis C — NON EXÉCUTÉE ici
-
-Sur une base de démonstration isolée : catalogue → compte fictif → commande →
-confirmation et livraison administrateur → attribution unique des points →
-SAV/message/réponse → avis après livraison → indicateurs actualisés.
-Vérifier les refus interclients/admin, CSRF, stock concurrent, rate limiting,
-non-exposition des fichiers privés et absence de trace PHP dans les erreurs.
-Effectuer la recette Windows 11, la vérification d'un lecteur d'écran et les tests
-multi-navigateurs. Aucun de ces résultats ne peut être déduit des fixtures navigateur.
+**NON EXÉCUTÉS dans cette finalisation :** Windows 11, PHP 8.2 exact, autres moteurs
+de navigateur et lecteur d'écran, publication HTTPS/tunnel, tests de charge,
+concurrence multiprocessus et recette complète du limiteur de connexion.
+L'idempotence de création à travers une fermeture/recharge complète reste une
+limite du contrat, qui ne fournit pas de clé d'idempotence. Après une réponse perdue,
+consulter l'historique avant toute nouvelle création.

@@ -75,7 +75,7 @@ function accessMessage(user, error) {
     renderError(details, error, () => location.reload());
     main.append(details);
   } else {
-    const next = `/${page}.html`;
+    const next = `/${page}.html${location.search}`;
     main.append(el('div', { className: 'panel cluster' },
       el('a', { className: 'button button-primary', href: user ? '/' : `/login.html?next=${encodeURIComponent(next)}` }, user ? 'Retour à la boutique' : 'Se connecter'),
       !user ? el('a', { className: 'button button-secondary', href: `/register.html?next=${encodeURIComponent(next)}` }, 'Créer un compte fictif') : null));

@@ -1,4 +1,4 @@
-import { api } from './api.js';
+import { api, isUncertainMutation } from './api.js';
 import {
   el, money, notice, field, button, heading, empty,
   renderError, busy, orderCard, productImage,
@@ -13,6 +13,11 @@ const MAX_QUANTITY = 20;
 // pending or uncertain order request by creating a fresh checkout form.
 let checkoutPending = false;
 let checkoutUncertain = false;
+
+function sameCart(left, right) {
+  return left.length === right.length && left.every(item =>
+    right.some(other => other.product_id === item.product_id && other.quantity === item.quantity));
+}
 
 function id(value) {
   if (typeof value === 'string' && !/^[1-9]\d*$/.test(value)) return null;
@@ -336,6 +341,11 @@ async function mountCart(root, user) {
       const checkout = el('form', { className: 'stack', onSubmit: async event => {
         event.preventDefault();
         if (checkoutPending || checkoutUncertain || uncertain || submitted || submitting || invalid || !checkout.reportValidity()) return;
+        if (!sameCart(cart, getCart())) {
+          notice(messages, 'Votre panier a changé dans un autre onglet. Actualisez-le pour vérifier les quantités avant de commander.');
+          messages.append(button('Actualiser le panier', { className: 'button button-secondary', onClick: () => mountCart(root, user) }));
+          return;
+        }
         submitting = true;
         checkoutPending = true;
         const lockedControls = Array.from(root.querySelectorAll('button,input,select,textarea'))
@@ -359,12 +369,18 @@ async function mountCart(root, user) {
               // The server response is authoritative. Storage failure must not turn
               // a successful order into an apparent error and invite a duplicate.
               let cartCleared = true;
-              try { clearCart(); } catch { cartCleared = false; }
+              let cartChanged = false;
+              try {
+                cartChanged = !sameCart(cart, getCart());
+                if (!cartChanged) clearCart();
+              } catch { cartCleared = false; }
               root.replaceChildren(heading('Commande enregistrée',
                 'Votre commande de démonstration a bien été confirmée par le serveur.'),
               el('section', { className: 'order-confirmation stack', role: 'status' },
                 el('p', {}, 'Démonstration — données fictives. Aucun paiement ni livraison réel.'),
                 orderCard(order),
+                cartChanged ? el('p', { className: 'notice notice-info' },
+                  'Le panier a changé dans un autre onglet pendant l’envoi et a été conservé. Comparez-le à la commande enregistrée avant tout nouvel achat fictif.') : null,
                 !cartCleared ? el('p', { className: 'notice' },
                   'La commande est enregistrée, mais le navigateur n’a pas pu vider votre panier. Ne le validez pas une seconde fois.') : null,
                 cartIssue() ? el('p', { className: 'notice notice-info', role: 'status' },
@@ -372,8 +388,7 @@ async function mountCart(root, user) {
                 el('a', { href: '/account.html', className: 'button button-primary' }, 'Retrouver mes commandes'),
                 el('a', { href: '/index.html', className: 'button button-secondary' }, 'Retour à la boutique')));
             } catch (error) {
-              if (!error.status || error.status < 400 || error.status >= 500
-                || error.code === 'INVALID_RESPONSE' || error.uncertain) {
+              if (isUncertainMutation(error)) {
                 uncertain = true;
                 checkoutUncertain = true;
                 notice(messages, 'La confirmation n’a pas pu être vérifiée. La commande a peut-être été enregistrée. Consultez votre historique avant toute nouvelle tentative ; votre panier est conservé.');
