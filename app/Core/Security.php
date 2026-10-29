@@ -33,7 +33,16 @@ final class Security
             session_regenerate_id(true);
         }
         $_SESSION['created_at'] ??= $now;
-        $_SESSION['last_seen'] = $now;
+        // Periodic read-only refreshes must not prolong authentication after
+        // the user stops interacting with the site. This header never grants
+        // authorization: every endpoint still checks the session and role.
+        $route = (string)(parse_url((string)($_SERVER['REQUEST_URI'] ?? ''), PHP_URL_PATH) ?? '');
+        $passiveRead = ($_SERVER['REQUEST_METHOD'] ?? '') === 'GET'
+            && ($_SERVER['HTTP_X_GRC_PASSIVE'] ?? '') === '1'
+            && preg_match('~^/api/v1/(?:tickets/me|tickets/[1-9][0-9]*|admin/tickets|admin/dashboard)$~D', $route) === 1;
+        if (!$passiveRead) {
+            $_SESSION['last_seen'] = $now;
+        }
     }
 
     public static function token(): string

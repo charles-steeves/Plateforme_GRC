@@ -47,3 +47,8 @@ PATCH /admin/products/{id} body champ(s) parmi {name,description,category,price_
 Entiers stricts (pas string numérique ni float pour prix/quantité), limites de taille (name 1..120, subject 1..160, commentaire 0..1500, description ticket 1..4000, message 1..4000, email <=254, mot de passe >=12 caractères en démo). Refuser champs sensibles inconnus role, user_id, total_xaf fournis par client pour déterminer l'autorité. Contrôler bornes serveur, filtrer paramètres page/per_page, ne pas utiliser de SQL concaténé.
 ## Contrat frontend et tests
 Le frontend se base exclusivement sur ces formats ; les faux objets de développement suivent exactement les mêmes schémas et restent marqués MOCK. Les tests d'intégration vérifient structure et codes. Les nouveautés de routes/champs nécessitent demande explicite au coordinateur puis synchronisation des agents.
+
+
+## Mise à jour passive des conversations et des indicateurs — 29 octobre 2026
+
+Les endpoints GET existants `/tickets/me`, `/tickets/{id}`, `/admin/tickets` et `/admin/dashboard` acceptent le header facultatif `X-GRC-Passive: 1` pour le polling de lecture. Ce header ne donne **aucun droit supplémentaire** et ne contourne ni l'authentification, ni le rôle, ni les règles d'accès au ticket. Il empêche uniquement ces lectures périodiques, côté serveur, de remettre à zéro le délai de 30 minutes d'inactivité de la session. Tout autre endpoint et toute action de mutation continuent à appliquer la gestion ordinaire des sessions. Aucun nouvel endpoint ni changement du corps JSON des tickets.

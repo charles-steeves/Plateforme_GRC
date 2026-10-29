@@ -1,6 +1,8 @@
-# Plateforme de vente en ligne et de GRC
+# Junelia's Shop — nom temporaire
 
-Plateforme universitaire de **vente en ligne et de gestion de la relation client (GRC)**, développée au Gabon. L'application présente les relations entre vente, suivi des commandes, fidélisation, segmentation, satisfaction et service après-vente. **Le nom, l'identité et l'activité définitive de l'entreprise seront choisis ultérieurement.** Le catalogue actuellement fourni sert uniquement de jeu d'essai.
+> Nom commercial **provisoire**, choisi pour l'interface, sans modification du nom technique du dépôt ni de la structure GRC.
+
+Plateforme universitaire de **vente en ligne et de gestion de la relation client (GRC)**, développée au Gabon. L'application présente les relations entre vente, suivi des commandes, fidélisation, segmentation, satisfaction et service après-vente. **Junelia's Shop est le nom temporaire ; l'identité et l'activité définitives restent à confirmer.** Le catalogue actuellement fourni sert uniquement de jeu d'essai.
 
 > **Démonstration — données fictives.** Aucun paiement, aucune livraison et aucune donnée personnelle réels. Ne pas utiliser comme site de production.
 

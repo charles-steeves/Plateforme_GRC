@@ -1,5 +1,8 @@
 # Frontend GRC — Plateforme de vente en ligne et relation client
 
+> **29 octobre 2026 — Identité provisoire et SAV** : nom public temporaire **Junelia's Shop**, sur toutes les pages et dans le shell commun. Listes de tickets et conversation sélectionnée rafraîchies par HTTP environ toutes les 10 secondes, uniquement en onglet visible et connecté. Les mises à jour en place préservent le texte et le focus lors de la rédaction, ne déclenchent aucune mutation/retransmission et bloquent les formulaires obsolètes si le statut est modifié par un autre utilisateur. Header `X-GRC-Passive: 1` pour ne pas étendre la session de l'utilisateur par ces lectures automatiques. Aucun WebSocket, SMS ou email ajouté ; les réponses sont visibles avec un décalage d'au plus un cycle en fonctionnement normal.
+
+
 > Retouches visuelles demandées le 29 octobre 2026 : en-têtes bleu profond (plus de bandeau blanc), accents corail/ambre contrastés et boutique plus accueillante, sans animation ; catégories visuelles fondées sur les groupes existants et CTA vers le catalogue. Tableau de bord administratif volontairement distinct, avec diagramme en anneau des statuts de commandes et histogramme horizontal des commandes quotidiennes sur sept jours (valeurs exclusivement calculées depuis SQLite). Les données, images, comptes, accès et transactions existants sont conservés. La qualité du rendu sur Windows et petit écran reste à valider par les utilisateurs.
 
 

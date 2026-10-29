@@ -59,6 +59,9 @@ jobs:
       - name: Admin workspace and lecture-driven CRM presentation
         run: node tests/admin-workspace.mjs
 
+      - name: Live SAV replies, safe session refresh and provisional shop identity
+        run: node tests/ticket-live-refresh.mjs
+
       - name: Store sidebar and controlled catalogue category selector
         run: node tests/store-sidebar-categories.mjs
 

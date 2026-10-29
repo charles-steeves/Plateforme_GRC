@@ -7,6 +7,7 @@ const TRANSITIONS = Object.freeze({
   resolved: ['closed', 'in_progress'],
   closed: [],
 });
+const AUTO_REFRESH_MS = 10000;
 const STATUS_LABELS = Object.freeze({
   open: 'Ouvert', in_progress: 'En cours', resolved: 'Résolu', closed: 'Fermé',
 });
@@ -60,6 +61,11 @@ export async function mountTickets(root, { user, admin = false }) {
   let listGeneration = 0;
   let detailGeneration = 0;
   let selectedId = null;
+  let displayedListStamp = null;
+  let displayedDetailStamp = null;
+  let displayedTicketStatus = null;
+  let displayedMessageCount = 0;
+  let polling = false;
   const drafts = new Map();
   const pendingTickets = new Set();
   const uncertainTickets = new Set();
@@ -99,24 +105,36 @@ export async function mountTickets(root, { user, admin = false }) {
     }));
   }
 
-  async function loadList() {
+  async function loadList({ silent = false } = {}) {
+    if (silent && refresh.disabled) return false;
     const generation = ++listGeneration;
-    refresh.disabled = true;
-    list.setAttribute('aria-busy', 'true');
-    if (!listReady) list.replaceChildren(el('p', { className: 'muted' }, 'Chargement des tickets…'));
+    if (!silent) {
+      refresh.disabled = true;
+      list.setAttribute('aria-busy', 'true');
+      if (!listReady) list.replaceChildren(el('p', { className: 'muted' }, 'Chargement des tickets…'));
+    }
     try {
-      const result = items(await api(admin ? '/admin/tickets' : '/tickets/me'));
+      const result = items(await api(admin ? '/admin/tickets' : '/tickets/me', silent ? { passive: true } : {}));
       if (generation !== listGeneration) return;
       tickets = result;
       listReady = true;
-      renderList();
+      const stamp = JSON.stringify(result.map(ticket =>
+        [ticket.id, ticket.status, ticket.updated_at, ticket.subject, ticket.customer_name]));
+      // No list replacement on every timer tick: preserves keyboard focus and
+      // avoids visual flicker while the customer is reading the ticket list.
+      if (!silent || stamp !== displayedListStamp) {
+        if (!silent || !list.contains(document.activeElement)) {
+          renderList();
+          displayedListStamp = stamp;
+        }
+      }
       return true;
     } catch (error) {
       if (generation !== listGeneration) return;
-      renderError(list, error, loadList);
+      if (!silent) renderError(list, error, loadList);
       return false;
     } finally {
-      if (generation === listGeneration) {
+      if (generation === listGeneration && !silent) {
         refresh.disabled = false;
         list.removeAttribute('aria-busy');
       }
@@ -127,6 +145,9 @@ export async function mountTickets(root, { user, admin = false }) {
     if (!validId(id)) return;
     const reconciliationRequested = reconcile && uncertainTickets.has(id) && !pendingTickets.has(id);
     selectedId = id;
+    displayedDetailStamp = null;
+    displayedTicketStatus = null;
+    displayedMessageCount = 0;
     const generation = ++detailGeneration;
     if (updateUrl) {
       const url = new URL(window.location.href);
@@ -146,6 +167,9 @@ export async function mountTickets(root, { user, admin = false }) {
       }
       if (reconciliationRequested && !pendingTickets.has(id)) uncertainTickets.delete(id);
       renderDetail(data.ticket, data.messages);
+      displayedDetailStamp = ticketStamp(data.ticket, data.messages);
+      displayedTicketStatus = data.ticket.status;
+      displayedMessageCount = data.messages.length;
       return true;
     } catch (error) {
       if (generation !== detailGeneration) return;
@@ -154,6 +178,75 @@ export async function mountTickets(root, { user, admin = false }) {
     } finally {
       if (generation === detailGeneration) detail.removeAttribute('aria-busy');
     }
+  }
+
+  function ticketStamp(ticket, messages) {
+    return JSON.stringify([ticket.id, ticket.status, ticket.updated_at,
+      messages.map(message => [message.id, message.author_user_id, message.created_at, message.body])]);
+  }
+
+  function conversationContent(messages) {
+    return el('div', { className: 'stack', 'data-ticket-conversation': '' },
+      el('h3', {}, 'Conversation'), messages.length ? messages.map(message =>
+        el('article', { className: 'message stack' },
+          el('div', { className: 'cluster' },
+            el('strong', {}, message.author_user_id === user.id ? 'Vous' : 'Votre interlocuteur'),
+            el('time', { dateTime: message.created_at, className: 'muted' }, date(message.created_at))),
+          el('p', { className: 'text-block' }, message.body)))
+        : el('p', { className: 'muted' }, 'Aucun message supplémentaire. La demande initiale est affichée ci-dessus.'));
+  }
+
+  async function updateVisibleTicket() {
+    const id = selectedId;
+    const generation = detailGeneration;
+    if (!id || pendingTickets.size || uncertainTickets.has(id) || detail.dataset.ticketId !== String(id)) return;
+    const data = await api(`/tickets/${id}`, { passive: true });
+    if (generation !== detailGeneration || id !== selectedId || !detail.isConnected
+      || pendingTickets.has(id) || uncertainTickets.has(id)) return;
+    if (!data?.ticket || validId(data.ticket.id) !== id || !Array.isArray(data.messages)
+      || data.messages.some(message => !message || typeof message !== 'object'
+        || typeof message.body !== 'string')) {
+      throw new Error('La conversation reçue est invalide.');
+    }
+    const stamp = ticketStamp(data.ticket, data.messages);
+    if (stamp === displayedDetailStamp) return;
+    const changedStatus = data.ticket.status !== displayedTicketStatus;
+    const messageDraft = detail.querySelector('textarea[name="body"]');
+    const statusChoice = detail.querySelector('select[name="status"]');
+    const userEditing = (messageDraft && (messageDraft.value.trim() || document.activeElement === messageDraft))
+      || (statusChoice && (statusChoice.value || document.activeElement === statusChoice));
+    if (changedStatus && !userEditing) {
+      renderDetail(data.ticket, data.messages);
+    } else {
+      // Update only the message list and status badge, never replace the editor.
+      // A reply typed on a phone is retained even when a colleague responds.
+      const conversation = detail.querySelector('[data-ticket-conversation]');
+      if (!conversation) return;
+      conversation.replaceWith(conversationContent(data.messages));
+      const statusBadge = detail.querySelector('[data-ticket-status] .badge');
+      if (statusBadge) statusBadge.replaceWith(badge(data.ticket.status));
+      const updatedAt = detail.querySelector('[data-ticket-updated]');
+      if (updatedAt) updatedAt.textContent = `Ouvert le ${date(data.ticket.created_at)} · Mis à jour le ${date(data.ticket.updated_at)}`;
+      if (changedStatus) {
+        // The old status transition form is now stale: never submit it.
+        detail.querySelectorAll('select[name="status"], button[type="submit"]').forEach(control => {
+          control.disabled = true;
+        });
+        const alert = detail.querySelector('[data-ticket-change-notice]');
+        if (alert) {
+          alert.textContent = data.ticket.status === 'closed'
+            ? 'Cette demande est fermée. Actualisez-la pour consulter les dernières informations.'
+            : 'Le statut de cette demande a changé. Actualisez-la avant une nouvelle action.';
+          alert.hidden = false;
+        }
+      }
+    }
+    if (data.messages.length > displayedMessageCount) {
+      notice(summaryNotice, 'Un nouveau message est arrivé dans cette conversation.', 'info');
+    }
+    displayedDetailStamp = stamp;
+    displayedTicketStatus = data.ticket.status;
+    displayedMessageCount = data.messages.length;
   }
 
   function syncTicketLock(id) {
@@ -179,22 +272,16 @@ export async function mountTickets(root, { user, admin = false }) {
         await busy(event.currentTarget, () => selectTicket(id, { reconcile: true }));
       },
     }));
-    const conversation = el('div', { className: 'stack' },
-      el('h3', {}, 'Conversation'), messages.length ? messages.map(message =>
-        el('article', { className: 'message stack' },
-          el('div', { className: 'cluster' },
-            el('strong', {}, message.author_user_id === user.id ? 'Vous' : 'Votre interlocuteur'),
-            el('time', { dateTime: message.created_at, className: 'muted' }, date(message.created_at))),
-          el('p', { className: 'text-block' }, message.body)))
-        : el('p', { className: 'muted' }, 'Aucun message supplémentaire. La demande initiale est affichée ci-dessus.'));
+    const conversation = conversationContent(messages);
     detail.replaceChildren(
-      el('div', { className: 'cluster' }, el('h2', {}, `Ticket #${id}`), badge(ticket.status)),
+      el('div', { className: 'cluster', 'data-ticket-status': '' }, el('h2', {}, `Ticket #${id}`), badge(ticket.status)),
       el('h3', {}, ticket.subject),
-      el('p', { className: 'muted' }, `Ouvert le ${date(ticket.created_at)} · Mis à jour le ${date(ticket.updated_at)}`),
+      el('p', { className: 'muted', 'data-ticket-updated': '' }, `Ouvert le ${date(ticket.created_at)} · Mis à jour le ${date(ticket.updated_at)}`),
       el('p', { className: 'muted' }, ticket.order_id ? `Commande liée : #${ticket.order_id}` : 'Sans commande liée'),
       el('p', { className: 'text-block' }, ticket.description),
       admin ? statusForm(ticket) : null,
-      conversation, verification, messageNotice);
+      conversation, el('p', { className: 'notice notice-info', 'data-ticket-change-notice': '', hidden: true }),
+      verification, messageNotice);
 
     const reload = button('Actualiser la conversation', {
       className: 'button button-secondary', onClick: () => selectTicket(id, { reconcile: true }),
@@ -395,4 +482,26 @@ export async function mountTickets(root, { user, admin = false }) {
     else notice(summaryNotice, 'Le numéro de ticket dans l’adresse est invalide.', 'error');
   }
   await loadList();
+
+  // HTTP polling only when this page is visible and on-line. It never posts,
+  // never retries uncertain mutations and keeps the user's text/status draft.
+  async function refreshAutomatically() {
+    if (polling || document.visibilityState !== 'visible' || !navigator.onLine
+      || !root.isConnected || !user) return;
+    polling = true;
+    try {
+      await loadList({ silent: true });
+      await updateVisibleTicket();
+    } catch {
+      // Retain the last valid conversation when network/read errors occur.
+      // Manual "Actualiser" is always available to show a readable error.
+    } finally {
+      polling = false;
+    }
+  }
+  const timer = window.setInterval(() => { void refreshAutomatically(); }, AUTO_REFRESH_MS);
+  window.addEventListener('pagehide', () => window.clearInterval(timer), { once: true });
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') void refreshAutomatically();
+  });
 }
