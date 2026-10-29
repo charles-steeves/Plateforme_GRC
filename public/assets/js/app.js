@@ -56,7 +56,7 @@ function renderHeader(user, pending = false) {
   header.replaceChildren(el('div', { className: 'header-inner' },
     el('a', { className: 'brand', href: '/', 'aria-label': "Junelia's Shop — accueil" },
       el('span', { className: 'brand-mark', 'aria-hidden': 'true' }, 'JS'),
-      el('span', {}, 'Junelia's Shop', el('small', {}, 'Vente & relation client'))), toggle, nav, actions));
+      el('span', {}, "Junelia's Shop", el('small', {}, 'Vente & relation client'))), toggle, nav, actions));
 }
 function renderAdminNav(user) {
   const container = document.getElementById('section-navigation');
