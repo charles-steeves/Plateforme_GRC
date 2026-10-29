@@ -469,7 +469,7 @@ async function customers(root) {
           el('td', {}, count(customer.orders_count)), el('td', {}, money(customer.total_delivered_xaf))));
       }
       list.replaceChildren(items.length ? el('div', { className: 'table-wrap', tabIndex: 0, 'aria-label': 'Tableau des clients, défilement horizontal possible' },
-        el('table', {}, el('caption', {}, `${data.total} client${data.total > 1 ? 's' : ''} — données fictives`),
+        el('table', {}, el('caption', {}, `${data.total} client${data.total > 1 ? 's' : ''}`),
           el('thead', {}, el('tr', {}, ...['Client', 'Segment', 'Commandes', 'Montant livré'].map((label) => el('th', { scope: 'col' }, label)))), tableBody))
         : empty('Aucun client trouvé', 'Essayez une autre recherche.'),
       el('nav', { className: 'cluster pagination', 'aria-label': 'Pagination des clients' },
