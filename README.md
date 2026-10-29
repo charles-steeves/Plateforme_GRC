@@ -47,9 +47,21 @@ Le navigateur et l'administration utilisent la même API et la même base SQLite
 Get-Content .\storage\demo-accounts.json
 ```
 
-Il contient les comptes `admin@example.test` et `client1@example.test` à `client8@example.test`, avec leurs mots de passe fictifs propres à votre installation. **Ne jamais publier ni envoyer ce fichier**. Pour tester simultanément le client et l'administrateur, employer deux profils de navigateur distincts, car un même profil partage les cookies de session.
+Il contient les comptes `admin@example.test` et `client1@example.test` à `client8@example.test`, avec leurs mots de passe de connexion propres à votre installation. **Ne jamais publier ni envoyer ce fichier**. Pour tester simultanément le client et l'administrateur, employer deux profils de navigateur distincts, car un même profil partage les cookies de session.
 
 Pour **arrêter le serveur**, revenir au terminal où il fonctionne et appuyer sur **Ctrl+C**. Ne pas relancer `database/init.php` sur une base existante : l'initialiseur refuse volontairement de remplacer les données sans option explicite. `--reset` détruit et recrée les données fictives ; ne l'utiliser qu'après sauvegarde, serveur arrêté et en connaissance de cause.
+
+## Accès à l'administration GRC
+
+Après démarrage du serveur, ouvrez `http://127.0.0.1:8000/login.html`. Connectez-vous avec l'adresse et le mot de passe **administrateur** indiqués dans `storage/demo-accounts.json` sur votre machine. Vous serez dirigé vers `http://127.0.0.1:8000/admin.html`, où se trouvent le tableau de bord, les clients, les produits, les commandes et le SAV. Utilisez un autre profil de navigateur pour la session client.
+
+Si les produits ou la connexion affichent une erreur de serveur (HTTP 500), vérifiez d'abord les prérequis et la base **sans suppression ni réinitialisation** :
+
+```sh
+php database/doctor.php
+```
+
+Cette commande lit uniquement la configuration PHP et le fichier SQLite local ; elle n'affiche pas les mots de passe. Si elle signale `pdo_sqlite` absent, activez l'extension dans le `php.ini` chargé par le terminal. Si le diagnostic est bon, consulter localement `storage/errors.log` et le terminal PHP pour identifier la cause. Ne partagez jamais `storage/demo-accounts.json`.
 
 ## Parcours de démonstration GRC
 

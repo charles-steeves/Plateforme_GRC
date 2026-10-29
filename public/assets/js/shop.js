@@ -84,20 +84,21 @@ async function mountCatalogue(root) {
   const form = el('form', { className: 'panel catalogue-toolbar', action: '/index.html', method: 'get',
     role: 'search', 'aria-label': 'Rechercher dans le catalogue' },
   field('Rechercher un produit', searchInput),
-  field('Catégorie', categoryInput, 'Saisissez le nom de la catégorie, ou laissez ce champ vide.'),
-  button('Rechercher', { type: 'submit', className: 'button button-primary' }),
-  el('a', { href: '/index.html', className: 'button button-secondary' }, 'Réinitialiser'));
+  field('Catégorie', categoryInput),
+  el('div', { className: 'catalogue-toolbar-actions' },
+    button('Rechercher', { type: 'submit', className: 'button button-primary' }),
+    el('a', { href: '/index.html', className: 'button button-secondary' }, 'Effacer les filtres')));
   const results = el('section', { className: 'stack', 'aria-label': 'Résultats du catalogue',
     'aria-busy': 'true' }, el('p', { role: 'status' }, 'Chargement des produits…'));
   root.replaceChildren(
     el('section', { className: 'hero' },
       el('div', { className: 'hero-copy' },
-        el('p', { className: 'eyebrow' }, 'Boutique de démonstration · Gabon'),
+        el('p', { className: 'eyebrow' }, 'Découvrez notre catalogue'),
         el('h1', { className: 'hero-title' }, 'Votre quotidien, ', el('em', {}, 'bien équipé.')),
         el('p', { className: 'hero-description' },
           'Parcourez les produits, préparez votre panier et retrouvez notre service client au même endroit.'),
-        el('div', { className: 'hero-facts' }, el('span', {}, 'Prix en FCFA · XAF'),
-          el('span', {}, 'SAV et fidélité'), el('span', {}, 'Données fictives'))),
+        el('div', { className: 'hero-facts' }, el('span', {}, 'Suivi des commandes'),
+          el('span', {}, 'Service client'), el('span', {}, 'Programme de fidélité'))),
       el('div', { className: 'hero-art', 'aria-hidden': 'true' },
         el('img', { src: '/assets/images/product-placeholder.svg', alt: '', width: 480, height: 360 }))),
     form, results);
@@ -188,8 +189,7 @@ async function mountProduct(root, user) {
         user?.role === 'admin'
           ? el('p', { className: 'notice' }, 'Le panier et les commandes sont réservés aux comptes clients.')
           : form,
-        messages,
-        el('p', { className: 'muted' }, 'Démonstration — données fictives. Aucun paiement réel.'))));
+        messages)));
   } catch (error) {
     if (error.status === 404) content.replaceChildren(heading('Produit introuvable'),
       empty('Ce produit n’est pas disponible', 'Il a peut-être été retiré du catalogue.'));
@@ -231,7 +231,7 @@ async function mountCart(root, user) {
   try {
     cart = getCart();
     if (!cart.length) {
-      stage.replaceChildren(empty('Votre panier est vide', 'Découvrez la sélection du catalogue pour préparer une commande de démonstration.'),
+      stage.replaceChildren(empty('Votre panier est vide', 'Découvrez notre sélection et ajoutez vos articles favoris.'),
         el('a', { href: '/index.html', className: 'button button-primary' }, 'Découvrir la boutique'));
       if (cartIssue()) stage.prepend(el('p', { className: 'notice notice-info', role: 'status' }, cartIssue()));
       return;
@@ -313,11 +313,11 @@ async function mountCart(root, user) {
       row.append(controls);
       lines.append(row);
     }
-    summary.append(el('h2', {}, 'Votre commande de démonstration'),
+    summary.append(el('h2', {}, 'Récapitulatif de la commande'),
       el('p', {}, `${cart.reduce((sum, item) => sum + item.quantity, 0)} article(s) dans le panier`),
       el('p', { className: 'muted' }, invalid ? 'Sous-total des produits vérifiables' : 'Total indicatif'),
       el('p', { className: 'price' }, money(total)),
-      el('p', { className: 'muted' }, 'Le total définitif est celui retourné par le serveur après validation. Aucun argent n’est transféré.'));
+      el('p', { className: 'muted' }, 'Le total est vérifié lors de la confirmation de votre commande.'));
     if (invalid) summary.append(el('p', { className: 'notice', role: 'alert' },
       'Corrigez les lignes indisponibles ou en stock insuffisant avant de commander.'),
     button('Revérifier le panier', { type: 'button', className: 'button button-secondary',
@@ -333,7 +333,7 @@ async function mountCart(root, user) {
       el('a', { href: '/account.html', className: 'button button-primary' }, 'Vérifier mes commandes'));
     } else {
       const confirmation = el('input', { id: 'cart-confirmation', type: 'checkbox', required: true });
-      const submit = button('Confirmer la commande de démonstration', { type: 'submit',
+      const submit = button('Confirmer ma commande', { type: 'submit',
         className: 'button button-primary', disabled: invalid });
       let uncertain = false;
       let submitted = false;
@@ -354,7 +354,7 @@ async function mountCart(root, user) {
         lockedControls.forEach(({ control }) => { control.disabled = true; });
         try {
           await busy(submit, async () => {
-            notice(messages, 'Envoi de la commande de démonstration…', 'info');
+            notice(messages, 'Enregistrement de votre commande…', 'info');
             try {
               const data = await api('/orders', { method: 'POST', body: {
                 items: cart.map(item => ({ product_id: item.product_id, quantity: item.quantity })),
@@ -375,12 +375,11 @@ async function mountCart(root, user) {
                 if (!cartChanged) clearCart();
               } catch { cartCleared = false; }
               root.replaceChildren(heading('Commande enregistrée',
-                'Votre commande de démonstration a bien été confirmée par le serveur.'),
+                'Votre commande a bien été enregistrée.'),
               el('section', { className: 'order-confirmation stack', role: 'status' },
-                el('p', {}, 'Démonstration — données fictives. Aucun paiement ni livraison réel.'),
                 orderCard(order),
                 cartChanged ? el('p', { className: 'notice notice-info' },
-                  'Le panier a changé dans un autre onglet pendant l’envoi et a été conservé. Comparez-le à la commande enregistrée avant tout nouvel achat fictif.') : null,
+                  'Le panier a changé dans un autre onglet pendant l’envoi et a été conservé. Comparez-le à la commande enregistrée avant de recommander.') : null,
                 !cartCleared ? el('p', { className: 'notice' },
                   'La commande est enregistrée, mais le navigateur n’a pas pu vider votre panier. Ne le validez pas une seconde fois.') : null,
                 cartIssue() ? el('p', { className: 'notice notice-info', role: 'status' },
@@ -408,7 +407,7 @@ async function mountCart(root, user) {
           if (uncertain || submitted) submit.disabled = true;
         }
       } }, el('label', { className: 'checkbox-field', htmlFor: 'cart-confirmation' }, confirmation,
-        el('span', {}, 'Je confirme une commande de démonstration, sans paiement réel.')), submit);
+        el('span', {}, 'Je confirme les articles et les quantités de ma commande.')), submit);
       summary.append(checkout);
     }
     const storageWarning = cartIssue()

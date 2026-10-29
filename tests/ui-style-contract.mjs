@@ -33,7 +33,7 @@ for (const filename of pages) {
   assert.match(source, /href="\/assets\/css\/site\.css"/, filename + ': should use shared stylesheet');
   assert.match(source, /class="skip-link"/, filename + ': skip to content should remain');
   assert.match(source, /id="main-content"/, filename + ': main content landmark should remain');
-  assert.match(source, /Démonstration — données fictives/, filename + ': disclaimer must remain');
+  assert.doesNotMatch(source, /Démonstration — données fictives|Projet universitaire|demo-banner/i, filename + ': no repeated technical notices in the customer interface');
   assert.doesNotMatch(source, /équateur|entreprise fictive|boutique fictive/i, filename + ': business identity still undecided');
 }
 console.log('OK — consistent local typography, responsive rules and French UTF-8 markup on all twelve pages');

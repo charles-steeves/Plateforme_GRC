@@ -45,7 +45,7 @@ function feedbackForm(order) {
     const submit = button('Envoyer mon avis', { type: 'submit', className: 'button button-primary' });
     const form = el('form', { className: 'stack' },
         field('Votre satisfaction', rating),
-        field('Commentaire facultatif', comment, '1 500 caractères maximum. Utilisez uniquement des informations fictives.'),
+        field('Commentaire facultatif', comment, '1 500 caractères maximum.'),
         message, submit);
     const details = el('details', { className: 'feedback-section' },
         el('summary', {}, 'Évaluer cette commande livrée'),
@@ -121,7 +121,7 @@ async function renderLoyalty(root) {
             el('div', { className: 'cluster' }, el('h2', {}, 'Ma fidélité'), button('Actualiser les points', { className: 'button button-secondary', onClick: () => renderLoyalty(root) })),
             el('p', { className: 'eyebrow' }, 'Solde confirmé par le serveur'),
             el('p', { className: 'price' }, `${data.balance.toLocaleString('fr-FR')} points`),
-            el('p', { className: 'muted' }, 'À la première livraison d’une commande, le serveur attribue 1 point par tranche complète de 1 000 FCFA. Les points ne sont pas utilisables comme moyen de paiement dans cette démonstration.'));
+            el('p', { className: 'muted' }, 'Gagnez 1 point de fidélité par tranche de 1 000 FCFA sur vos commandes livrées.'));
         if (!data.transactions.length) {
             root.append(empty('Aucun mouvement pour le moment', 'Votre historique de points apparaîtra après une commande livrée.'));
             return;
@@ -150,7 +150,7 @@ async function account(root, user) {
     const orders = el('section', { className: 'stack', 'aria-label': 'Mes commandes' });
     const loyalty = el('section', { className: 'panel stack', 'aria-label': 'Mes points de fidélité' });
     root.replaceChildren(
-        heading('Bonjour, ' + user.name, 'Votre relation avec la boutique, au même endroit. Démonstration — données fictives.'),
+        heading('Bonjour, ' + user.name, 'Suivez vos commandes, vos points et vos demandes au même endroit.'),
         el('section', { className: 'panel stack', 'aria-label': 'Mon profil' },
             el('div', { className: 'cluster' }, el('div', {}, el('p', { className: 'eyebrow' }, 'Votre compte client'), el('h2', {}, 'Mon profil')),
                 el('a', { href: '/tickets.html', className: 'button button-secondary' }, 'Contacter le SAV')),
@@ -175,7 +175,7 @@ async function auth(root, page, user) {
         const tooShort = register && Array.from(value).length < 12;
         const tooLong = new TextEncoder().encode(value).length > 72;
         password.setCustomValidity(value && (tooShort || tooLong || value.includes('\0'))
-            ? (register ? 'Utilisez au moins 12 caractères et au plus 72 octets UTF-8, sans caractère nul.' : 'Le mot de passe ne doit pas dépasser 72 octets UTF-8 ni contenir de caractère nul.')
+            ? (register ? 'Utilisez au moins 12 caractères et choisissez un mot de passe moins long.' : 'Ce mot de passe est trop long ou contient un caractère non autorisé.')
             : '');
     }
     password.addEventListener('input', validatePassword);
@@ -185,22 +185,21 @@ async function auth(root, page, user) {
         reveal.textContent = visible ? 'Masquer le mot de passe' : 'Afficher le mot de passe';
         reveal.setAttribute('aria-pressed', String(visible));
     } });
-    const submit = button(register ? 'Créer mon compte de démonstration' : 'Se connecter', { type: 'submit', className: 'button button-primary' });
+    const submit = button(register ? 'Créer mon compte' : 'Se connecter', { type: 'submit', className: 'button button-primary' });
     const form = el('form', { className: 'panel stack auth-form' },
         el('h2', {}, register ? 'Bienvenue dans la boutique' : 'Retrouvons-nous'),
-        register ? field('Nom fictif', name, '120 caractères maximum.') : null,
-        field('Adresse e-mail fictive', email, register ? 'Utilisez une adresse de démonstration, par exemple nom@example.test.' : ''),
-        field('Mot de passe', password, `${register ? '12 caractères minimum. ' : ''}72 octets UTF-8 maximum (un caractère accentué ou un emoji peut compter plusieurs octets). Ne réutilisez aucun mot de passe réel.`),
+        register ? field('Nom complet', name) : null,
+        field('Adresse e-mail', email),
+        field('Mot de passe', password, register ? '12 caractères minimum.' : ''),
         reveal, message, submit);
     if (!register && new URLSearchParams(window.location.search).get('logged_out') === '1') {
         notice(message, 'Vous êtes déconnecté. Votre session a été fermée.', 'success');
     }
-    root.replaceChildren(heading(register ? 'Créer un compte' : 'Connexion', 'Démonstration — données fictives. Aucun paiement réel.'),
+    root.replaceChildren(heading(register ? 'Créer un compte' : 'Connexion', register ? 'Rejoignez-nous et suivez vos commandes.' : 'Accédez à votre espace personnel.'),
         el('div', { className: 'auth-layout' }, form,
             el('aside', { className: 'panel stack' }, el('p', { className: 'eyebrow' }, 'Une relation qui compte'),
                 el('h2', {}, register ? 'Bien plus qu’un panier' : 'Votre espace, vos échanges'),
                 el('p', {}, 'Suivez vos commandes, retrouvez vos points de fidélité et échangez avec notre service après-vente.'),
-                el('p', { className: 'muted' }, 'Tous les comptes, achats et échanges de ce projet universitaire sont fictifs.'),
                 el('a', { href: authLink(register ? 'login' : 'register') }, register ? 'J’ai déjà un compte' : 'Créer un compte client'))));
     let pending = false;
     form.addEventListener('submit', async event => {
@@ -209,7 +208,7 @@ async function auth(root, page, user) {
         validatePassword();
         if (!form.reportValidity()) return;
         if (register && !name.value.trim()) {
-            name.setCustomValidity('Saisissez un nom fictif.');
+            name.setCustomValidity('Saisissez votre nom.');
             name.reportValidity();
             name.addEventListener('input', () => name.setCustomValidity(''), { once: true });
             return;

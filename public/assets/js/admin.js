@@ -80,7 +80,7 @@ async function dashboard(root) {
       const values = el('div', { className: 'metrics' },
         metric('Clients', count(data.customers_count), 'Comptes clients, administrateurs exclus.'),
         metric('Commandes', count(data.orders_count), 'Commandes non annulées.'),
-        metric('Chiffre d’affaires simulé', money(data.ca_simule_xaf), 'Montant des commandes livrées uniquement.'),
+        metric('Chiffre d’affaires', money(data.ca_simule_xaf), 'Montant des commandes livrées uniquement.'),
         metric('Tickets à traiter', count(data.tickets_open_count), 'Tickets ouverts ou en cours.'),
         metric('Satisfaction', satisfaction === null ? 'Aucun avis' : `${new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 2 }).format(satisfaction)} / 5`, 'Notes reçues après livraison.'),
         metric('Clients inactifs', count(data.customers_inactive_count), 'Dernier achat datant de plus de 90 jours.'));
@@ -91,7 +91,7 @@ async function dashboard(root) {
       }
       status.append(list);
       content.replaceChildren(values, status,
-        el('p', { className: 'muted' }, 'Démonstration — données fictives. Aucun paiement réel. Les segments et les points de fidélité sont calculés par le serveur.'),
+        el('p', { className: 'muted' }, 'Les indicateurs reflètent les commandes et les échanges enregistrés.'),
         el('div', { className: 'cluster' },
           el('a', { href: '/admin-orders.html', className: 'button button-secondary' }, 'Gérer les commandes'),
           el('a', { href: '/admin-tickets.html', className: 'button button-secondary' }, 'Traiter le SAV')));
@@ -134,7 +134,7 @@ async function products(root) {
   const newProduct = button('Nouveau produit', {
     className: 'button button-primary', onClick: () => { if (mutationPending || needsRefresh) return; edit(); editor.querySelector('input')?.focus(); },
   });
-  root.replaceChildren(heading('Produits et stocks', 'Créer, modifier ou désactiver les produits de démonstration.'),
+  root.replaceChildren(heading('Produits et stocks', 'Créez, modifiez ou désactivez les produits du catalogue.'),
     el('div', { className: 'cluster' }, refresh, newProduct), feedback, el('div', { className: 'split' }, list, editor));
   let generation = 0;
   let editing = null;
@@ -147,7 +147,7 @@ async function products(root) {
     const name = el('input', { id: 'product-name', name: 'name', type: 'text', required: true, maxLength: 120, value: product?.name ?? '' });
     const description = el('textarea', { id: 'product-description', name: 'description', rows: 4, maxLength: 4000 }, product?.description ?? '');
     const category = el('input', { id: 'product-category', name: 'category', type: 'text', required: true, maxLength: 120, value: product?.category ?? '' });
-    const price = integerControl('price_xaf', product?.price_xaf ?? 0, 'Prix entier en FCFA (XAF)');
+    const price = integerControl('price_xaf', product?.price_xaf ?? 0, 'Prix (FCFA)');
     const stock = integerControl('stock_quantity', product?.stock_quantity ?? 0, 'Quantité disponible');
     const image = el('input', { id: 'product-image', name: 'image_url', type: 'text', maxLength: 500, value: product?.image_url ?? '/assets/images/product-placeholder.svg', placeholder: '/assets/images/product-placeholder.svg' });
     const active = el('input', { id: 'product-active', name: 'active', type: 'checkbox', checked: product ? Boolean(product.active) : true });
@@ -249,7 +249,7 @@ async function products(root) {
       }
       list.replaceChildren(el('h2', {}, 'Catalogue administrateur'),
         items.length ? el('div', { className: 'table-wrap', tabIndex: 0, 'aria-label': 'Tableau des produits, défilement horizontal possible' },
-          el('table', {}, el('caption', {}, `${items.length} produit${items.length > 1 ? 's' : ''} — données fictives`),
+          el('table', {}, el('caption', {}, `${items.length} produit${items.length > 1 ? 's' : ''}`),
             el('thead', {}, el('tr', {}, ...['Produit', 'Prix', 'Stock', 'Visibilité', 'Action'].map((label) => el('th', { scope: 'col' }, label)))), body))
           : empty('Aucun produit enregistré', 'Créez un premier produit avec le formulaire.'));
       // Do not unlock after a response that cannot be rendered coherently.
@@ -469,7 +469,7 @@ async function customers(root) {
           el('td', {}, count(customer.orders_count)), el('td', {}, money(customer.total_delivered_xaf))));
       }
       list.replaceChildren(items.length ? el('div', { className: 'table-wrap', tabIndex: 0, 'aria-label': 'Tableau des clients, défilement horizontal possible' },
-        el('table', {}, el('caption', {}, `${data.total} client${data.total > 1 ? 's' : ''} — données fictives`),
+        el('table', {}, el('caption', {}, `${data.total} client${data.total > 1 ? 's' : ''}`),
           el('thead', {}, el('tr', {}, ...['Client', 'Segment', 'Commandes', 'Montant livré'].map((label) => el('th', { scope: 'col' }, label)))), tableBody))
         : empty('Aucun client trouvé', 'Essayez une autre recherche.'),
       el('nav', { className: 'cluster pagination', 'aria-label': 'Pagination des clients' },
@@ -488,7 +488,7 @@ async function customers(root) {
 
 export async function mountAdmin(root, { page, user }) {
   if (user?.role !== 'admin') {
-    root.replaceChildren(heading('Accès administrateur requis', 'Connectez-vous avec un compte administrateur de démonstration pour consulter cette page.'),
+    root.replaceChildren(heading('Accès administrateur requis', 'Connectez-vous avec votre compte administrateur pour consulter cette page.'),
       el('a', { href: '/login.html', className: 'button button-primary' }, 'Se connecter'));
     return;
   }

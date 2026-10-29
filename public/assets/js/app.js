@@ -69,7 +69,7 @@ function renderAdminNav() {
 function accessMessage(user, error) {
   main.replaceChildren(heading(error ? 'Session indisponible' : user ? 'Accès réservé' : 'Retrouvons votre espace',
     error ? 'La session n’a pas pu être vérifiée. Aucune donnée privée n’a été chargée.'
-      : user ? 'Cette page est réservée à un autre rôle.' : 'Connectez-vous avec un compte de démonstration pour continuer.'));
+      : user ? 'Cette page est réservée à un autre rôle.' : 'Connectez-vous pour accéder à votre espace.'));
   if (error) {
     const details = el('div');
     renderError(details, error, () => location.reload());
@@ -78,7 +78,7 @@ function accessMessage(user, error) {
     const next = `/${page}.html${location.search}`;
     main.append(el('div', { className: 'panel cluster' },
       el('a', { className: 'button button-primary', href: user ? '/' : `/login.html?next=${encodeURIComponent(next)}` }, user ? 'Retour à la boutique' : 'Se connecter'),
-      !user ? el('a', { className: 'button button-secondary', href: `/register.html?next=${encodeURIComponent(next)}` }, 'Créer un compte fictif') : null));
+      !user ? el('a', { className: 'button button-secondary', href: `/register.html?next=${encodeURIComponent(next)}` }, 'Créer un compte') : null));
   }
 }
 async function mount(user) {
@@ -125,7 +125,7 @@ async function start() {
   catch (error) { sessionError = error; }
   renderHeader(signedInUser);
   if (sessionError && !isPrivatePage) {
-    status.textContent = 'Service de session indisponible. Les données affichées ne remplacent pas une connexion au serveur.';
+    status.textContent = 'Connexion momentanément indisponible. Certaines fonctions peuvent être limitées.';
     status.className = 'notice notice-info';
   }
   if (isPrivatePage && (sessionError || !signedInUser || signedInUser.role !== (isAdminPage ? 'admin' : 'client'))) {
