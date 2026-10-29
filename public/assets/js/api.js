@@ -55,7 +55,7 @@ async function request(path, { method = 'GET', body, signal, token } = {}) {
         429: 'Trop de tentatives. Patientez avant de réessayer.',
       };
       const message = response.status >= 500
-        ? 'Une erreur est survenue. Veuillez réessayer dans un instant.'
+        ? 'Le service est temporairement indisponible.'
         : (typeof payload?.error?.message === 'string' ? payload.error.message : fallback[response.status] || 'La requête a échoué.');
       if (response.status === 401 && path !== '/auth/me' && path !== '/auth/login') {
         csrfToken = null;
