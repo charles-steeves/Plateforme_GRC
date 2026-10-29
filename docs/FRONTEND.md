@@ -1,5 +1,7 @@
 # Frontend GRC — Plateforme de vente en ligne et relation client
 
+> Actualisation de l'expérience utilisateur (29 octobre 2026) : formulaire catalogue organisé en grille responsive (recherche, catégorie, actions) et simplification des libellés jugés trop techniques. Les douze pages HTML et les espaces client/admin n'affichent plus de bandeaux « projet universitaire / données fictives » ; ces restrictions restent réelles et documentées côté serveur. Le formulaire d'inscription présente « Nom complet », « Adresse e-mail » et une aide courte pour le mot de passe ; la borne sécuritaire de 72 octets demeure appliquée en JavaScript et PHP. Les erreurs 500 restent masquées côté navigateur et doivent être diagnostiquées dans les journaux privés. Voir `tests/ux-copy.mjs`. Aucun paiement, email commercial ou livraison réelle n'est ajouté.
+
 > Mise à jour ciblée UI du 29 octobre 2026 : typographie locale unifiée (sans police non livrée), suppression de la famille serif isolée sur le grand titre, en-tête neutre plus souple entre 801 et 1100 px, navigation mobile et paniers améliorés sur écran étroit. Les douze pages partagent toujours le même CSS, sans modification des appels API ni des données. Le test `node tests/ui-style-contract.mjs` protège ces règles structurelles. **Le rendu sur Windows 11, les caractères anormaux signalés et l'ensemble des résolutions restent à vérifier en situation réelle.**
 
 Finalisation du chantier A sur `feature/frontend-finalization`, créée depuis
