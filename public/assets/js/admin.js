@@ -142,7 +142,7 @@ async function dashboard(root) {
     refresh.disabled = true;
     if (!automatic) loading(content, 'Chargement des indicateurs…');
     try {
-      const data = await api('/admin/dashboard');
+      const data = await api('/admin/dashboard', automatic ? { passive: true } : {});
       if (request !== generation) return;
       const satisfaction = data.satisfaction_avg;
       if (satisfaction !== null && (typeof satisfaction !== 'number' || !Number.isFinite(satisfaction) || satisfaction < 1 || satisfaction > 5)) {
