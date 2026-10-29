@@ -12,9 +12,11 @@ function generateId() {
   return Array.from(bytes, byte => byte.toString(16).padStart(2, '0')).join('');
 }
 
-export function requestId(kind, userId, payload) {
+export async function requestId(kind, userId, payload) {
   const key = `grc-request-v1:${kind}:${userId}`;
-  const signature = JSON.stringify(payload);
+  const content = new TextEncoder().encode(JSON.stringify(payload));
+  const digest = await crypto.subtle.digest('SHA-256', content);
+  const signature = Array.from(new Uint8Array(digest), b => b.toString(16).padStart(2, '0')).join('');
   let previous = memory.get(key);
   try {
     const saved = localStorage.getItem(key);
