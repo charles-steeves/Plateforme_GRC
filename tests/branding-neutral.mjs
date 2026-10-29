@@ -27,4 +27,4 @@ for (const doc of ['README.md', 'docs/PROJECT_BRIEF.md', 'docs/DEMO.md']) {
   const markdown = readFileSync(join(root, doc), 'utf8');
   assert.doesNotMatch(markdown, /équateur|entreprise fictive|boutique fictive/i, doc + ' retains a deprecated assumption');
 }
-console.log('OK — temporary Junelia's Shop identity on 12 pages, app header and major docs; no repetitive simulation disclaimers in pages');
+console.log("OK — temporary Junelia's Shop identity on 12 pages, app header and major docs; no repetitive simulation disclaimers in pages");
