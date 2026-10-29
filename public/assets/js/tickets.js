@@ -1,4 +1,4 @@
-import { api } from './api.js';
+import { api, isUncertainMutation as uncertainMutation } from './api.js';
 import { el, date, badge, notice, field, button, heading, empty, renderError, busy } from './ui.js';
 
 const TRANSITIONS = Object.freeze({
@@ -14,11 +14,6 @@ const STATUS_LABELS = Object.freeze({
 function validId(value) {
   const id = Number(value);
   return Number.isSafeInteger(id) && id > 0 ? id : null;
-}
-
-function uncertainMutation(error) {
-  return error.code === 'INVALID_RESPONSE' || !Number.isInteger(error.status)
-    || error.status < 400 || error.status >= 500;
 }
 
 function mutationError(error) {

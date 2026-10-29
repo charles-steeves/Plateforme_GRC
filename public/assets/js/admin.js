@@ -1,4 +1,4 @@
-import { api } from './api.js';
+import { api, isUncertainMutation as uncertain } from './api.js';
 import {
   el, money, date, badge, notice, field, button, heading, empty,
   renderError, busy, orderCard, productImage, isLocalImagePath,
@@ -46,11 +46,6 @@ function confirmedMutation(data, key, expectedId) {
     throw error;
   }
   return value;
-}
-
-function uncertain(error) {
-  return error.uncertain || !error.status || error.status >= 500
-    || error.code === 'INVALID_RESPONSE' || (error.status >= 200 && error.status < 300);
 }
 
 function mutationMessage(error) {
@@ -113,19 +108,20 @@ async function dashboard(root) {
 }
 
 function integerControl(name, value, label) {
+  const max = name === 'price_xaf' ? 1_000_000_000_000 : 1_000_000_000;
   const input = el('input', {
     id: `product-${name}`, name, type: 'number', required: true, min: '0',
-    max: String(Number.MAX_SAFE_INTEGER), step: '1', inputMode: 'numeric', value: String(value),
+    max: String(max), step: '1', inputMode: 'numeric', value: String(value),
   });
-  return { input, field: field(label, input) };
+  return { input, field: field(label, input, `Maximum : ${new Intl.NumberFormat('fr-FR').format(max)}.`) };
 }
 
 function readInteger(control, label) {
   const text = control.value.trim();
   const value = Number(text);
-  if (!/^(0|[1-9]\d*)$/.test(text) || !Number.isSafeInteger(value)) {
+  if (!/^(0|[1-9]\d*)$/.test(text) || !Number.isSafeInteger(value) || value > Number(control.max)) {
     control.focus();
-    throw new Error(`${label} doit être un entier positif ou nul, sans décimales.`);
+    throw new Error(`${label} doit être un entier positif ou nul, sans décimales, inférieur ou égal à ${control.max}.`);
   }
   return value;
 }
@@ -149,11 +145,11 @@ async function products(root) {
     editing = product;
     const original = product ? { ...product, active: Boolean(product.active) } : null;
     const name = el('input', { id: 'product-name', name: 'name', type: 'text', required: true, maxLength: 120, value: product?.name ?? '' });
-    const description = el('textarea', { id: 'product-description', name: 'description', rows: 4 }, product?.description ?? '');
-    const category = el('input', { id: 'product-category', name: 'category', type: 'text', required: true, value: product?.category ?? '' });
+    const description = el('textarea', { id: 'product-description', name: 'description', rows: 4, maxLength: 4000 }, product?.description ?? '');
+    const category = el('input', { id: 'product-category', name: 'category', type: 'text', required: true, maxLength: 120, value: product?.category ?? '' });
     const price = integerControl('price_xaf', product?.price_xaf ?? 0, 'Prix entier en FCFA (XAF)');
     const stock = integerControl('stock_quantity', product?.stock_quantity ?? 0, 'Quantité disponible');
-    const image = el('input', { id: 'product-image', name: 'image_url', type: 'text', value: product?.image_url ?? '/assets/images/product-placeholder.svg', placeholder: '/assets/images/product-placeholder.svg' });
+    const image = el('input', { id: 'product-image', name: 'image_url', type: 'text', maxLength: 500, value: product?.image_url ?? '/assets/images/product-placeholder.svg', placeholder: '/assets/images/product-placeholder.svg' });
     const active = el('input', { id: 'product-active', name: 'active', type: 'checkbox', checked: product ? Boolean(product.active) : true });
     const message = el('div', { 'aria-live': 'polite' });
     const save = button(product ? 'Enregistrer les modifications' : 'Créer le produit', { type: 'submit', className: 'button button-primary' });

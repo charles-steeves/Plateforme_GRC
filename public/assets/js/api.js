@@ -11,6 +11,11 @@ export class ApiError extends Error {
   }
 }
 
+export function isUncertainMutation(error) {
+  return !error.beforeMutation && (error.uncertain || !error.status
+    || error.status < 400 || error.status >= 500 || error.code === 'INVALID_RESPONSE');
+}
+
 async function request(path, { method = 'GET', body, signal, token } = {}) {
   if (!path.startsWith('/') || path.startsWith('//') || path.includes('\\')) {
     throw new ApiError('Adresse de requête non autorisée.', 0, 'INVALID_PATH');
@@ -86,7 +91,17 @@ export async function refreshCsrf() {
 export async function api(path, options = {}) {
   const method = (options.method || 'GET').toUpperCase();
   if (!['GET', 'POST', 'PATCH'].includes(method)) throw new ApiError('Méthode non autorisée.');
-  const token = method === 'GET' ? null : (csrfToken || await refreshCsrf());
+  let token = null;
+  if (method !== 'GET') {
+    try { token = csrfToken || await refreshCsrf(); }
+    catch (error) {
+      // No business request has been made yet. A CSRF/network failure here
+      // must remain retryable rather than claim an order may already exist.
+      const failure = new ApiError('Impossible de préparer la session. Aucune action n’a été envoyée. Réessayez après rétablissement du service.', error.status, error.code);
+      failure.beforeMutation = true;
+      throw failure;
+    }
+  }
   const data = await request(path, { ...options, method, token });
   if (path === '/auth/login' && method === 'POST') {
     csrfToken = null;

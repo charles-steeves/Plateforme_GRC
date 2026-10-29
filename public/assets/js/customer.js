@@ -169,7 +169,16 @@ async function auth(root, page, user) {
     const message = el('div', { 'aria-live': 'polite', tabindex: '-1' });
     const name = el('input', { id: 'auth-name', name: 'name', type: 'text', autocomplete: 'name', required: true, maxLength: 120 });
     const email = el('input', { id: 'auth-email', name: 'email', type: 'email', autocomplete: 'username', required: true, maxLength: 254, spellcheck: 'false', autocapitalize: 'none' });
-    const password = el('input', { id: 'auth-password', name: 'password', type: 'password', autocomplete: register ? 'new-password' : 'current-password', required: true, minLength: 12 });
+    const password = el('input', { id: 'auth-password', name: 'password', type: 'password', autocomplete: register ? 'new-password' : 'current-password', required: true, ...(register ? { minLength: 12 } : {}) });
+    function validatePassword() {
+        const value = password.value;
+        const tooShort = register && Array.from(value).length < 12;
+        const tooLong = new TextEncoder().encode(value).length > 72;
+        password.setCustomValidity(value && (tooShort || tooLong || value.includes('\0'))
+            ? (register ? 'Utilisez au moins 12 caractères et au plus 72 octets UTF-8, sans caractère nul.' : 'Le mot de passe ne doit pas dépasser 72 octets UTF-8 ni contenir de caractère nul.')
+            : '');
+    }
+    password.addEventListener('input', validatePassword);
     const reveal = button('Afficher le mot de passe', { className: 'button button-secondary', type: 'button', 'aria-pressed': 'false', onClick: () => {
         const visible = password.type === 'password';
         password.type = visible ? 'text' : 'password';
@@ -181,7 +190,7 @@ async function auth(root, page, user) {
         el('h2', {}, register ? 'Bienvenue dans la boutique' : 'Retrouvons-nous'),
         register ? field('Nom fictif', name, '120 caractères maximum.') : null,
         field('Adresse e-mail fictive', email, register ? 'Utilisez une adresse de démonstration, par exemple nom@example.test.' : ''),
-        field('Mot de passe', password, '12 caractères minimum. Ne réutilisez aucun mot de passe réel.'),
+        field('Mot de passe', password, `${register ? '12 caractères minimum. ' : ''}72 octets UTF-8 maximum (un caractère accentué ou un emoji peut compter plusieurs octets). Ne réutilisez aucun mot de passe réel.`),
         reveal, message, submit);
     if (!register && new URLSearchParams(window.location.search).get('logged_out') === '1') {
         notice(message, 'Vous êtes déconnecté. Votre session a été fermée.', 'success');
@@ -197,6 +206,7 @@ async function auth(root, page, user) {
     form.addEventListener('submit', async event => {
         event.preventDefault();
         if (pending || submit.disabled) return;
+        validatePassword();
         if (!form.reportValidity()) return;
         if (register && !name.value.trim()) {
             name.setCustomValidity('Saisissez un nom fictif.');
