@@ -437,6 +437,8 @@ body.admin-workspace .site-main { max-width: 1550px; }
 .admin-sidebar .admin-nav a[aria-current="page"] { color: #07597f; background: #d9f0ff; }
 .admin-nav-icon { display: inline-grid; flex: 0 0 24px; place-items: center; font-size: 1.12rem; }
 .admin-sidebar-bottom { margin-top: auto; padding: .9rem .7rem 1.2rem; border-top: 1px solid var(--line); }
+.admin-sidebar-shop { display: flex; align-items: center; gap: .7rem; min-height: 42px; padding: .55rem .7rem; border-radius: 10px; color: var(--green-dark); text-decoration: none; font-size: .84rem; }
+.admin-sidebar-shop:hover { background: var(--soft-green); }
 .admin-sidebar-account { display: flex; align-items: center; gap: .65rem; padding: .5rem; min-width: 0; }
 .admin-account-initials { flex: 0 0 38px; width: 38px; height: 38px; display: grid; place-items: center; border-radius: 12px; background: #d9f0ff; color: #07597f; font-weight: 750; }
 .admin-sidebar-account-details { display: grid; min-width: 0; gap: .05rem; font-size: .8rem; }
@@ -452,6 +454,7 @@ body.admin-workspace.admin-sidebar-collapsed .admin-sidebar-title,
 body.admin-workspace.admin-sidebar-collapsed .admin-nav-label,
 body.admin-workspace.admin-sidebar-collapsed .admin-sidebar-account-details { display: none; }
 body.admin-workspace.admin-sidebar-collapsed .admin-sidebar .admin-nav a { justify-content: center; padding-inline: .4rem; }
+body.admin-workspace.admin-sidebar-collapsed .admin-sidebar-shop { justify-content: center; padding-inline: .4rem; }
 body.admin-workspace.admin-sidebar-collapsed .admin-sidebar-account { justify-content: center; padding-inline: 0; }
 body.admin-workspace.admin-sidebar-collapsed .admin-sidebar-signout { font-size: .7rem; padding: .4rem; white-space: normal; overflow-wrap: anywhere; }
 .admin-sidebar-overlay { display: none; }
