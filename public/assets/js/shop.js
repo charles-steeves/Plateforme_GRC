@@ -79,8 +79,9 @@ async function mountCatalogue(root) {
   const page = id(params.get('page') || '1') || 1;
   const searchInput = el('input', { id: 'catalogue-search', name: 'search', type: 'search',
     value: search, maxLength: 200, placeholder: 'Téléphone, casque, accessoire…' });
-  const categoryInput = el('input', { id: 'catalogue-category', name: 'category', type: 'text',
-    value: category, maxLength: 120, placeholder: 'Toutes les catégories' });
+  const categoryInput = el('select', { id: 'catalogue-category', name: 'category' },
+    el('option', { value: '' }, 'Toutes les catégories'));
+  if (category) categoryInput.append(el('option', { value: category, selected: true }, category));
   const form = el('form', { className: 'panel catalogue-toolbar', action: '/index.html', method: 'get',
     role: 'search', 'aria-label': 'Rechercher dans le catalogue' },
   field('Rechercher un produit', searchInput),
@@ -102,6 +103,22 @@ async function mountCatalogue(root) {
       el('div', { className: 'hero-art', 'aria-hidden': 'true' },
         el('img', { src: '/assets/images/product-placeholder.svg', alt: '', width: 480, height: 360 }))),
     form, results);
+  // Administrator-defined categories are derived from product data, never free
+  // text entered by a visitor. Keep the catalogue usable if this lookup fails.
+  void api('/products/categories').then(data => {
+    if (!Array.isArray(data?.items)) return;
+    const rows = data.items.filter(item => typeof item?.name === 'string'
+      && item.name.length > 0 && item.name.length <= 120 && Number.isSafeInteger(item.count));
+    const options = [el('option', { value: '' }, 'Toutes les catégories')];
+    let present = false;
+    for (const item of rows) {
+      if (item.name === category) present = true;
+      options.push(el('option', { value: item.name }, item.name));
+    }
+    if (category && !present) options.push(el('option', { value: category }, category));
+    categoryInput.replaceChildren(...options);
+    categoryInput.value = category;
+  }).catch(() => { /* Products can still load if the category list is unavailable. */ });
   try {
     const query = new URLSearchParams({ search, category, page: String(page), per_page: String(PER_PAGE) });
     const data = await api(`/products?${query}`);
