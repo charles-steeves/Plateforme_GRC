@@ -9,7 +9,7 @@ Toute nouvelle conversation, tout agent de développement et tout membre du grou
 Documents normatifs de même version : MASTER_CONTRACT.md (vision et gouvernance) ; PROJECT_BRIEF.md (périmètre) ; ARCHITECTURE.md (frontières) ; API_CONTRACT.md (HTTP et JSON) ; DATA_MODEL.md (SQL et métier) ; SECURITY_REQUIREMENTS.md (protections et essais) ; COURSE_MAPPING.md (cours). En cas d'incohérence, STOP et signalement au coordinateur ; aucune correction tacite.
 
 ## 1. Décisions désormais figées
-- Projet : une boutique fictive d'une seule entreprise gabonaise, **pas** une marketplace multi-vendeurs ; une GRC riche est au cœur de la soutenance.
+- Projet : une **plateforme de vente en ligne et de gestion de la relation client**, pensée comme une application unique et non une marketplace multi-vendeurs ; une GRC riche est au cœur de la soutenance. **Nom, entreprise, marque et activité commerciale définitifs non définis à ce stade.** Les données et les transactions de soutenance restent uniquement des démonstrations.
 - Trois composants d'exécution : interface client et interface administrateur (deux faces du même site) ; serveur PHP ; base SQLite. Seul le serveur accède à la base.
 - Technologies v1 : HTML5, CSS3, JavaScript moderne sans framework imposé ; PHP 8.2+ sans Laravel pour cette version accélérée ; PDO + SQLite via SQL. MySQL est une solution classique étudiée, non utilisée en v1.
 - Windows 11 **et** Linux pris en charge. macOS hors exigence. VS Code et GitHub privé pour le travail ; pas de Claude Code/ECC requis.
@@ -81,7 +81,7 @@ Cet addendum **complète**, sans annuler, les sections 0–8 et les annexes norm
 
 ### 9.1 Exigences déjà retenues, à préserver
 
-- La boutique et la GRC sont une **seule application réellement interactive** : les différents navigateurs et comptes consultent les mêmes données SQLite sur le PC serveur. « Fictif » qualifie les entreprises, personnes, commandes et transactions commerciales, **pas** le fonctionnement de l'API ni la persistance.
+- La boutique et la GRC sont une **seule application réellement interactive** : les différents navigateurs et comptes consultent les mêmes données SQLite sur le PC serveur. Les comptes et opérations de soutenance utilisent des **données de démonstration**, sans paiement réel ; cela **ne définit pas l'entreprise comme fictive** et ne réduit ni le fonctionnement de l'API ni la persistance.
 - L'utilisateur veut une démonstration concrète des trois dimensions de GRC, de la fidélisation et du SAV, conforme à l'enseignement. Le site doit rester **administrable depuis le navigateur** pour les produits, prix, stocks, commandes et tickets P0 ; pas de modification SQL ou du code à chaque ajout de produit.
 - Le parcours de soutenance de la section 4 est prioritaire. Un administrateur se connecte par l'authentification à rôles et un client ne dispose jamais de pouvoirs admin par simple accès à une URL.
 - Les données et comptes préchargés constituent un **jeu de démonstration**, pas une limitation à douze produits ni une promesse de catalogue réel. Les éléments ajoutés par les administrateurs doivent être réellement enregistrés. Une initialisation/reset ne doit jamais effacer silencieusement une base existante.
@@ -96,7 +96,7 @@ Cet addendum **complète**, sans annuler, les sections 0–8 et les annexes norm
 Ces sujets doivent être décidés **un par un** selon la section 8, sans être implémentés par anticipation :
 - **Plusieurs administrateurs** (deux ou trois suggérés), gestion depuis le navigateur, éventuels rôles distincts ou administrateur principal. Le P0 actuel prévoit un compte admin initial et le rôle `admin` ; ne pas créer de mécanisme de promotion publique.
 - **Import direct d'images** depuis le navigateur. Le P0 existant limite les images à des chemins statiques locaux contrôlés ; introduire un upload exigerait une conception de stockage, validation du contenu, limites et contrôles de sécurité.
-- **Nom de la boutique, identité visuelle et assortiment** : « Équateur » et les produits électroniques sont les choix de démonstration déjà présents, pas une obligation attribuée à l'enseignante. Les conserver jusqu'à nouvelle décision.
+- **Nom, identité, statut et secteur de l'entreprise** : décision explicite de l'utilisateur du 29 octobre 2026 : retirer « Équateur » et toute présentation affirmant qu'il s'agit d'une entreprise fictive. Le nom, la structure commerciale et l'identité seront définis plus tard. En attendant, utiliser « Plateforme GRC » comme libellé fonctionnel neutre, non comme une nouvelle marque. Les produits électroniques préchargés sont provisoires et restent des données de démonstration.
 - **Fonctions de GRC enrichie** (RFM, campagnes, prospects, coupons, suivi marketing et exports) : ne pas les ajouter par défaut si le P0, le SAV, la sécurité ou la qualité de présentation ne sont pas stabilisés.
 - **Portée d'accès à la soutenance** (jury, groupe, classe ou public plus large) : à confirmer avant toute publication ; seules des données fictives sont admises dans tous les cas.
 - **Réutilisation commerciale future** : n'est pas un objectif de cette v1 ; une conversion en boutique réelle exigerait un nouveau périmètre de sécurité, paiements, données, conformité et exploitation.
@@ -114,3 +114,7 @@ Ces sujets doivent être décidés **un par un** selon la section 8, sans être 
 Garder un coordinateur qui arbitre et des développeurs avec **périmètres de fichiers distincts**. Chaque livraison comprend : branche de départ, fichiers changés, modifications effectuées, tests **réellement exécutés**, limites, lien de PR, instructions de reprise. Favoriser les **ajouts minimaux** et les corrections ciblées ; ne pas remplacer un contrat, un service ou une interface entière sans bug démontré ou demande validée. Une PR ne doit pas être fusionnée seulement parce que GitHub indique `mergeable=true`.
 
 Cet addendum n'est pas une liste d'autorisations pour ajouter des fonctions P1/P2, ni une extension silencieuse du contrat d'API.
+
+### 9.5 Arbitrage commercial postérieur aux premières livraisons
+
+**Décision confirmée :** ne plus nommer la plateforme « Équateur » et ne plus présumer qu'une entreprise fictive sera créée. Les formulations des contrats antérieurs impliquant ces choix sont remplacées uniquement sur ces deux points ; toutes les exigences techniques, de GRC, de sécurité et de simulation des paiements restent applicables. Ne pas inventer d'autre nom ou type d'entreprise avant décision. La mention « données fictives » désigne exclusivement les données d'essai ; ce n'est pas une qualification de l'entreprise.
