@@ -72,6 +72,25 @@ try {
   const account = role => accounts.find(a => a.role === role);
   const clientAccounts = accounts.filter(a => a.role === 'client');
 
+  // A second admin is added to the DISPOSABLE database only; existing accounts
+  // and products remain intact. No secrets are written to GitHub logs.
+  const addAdmin = spawnSync('php', ['database/add-admin.php',
+    '--name=Collègue GRC', '--email=admin2@example.test'], {
+    cwd: root, env: { ...process.env, GRC_DB_PATH: dbPath },
+    encoding: 'utf8', timeout: 30000,
+  });
+  assert.equal(addAdmin.status, 0, 'Local additional admin creation failed: ' + addAdmin.stderr);
+  const extraAccounts = JSON.parse(readFileSync(join(folder, 'demo-accounts.json'), 'utf8')).accounts;
+  const secondAdmin = extraAccounts.find(a => a.email === 'admin2@example.test');
+  ok(secondAdmin?.role === 'admin' && typeof secondAdmin.password === 'string',
+    'second admin appended to private local credentials');
+  const addDuplicate = spawnSync('php', ['database/add-admin.php',
+    '--name=Doublon', '--email=admin2@example.test'], {
+    cwd: root, env: { ...process.env, GRC_DB_PATH: dbPath },
+    encoding: 'utf8', timeout: 30000,
+  });
+  ok(addDuplicate.status !== 0, 'duplicate admin account is refused');
+
   const port = await reservePort();
   const base = 'http://127.0.0.1:' + port;
   server = spawn('php', ['-S', '127.0.0.1:' + port, '-t', 'public', 'public/router.php'], {
@@ -125,6 +144,42 @@ try {
   const adminUser = await admin.login(account('admin'));
   ok(adminUser.role === 'admin', 'admin role from session');
   await outsider.login(clientAccounts[1]);
+  const colleague = new Session(base);
+  const colleagueUser = await colleague.login(secondAdmin);
+  ok(colleagueUser.role === 'admin', 'independent colleague admin can log in');
+  ok((await colleague.get('/admin/dashboard')).status === 200, 'colleague admin accesses same dashboard');
+
+  // Real HTTP multipart image: same CSRF and RBAC as other admin mutations.
+  function imageForm(bytes, type) {
+    const form = new FormData();
+    form.set('image', new Blob([bytes], { type }), 'image.png');
+    return form;
+  }
+  async function uploadAs(session, form, csrf = true) {
+    return fetch(base + '/api/v1/admin/product-image', {
+      method: 'POST',
+      headers: { ...(session.cookie ? { cookie: session.cookie } : {}),
+        ...(csrf && session.csrf ? { 'x-csrf-token': session.csrf } : {}) },
+      body: form, signal: AbortSignal.timeout(5000),
+    });
+  }
+  const validPng = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jS8cAAAAASUVORK5CYII=', 'base64');
+  ok((await uploadAs(client, imageForm(validPng, 'image/png'))).status === 403,
+    'client cannot upload product images');
+  ok((await uploadAs(admin, imageForm(validPng, 'image/png'), false)).status === 403,
+    'upload without CSRF is forbidden');
+  ok((await uploadAs(admin, imageForm(Buffer.from('fake image'), 'image/png'))).status === 422,
+    'fake image content is rejected');
+  const imageReply = await uploadAs(admin, imageForm(validPng, 'image/png'));
+  const imagePayload = await imageReply.json();
+  ok(imageReply.status === 201 && /^\/assets\/images\/uploads\/[0-9a-f]{32}\.png$/.test(imagePayload.data?.image_url || ''),
+    'real PNG upload returns random local-only path');
+  const publicImage = await fetch(base + imagePayload.data.image_url);
+  ok(publicImage.status === 200 && publicImage.headers.get('content-type')?.includes('image/png'),
+    'uploaded product image is available as local static image');
+  const imageProduct = await colleague.patch('/admin/products/1', { image_url: imagePayload.data.image_url });
+  ok(imageProduct.status === 200 && imageProduct.data.product.image_url === imagePayload.data.image_url,
+    'second admin can attach uploaded photo to existing product');
 
   const forbidden = await client.get('/admin/dashboard');
   ok(forbidden.status === 403, 'client forbidden from admin API');
