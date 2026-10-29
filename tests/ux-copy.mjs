@@ -16,7 +16,7 @@ for (const file of screens) {
   const html = read('public/' + file);
   assert.match(html, /<html lang="fr">/);
   assert.match(html, /<meta charset="utf-8">/);
-  assert.match(html, /Plateforme GRC/);
+  assert.match(html, /Junelia's Shop/);
   assert.doesNotMatch(html, /Projet universitaire|Démonstration — données fictives|Utilisez exclusivement des identités|Prix en FCFA \(XAF\)/i, file);
 }
 const shop = read('public/assets/js/shop.js');
