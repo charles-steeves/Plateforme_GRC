@@ -43,6 +43,8 @@ Le navigateur et l'administration utilisent la même API et la même base SQLite
 
 5. Dans le navigateur, ouvrir **http://127.0.0.1:8000/**. Pour vérifier rapidement la réponse de l'API, ouvrir **http://127.0.0.1:8000/api/v1/products** : la réponse doit être un objet JSON avec `success: true` et une liste de produits.
 
+**Actualisation automatique :** le tableau de bord administratif et les échanges SAV se mettent à jour toutes les **5 secondes** lorsque l'onglet est visible et connecté, sans recharger la page ni effacer les brouillons. Pour tester simultanément le dépôt de votre collègue sur le même ordinateur, lancez celui-ci sur `http://localhost:8001/` ; conserver `127.0.0.1` ici et `localhost` là-bas isole aussi les cookies de session.
+
 **Sous Windows / PowerShell**, le fichier des comptes peut être ouvert dans VS Code sous `storage/demo-accounts.json` ou consulté localement avec :
 
 ```powershell
