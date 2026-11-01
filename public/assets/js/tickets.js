@@ -8,7 +8,7 @@ const TRANSITIONS = Object.freeze({
   resolved: ['closed', 'in_progress'],
   closed: [],
 });
-const AUTO_REFRESH_MS = 10000;
+const AUTO_REFRESH_MS = 5000;
 const STATUS_LABELS = Object.freeze({
   open: 'Ouvert', in_progress: 'En cours', resolved: 'Résolu', closed: 'Fermé',
 });
