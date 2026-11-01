@@ -24,7 +24,7 @@ for (const dimension of ['GRC analytique', 'GRC opérationnelle', 'GRC interacti
   assert.ok(admin.includes(dimension), 'Missing lecture dimension: ' + dimension);
 }
 assert.match(admin, /const timer = setInterval/);
-assert.match(admin, /}, 12000\)/);
+assert.match(admin, /}, 5000\)/);
 assert.match(admin, /document\.visibilityState === 'visible'/);
 assert.match(admin, /'Gérer les commandes'|'Suivre les commandes'/);
 assert.match(contract, /93 diapositives/);
