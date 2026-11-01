@@ -727,3 +727,170 @@ body.store-workspace .product-card:nth-child(3n) .product-image { background: #e
 .site-footer a:hover { color: #ffffff; }
 .site-footer a:focus-visible { outline-color: #ffd2a8; }
 .site-footer .footer-inner p { color: #c5d0dc; }
+
+/* ========================================================================
+   Habillage inspire du tableau de bord de la collegue (ELYA E'VENT).
+   Portage strictement visuel : aucun changement aux comptes, roles ou API.
+   Sauvegarde : sauvegarde-avant-design-collegue-2026-11-01.
+   ======================================================================== */
+body {
+  --paper: #f2f7fb;
+  --muted: #547388;
+  --line: #d7e7f0;
+  --green: #18709b;
+  --green-dark: #0b587c;
+  --soft-green: #e9f6fd;
+  --shadow: 0 10px 30px rgb(16 44 72 / 7%);
+  background: var(--paper);
+}
+.site-header {
+  background: linear-gradient(100deg, #163550 0%, #125d7c 68%, #087b95 100%);
+  border-bottom-color: #194b65;
+}
+.site-header .brand-mark { background: #f3a67f; color: #17334d; }
+.panel, .product-card, .order-card, .auth-card {
+  border-color: var(--line);
+  box-shadow: var(--shadow);
+  border-radius: 16px;
+}
+.button, button { border-radius: 10px; }
+.auth-aside { background: linear-gradient(140deg, #102c48, #075d80); }
+.auth-aside h1, .auth-aside h2, .auth-aside h3 { color: #fff; }
+body.admin-workspace {
+  --admin-sidebar-width: 264px;
+  --paper: #f2f7fb;
+  background: #f2f7fb;
+}
+body.admin-workspace.admin-sidebar-collapsed { --admin-sidebar-width: 72px; }
+body.admin-workspace .site-header {
+  background: linear-gradient(100deg, #163550 0%, #125d7c 68%, #087b95 100%);
+}
+body.admin-workspace .site-header .header-inner { min-height: 72px; }
+body.admin-workspace .site-header .brand-mark { background: #f3a67f; color: #17334d; }
+body.admin-workspace #section-navigation { top: 72px; }
+body.admin-workspace .site-main {
+  max-width: none;
+  padding-top: 2rem;
+  background: none;
+}
+body.admin-workspace .admin-sidebar,
+body.store-workspace .store-sidebar {
+  background: #102c48;
+  color: #dceefb;
+  border-right: 1px solid #3b6683;
+  box-shadow: 4px 0 20px rgb(16 44 72 / 10%);
+}
+body.admin-workspace .admin-sidebar-heading,
+body.store-workspace .store-sidebar-heading { color: #91bdcf; }
+body.admin-workspace .admin-sidebar-title,
+body.store-workspace .store-sidebar-heading {
+  font-size: .69rem;
+  letter-spacing: .14em;
+  font-weight: 700;
+}
+body.admin-workspace .admin-sidebar .admin-nav { gap: .38rem; padding: .75rem .9rem; }
+body.admin-workspace .admin-sidebar .admin-nav a {
+  min-height: 62px;
+  padding: .65rem .85rem;
+  color: #e0eff8;
+  background: transparent;
+  border-radius: 11px;
+  font-size: .88rem;
+  font-weight: 650;
+}
+body.admin-workspace .admin-sidebar .admin-nav a:hover,
+body.admin-workspace .admin-sidebar .admin-nav a[aria-current="page"] {
+  background: #18709b;
+  color: #fff;
+}
+body.admin-workspace .admin-nav-label { display: grid; gap: .12rem; line-height: 1.35; }
+body.admin-workspace .admin-nav-label small {
+  color: #bed6e5;
+  font-size: .7rem;
+  font-weight: 400;
+  white-space: normal;
+}
+body.admin-workspace .admin-nav-icon { font-size: 1.35rem; }
+body.admin-workspace .admin-sidebar-bottom,
+body.store-workspace .store-sidebar-bottom { border-top-color: #3b6683; }
+body.admin-workspace .admin-sidebar-shop {
+  color: #dceefb;
+  border-radius: 10px;
+}
+body.admin-workspace .admin-sidebar-shop:hover { background: #1a5578; color: #fff; }
+body.admin-workspace .admin-sidebar-account-details > strong,
+body.store-workspace .store-account-details strong { color: #fff; }
+body.admin-workspace .admin-sidebar-account-details > span,
+body.store-workspace .store-account-details a { color: #bed6e5; }
+body.admin-workspace .admin-account-initials,
+body.store-workspace .store-account-avatar {
+  color: #102c48;
+  background: #a0ddec;
+}
+body.admin-workspace .admin-sidebar-signout.button,
+body.admin-workspace .admin-sidebar-signout {
+  border: 1px solid #6795b0;
+  background: transparent;
+  color: #fff;
+  border-radius: 9px;
+}
+body.admin-workspace .admin-sidebar-signout:hover {
+  background: #1a5578 !important;
+  border-color: #91bdcf !important;
+  color: #fff !important;
+}
+body.admin-workspace .metric-card { border-top-color: #18709b; }
+body.admin-workspace .metric-value { color: #134666; }
+body.admin-workspace .crm-process-grid a {
+  border-color: #c9e3f2;
+  background: #e9f6fd;
+}
+body.store-workspace { --store-sidebar-width: 244px; }
+body.store-workspace.store-sidebar-collapsed { --store-sidebar-width: 66px; }
+body.store-workspace .store-sidebar-nav { gap: .35rem; padding: .75rem; }
+body.store-workspace .store-sidebar-nav a {
+  min-height: 50px;
+  color: #e0eff8;
+  background: transparent;
+  border-radius: 11px;
+  font-weight: 650;
+}
+body.store-workspace .store-sidebar-nav a:hover,
+body.store-workspace .store-sidebar-nav a[aria-current="page"] {
+  background: #18709b;
+  color: #fff;
+}
+body.store-workspace .store-sidebar-visitor > a:not(.button) { color: #bed6e5; }
+body.store-workspace .store-sidebar-visitor .button { background: #18709b; color: #fff; }
+body.store-workspace .store-sidebar-visitor .button:hover { background: #2388b5; }
+body.store-workspace .store-sidebar-heading { color: #91bdcf; }
+body.store-workspace .site-main {
+  background: radial-gradient(circle at 95% 12%, #e9f6fd, transparent 32%);
+}
+body.store-workspace .hero {
+  background: linear-gradient(120deg, #102c48 0%, #075d80 70%, #18709b 100%);
+  border-color: #1b7194;
+}
+body.store-workspace .hero-art {
+  background: radial-gradient(circle at 50% 52%, #d4eefa 0 30%, transparent 60%);
+}
+body.admin-workspace .admin-sidebar a:focus-visible,
+body.admin-workspace .admin-sidebar button:focus-visible,
+body.store-workspace .store-sidebar a:focus-visible,
+body.store-workspace .store-sidebar button:focus-visible {
+  outline: 3px solid #edb75d;
+  outline-offset: 2px;
+}
+@media (max-width: 900px) {
+  body.admin-workspace #section-navigation { top: 0; }
+  body.admin-workspace .site-header .header-inner { min-height: 76px; }
+  body.admin-workspace .site-main { padding-top: 1.5rem; }
+}
+@media (max-width: 540px) {
+  body.admin-workspace .admin-sidebar .admin-nav a { min-height: 54px; }
+}
+@media print {
+  body.admin-workspace #section-navigation,
+  body.admin-workspace .admin-sidebar-toggle { display: none !important; }
+  body.admin-workspace .site-main { margin-left: 0; }
+}
