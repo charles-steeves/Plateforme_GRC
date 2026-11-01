@@ -194,7 +194,7 @@ async function dashboard(root) {
   // and no polling while offline/in the background; source of truth remains SQLite.
   const timer = setInterval(() => {
     if (document.visibilityState === 'visible' && navigator.onLine && !refresh.disabled && root.isConnected) void load(true);
-  }, 12000);
+  }, 5000);
   window.addEventListener('pagehide', () => clearInterval(timer), { once: true });
 }
 
