@@ -15,7 +15,7 @@ for (const name of pages) {
   assert.match(read('public/' + name), /Junelia's Shop/, name + ': shop name');
 }
 assert.match(read('public/assets/js/app.js'), /Junelia's Shop — accueil/);
-assert.match(tickets, /AUTO_REFRESH_MS = 10000/);
+assert.match(tickets, /AUTO_REFRESH_MS = 5000/);
 assert.match(tickets, /window\.setInterval\(/);
 assert.match(tickets, /document\.visibilityState !== 'visible'/);
 assert.match(tickets, /!navigator\.onLine/);
