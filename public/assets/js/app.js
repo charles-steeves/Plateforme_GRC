@@ -61,16 +61,19 @@ function renderHeader(user, pending = false) {
 function renderAdminNav(user) {
   const container = document.getElementById('section-navigation');
   const tabs = [
-    ['admin', 'Vue d’ensemble', '◫'], ['admin-customers', 'Clients', '♙'],
-    ['admin-orders', 'Commandes', '▤'], ['admin-products', 'Produits', '▦'],
-    ['admin-tickets', 'Service client', '✉'],
+    ['admin', 'Vue d’ensemble', '◫', 'Indicateurs et suivi'],
+    ['admin-customers', 'Clients', '♙', 'Portefeuille et fidélité'],
+    ['admin-orders', 'Commandes', '▤', 'Ventes et transactions'],
+    ['admin-products', 'Produits', '▦', 'Catalogue et stocks'],
+    ['admin-tickets', 'Service client', '✉', 'Dialogue et SAV'],
   ];
   const nav = el('nav', { className: 'admin-nav', id: 'admin-sidebar-menu', 'aria-label': 'Administration GRC' },
-    tabs.map(([key, label, symbol]) => el('a', {
+    tabs.map(([key, label, symbol, detail]) => el('a', {
       href: `/${key}.html`, title: label,
       ...(page === key ? { 'aria-current': 'page' } : {}),
     }, el('span', { className: 'admin-nav-icon', 'aria-hidden': 'true' }, symbol),
-      el('span', { className: 'admin-nav-label' }, label))));
+      el('span', { className: 'admin-nav-label' },
+        el('strong', {}, label), el('small', {}, detail)))));
   const account = el('div', { className: 'admin-sidebar-account' },
     el('div', { className: 'admin-account-initials', 'aria-hidden': 'true' }, user.name.trim().charAt(0).toUpperCase()),
     el('div', { className: 'admin-sidebar-account-details' },
