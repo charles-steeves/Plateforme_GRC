@@ -217,13 +217,14 @@ function readInteger(control, label) {
 async function products(root) {
   const feedback = el('div', { 'aria-live': 'polite' });
   const list = el('section', { className: 'stack', 'aria-label': 'Produits enregistrés' });
-  const editor = el('section', { className: 'panel stack', 'aria-label': 'Édition du produit' });
+  const editor = el('section', { className: 'panel stack', id: 'admin-product-editor',
+    'aria-label': 'Édition du produit', tabIndex: -1 });
   const refresh = button('Actualiser les produits', { className: 'button button-secondary', onClick: () => load() });
   const newProduct = button('Nouveau produit', {
     className: 'button button-primary', onClick: () => { if (mutationPending || needsRefresh) return; edit(); editor.querySelector('input')?.focus(); },
   });
   root.replaceChildren(heading('Produits et stocks', 'Créez, modifiez ou désactivez les produits du catalogue.'),
-    el('div', { className: 'cluster' }, refresh, newProduct), feedback, el('div', { className: 'split' }, list, editor));
+    el('div', { className: 'cluster' }, refresh, newProduct), feedback, el('div', { className: 'split admin-product-layout' }, list, editor));
   let generation = 0;
   let editing = null;
   let mutationPending = false;
@@ -355,6 +356,13 @@ async function products(root) {
     editor.replaceChildren(el('h2', {}, product ? `Modifier le produit n° ${product.id}` : 'Nouveau produit'), form);
   }
 
+  function selectProductOnMobile(product) {
+    if (mutationPending || needsRefresh) return;
+    edit(product);
+    editor.scrollIntoView({ block: 'start', behavior: 'auto' });
+    editor.querySelector('#product-price_xaf')?.focus({ preventScroll: true });
+  }
+
   async function load() {
     if (mutationPending) return;
     const request = ++generation;
@@ -367,7 +375,23 @@ async function products(root) {
       if (items.some((product) => !validId(product.id))) throw new Error('Un identifiant de produit reçu est invalide.');
       const wasUncertain = needsRefresh;
       const body = el('tbody');
+      const mobileCards = el('div', { className: 'admin-mobile-products',
+        'aria-label': 'Liste des produits modifiables' });
       for (const product of items) {
+        mobileCards.append(el('article', { className: 'panel admin-mobile-product' },
+          el('div', { className: 'admin-mobile-product-heading' },
+            productImage(product),
+            el('div', { className: 'stack' },
+              el('strong', {}, product.name),
+              el('span', { className: 'muted' }, product.category),
+              el('span', {}, money(product.price_xaf)),
+              el('span', { className: 'muted' },
+                `Stock : ${count(product.stock_quantity)} · ${product.active ? 'Actif' : 'Inactif'}`))),
+          button('Modifier ce produit', { className: 'button button-primary',
+            disabled: mutationPending || needsRefresh,
+            'aria-label': `Modifier ${product.name}`,
+            onClick: () => selectProductOnMobile(product) })));
+
         body.append(el('tr', {},
           el('td', {}, el('div', { className: 'admin-product-row' }, productImage(product),
             el('div', {}, el('strong', {}, product.name), el('p', { className: 'muted' }, product.category)))),
@@ -384,6 +408,10 @@ async function products(root) {
           el('table', {}, el('caption', {}, `${items.length} produit${items.length > 1 ? 's' : ''}`),
             el('thead', {}, el('tr', {}, ...['Produit', 'Prix', 'Stock', 'Visibilité', 'Action'].map((label) => el('th', { scope: 'col' }, label)))), body))
           : empty('Aucun produit enregistré', 'Créez un premier produit avec le formulaire.'));
+      if (items.length) {
+        list.querySelector('.table-wrap')?.classList.add('admin-product-desktop');
+        list.append(mobileCards);
+      }
       // Do not unlock after a response that cannot be rendered coherently.
       needsRefresh = false;
       newProduct.disabled = false;

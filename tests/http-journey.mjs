@@ -332,8 +332,34 @@ try {
   ok(filteredGroup.status === 200 && filteredGroup.data.total === 1
     && filteredGroup.data.items[0].id === 1,
     'visitor filters catalogue by selected group');
+  const changedPrice = await admin.patch('/admin/products/1', { price_xaf: 98500 });
+  ok(changedPrice.status === 200 && changedPrice.data.product.price_xaf === 98500,
+    'administrator can change the existing product price using the shared API');
+  const updatedPublicProduct = await visitor.get('/products/1');
+  ok(updatedPublicProduct.status === 200 && updatedPublicProduct.data.product.price_xaf === 98500,
+    'new price appears in public storefront without a duplicate product');
   ok((await visitor.get('/admin/categories')).status === 401,
     'admin group list remains private to unauthenticated visitors');
+
+  // Recover or check the real administrator in SQLite, independently from
+  // the auxiliary demo-accounts.json, without affecting any products.
+  const knownPassword = account('admin').password;
+  const checkAdmin = spawnSync('php', ['database/admin-login.php', '--check'], {
+    cwd: root, env: { ...process.env, GRC_DB_PATH: dbPath },
+    input: knownPassword + '\n', encoding: 'utf8', timeout: 30000,
+  });
+  ok(checkAdmin.status === 0, 'CLI verifies the current admin password directly in SQLite');
+  const choosePassword = spawnSync('php', ['database/admin-login.php', '--set-password'], {
+    cwd: root, env: { ...process.env, GRC_DB_PATH: dbPath },
+    input: 'TestAdmin-2026!\n', encoding: 'utf8', timeout: 30000,
+  });
+  ok(choosePassword.status === 0, 'CLI renews admin password without database reset');
+  const renewedSession = new Session(base);
+  const renewedUser = await renewedSession.login({ email: 'admin', password: 'TestAdmin-2026!' });
+  ok(renewedUser.role === 'admin', 'newly selected admin password works through real session HTTP');
+  const preservedProduct = await visitor.get('/products/1');
+  ok(preservedProduct.status === 200 && preservedProduct.data.product.price_xaf === 98500,
+    'password repair preserves product data');
 
   console.log('OK — ' + passed + ' checks: real PHP HTTP + disposable SQLite, distinct admin/client sessions');
 } finally {

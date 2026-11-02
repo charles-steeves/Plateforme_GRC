@@ -68,6 +68,9 @@ jobs:
       - name: Admin workspace and lecture-driven CRM presentation
         run: node tests/admin-workspace.mjs
 
+      - name: Mobile product editing and protected account switching
+        run: node tests/admin-mobile-auth.mjs
+
       - name: Live SAV replies, safe session refresh and provisional shop identity
         run: node tests/ticket-live-refresh.mjs
 

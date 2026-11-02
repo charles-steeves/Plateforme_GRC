@@ -162,8 +162,28 @@ async function account(root, user) {
 
 async function auth(root, page, user) {
     const register = page === 'register';
+    const adminEntry = !register && (safeNext()?.startsWith('/admin') ?? false);
     if (user) {
-        root.replaceChildren(heading('Vous êtes déjà connecté', `Session active : ${user.name}.`), el('a', { href: destination(user), className: 'button button-primary' }, 'Continuer avec ce compte'));
+        const switchAccount = button('Changer de compte', {
+            type: 'button', className: 'button button-secondary',
+            onClick: () => busy(switchAccount, async () => {
+                try {
+                    await api('/auth/logout', { method: 'POST', body: {} });
+                    location.assign(adminEntry ? '/login.html?next=%2Fadmin.html' : '/login.html?logged_out=1');
+                } catch (error) {
+                    notice(accountNotice, error.message || 'Déconnexion impossible.');
+                }
+            }),
+        });
+        const accountNotice = el('div', { 'aria-live': 'polite' });
+        root.replaceChildren(heading(
+            adminEntry && user.role !== 'admin' ? 'Compte client actif' : 'Vous êtes déjà connecté',
+            adminEntry && user.role !== 'admin'
+                ? 'L’administration est réservée aux comptes administrateurs. Changez de compte pour continuer.'
+                : `Session active : ${user.name}.`),
+            el('div', { className: 'cluster' },
+                el('a', { href: destination(user), className: 'button button-primary' }, 'Continuer avec ce compte'),
+                switchAccount), accountNotice);
         return;
     }
     const message = el('div', { 'aria-live': 'polite', tabindex: '-1' });
@@ -188,7 +208,7 @@ async function auth(root, page, user) {
     } });
     const submit = button(register ? 'Créer mon compte' : 'Se connecter', { type: 'submit', className: 'button button-primary' });
     const form = el('form', { className: 'panel stack auth-form' },
-        el('h2', {}, register ? 'Bienvenue dans la boutique' : 'Connexion à votre compte'),
+        el('h2', {}, register ? 'Bienvenue dans la boutique' : adminEntry ? 'Connexion administrateur' : 'Connexion à votre compte'),
         register ? field('Nom complet', name) : null,
         field(register ? 'Adresse e-mail' : 'Identifiant ou adresse e-mail', email),
         field('Mot de passe', password, register ? '12 caractères minimum.' : ''),
@@ -196,12 +216,17 @@ async function auth(root, page, user) {
     if (!register && new URLSearchParams(window.location.search).get('logged_out') === '1') {
         notice(message, 'Vous êtes déconnecté. Votre session a été fermée.', 'success');
     }
-    root.replaceChildren(heading(register ? 'Créer un compte' : 'Connexion', register ? 'Rejoignez-nous et suivez vos commandes.' : 'Clients et administrateurs utilisent cette connexion.'),
+    root.replaceChildren(heading(register ? 'Créer un compte' : adminEntry ? 'Administration' : 'Connexion',
+        register ? 'Rejoignez-nous et suivez vos commandes.'
+            : adminEntry ? 'Accès réservé aux comptes administrateurs.' : 'Connectez-vous à votre espace.'),
         el('div', { className: 'auth-layout' }, form,
             el('aside', { className: 'panel stack' }, el('p', { className: 'eyebrow' }, 'Une relation qui compte'),
                 el('h2', {}, register ? 'Bien plus qu’un panier' : 'Votre espace, vos échanges'),
                 el('p', {}, 'Suivez vos commandes, retrouvez vos points de fidélité et échangez avec notre service après-vente.'),
-                el('a', { href: authLink(register ? 'login' : 'register') }, register ? 'J’ai déjà un compte' : 'Créer un compte client'))));
+                el('a', { href: authLink(register ? 'login' : 'register') }, register ? 'J’ai déjà un compte' : 'Créer un compte client'),
+                !register && !adminEntry
+                    ? el('a', { href: '/login.html?next=%2Fadmin.html' }, 'Connexion administrateur')
+                    : !register ? el('a', { href: '/login.html' }, 'Connexion client') : null)));
     let pending = false;
     form.addEventListener('submit', async event => {
         event.preventDefault();

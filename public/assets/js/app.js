@@ -221,7 +221,9 @@ function accessMessage(user, error) {
     const next = `/${page}.html${location.search}`;
     main.append(el('div', { className: 'panel cluster' },
       el('a', { className: 'button button-primary', href: user ? '/' : `/login.html?next=${encodeURIComponent(next)}` }, user ? 'Retour à la boutique' : 'Se connecter'),
-      !user ? el('a', { className: 'button button-secondary', href: `/register.html?next=${encodeURIComponent(next)}` }, 'Créer un compte') : null));
+      !user ? el('a', { className: 'button button-secondary', href: `/register.html?next=${encodeURIComponent(next)}` }, 'Créer un compte')
+        : el('a', { className: 'button button-secondary', href: `/login.html?next=${encodeURIComponent(next)}` },
+          'Changer de compte')));
   }
 }
 async function mount(user) {

@@ -921,3 +921,21 @@ body.admin-workspace .admin-sidebar .admin-nav a { align-items: center; }
 .product-review:last-child { border-bottom: 0; }
 .product-review p { overflow-wrap: anywhere; }
 .stars { color: #a56a0e; white-space: nowrap; letter-spacing: .03em; }
+
+/* The product editor is shared across desktop, tablet and phone. */
+.admin-mobile-products { display: none; }
+#admin-product-editor { scroll-margin-top: 6rem; min-width: 0; }
+#admin-product-editor input, #admin-product-editor textarea,
+#admin-product-editor select { max-width: 100%; }
+@media (max-width: 1100px) {
+  body.admin-workspace .admin-product-layout { grid-template-columns: minmax(0, 1fr); }
+  .admin-product-desktop { display: none; }
+  .admin-mobile-products { display: grid; gap: .75rem; min-width: 0; }
+  .admin-mobile-product { display: grid; gap: .8rem; padding: 1rem; min-width: 0; }
+  .admin-mobile-product-heading { display: flex; gap: .8rem; align-items: center; min-width: 0; }
+  .admin-mobile-product-heading > .product-image {
+    width: 66px; height: 66px; flex: 0 0 66px; object-fit: contain;
+  }
+  .admin-mobile-product-heading > .stack { min-width: 0; overflow-wrap: anywhere; }
+  .admin-mobile-product > .button { min-height: 46px; width: 100%; }
+}
