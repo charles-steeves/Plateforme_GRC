@@ -14,7 +14,7 @@ Version : parcours pédagogique avec **données exclusivement fictives**. Il est
 
 | Durée indicative | Démonstration concrète | Notion du cours à expliquer |
 | --- | --- | --- |
-| 0:00–0:45 | Présenter Junelia's Shop (nom temporaire) et son espace GRC, sans prétendre qu'il s'agit d'une boutique commerciale en production. Montrer le catalogue de démonstration et les prix en FCFA. | L'e-commerce produit des interactions et données utiles à la relation client |
+| 0:00–0:45 | Présenter Akoma Boutique (nom temporaire) et son espace GRC, sans prétendre qu'il s'agit d'une boutique commerciale en production. Montrer le catalogue de démonstration et les prix en FCFA. | L'e-commerce produit des interactions et données utiles à la relation client |
 | 0:45–1:40 | Se connecter en client, ouvrir une fiche produit, ajouter au panier et confirmer une **commande simulée**. | GRC **opérationnelle** : centralisation et suivi des commandes |
 | 1:40–2:30 | Passer au profil administrateur, retrouver la commande, la confirmer puis la marquer livrée. | Coordination des opérations commerciales et des données de stock |
 | 2:30–3:10 | Revenir au client et afficher historique des commandes et solde de fidélité actualisé. | **Fidélisation** : attribution des points à la livraison, sans double crédit |

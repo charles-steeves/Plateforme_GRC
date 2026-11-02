@@ -50,11 +50,10 @@ try {
     if (!is_file($dbPath)) {
         $problems[] = 'La base est absente. Une fois les pilotes activés, exécuter php database/init.php (sans --reset).';
     } elseif ($hasSqlite) {
-        $db = new PDO('sqlite:' . $dbPath, null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-            PDO::SQLITE_ATTR_OPEN_FLAGS => PDO::SQLITE_OPEN_READONLY,
-        ]);
-        $check = $db->query('PRAGMA quick_check')->fetchColumn();
+        // SQLite3 provides a genuine read-only open on PHP 8.2+ without
+        // relying on undefined PDO SQLite open-flag constants.
+        $db = new SQLite3($dbPath, SQLITE3_OPEN_READONLY);
+        $check = $db->querySingle('PRAGMA quick_check');
         echo 'Intégrité SQLite : ' . ($check === 'ok' ? 'OK' : 'À VÉRIFIER') . "\n";
         if ($check !== 'ok') {
             $problems[] = 'La base ne passe pas le contrôle d’intégrité ; ne pas réinitialiser avant sauvegarde.';

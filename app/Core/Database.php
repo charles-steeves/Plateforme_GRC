@@ -17,10 +17,13 @@ final class Database
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
             PDO::ATTR_STRINGIFY_FETCHES => false,
-            PDO::SQLITE_ATTR_OPEN_FLAGS => PDO::SQLITE_OPEN_READWRITE,
+            // The file is checked above. Do not use non-existent PDO::SQLITE_*
+            // constants: those trigger HTTP 500 on PHP 8.2/8.3/8.4.
+            // SQLite opens this existing file in normal read/write mode.
         ]);
         $pdo->exec('PRAGMA foreign_keys = ON');
         $pdo->exec('PRAGMA busy_timeout = 5000');
+        Schema::ensureProductReviews($pdo);
         return $pdo;
     }
 

@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+const js = readFileSync('public/assets/js/shop.js','utf8');
+const css = readFileSync('public/assets/css/site.css','utf8');
+assert.match(js, /CATALOGUE_REFRESH_MS\s*=\s*10000/);
+assert.match(js, /setInterval\(/);
+assert.match(js, /document\.visibilityState === 'visible'/);
+assert.match(js, /navigator\.onLine/);
+assert.match(js, /api\(`\/products\?\$\{query\}`\)/);
+assert.match(js, /signature === lastCatalog/);
+assert.match(js, /refreshCategories\(\)/);
+assert.match(css, /\.product-card \{ height: 100%; \}/);
+console.log('OK - catalogue refresh and alignment contract');

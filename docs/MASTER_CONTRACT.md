@@ -153,7 +153,7 @@ L'utilisateur exprime également une préférence pour le changement de langue (
 
 ### 9.10 Nom commercial provisoire, conversations SAV et expiration des sessions (29 octobre 2026)
 
-**Décisions confirmées par l'utilisateur :** le nom commercial provisoire affiché par le site est désormais **Junelia's Shop**. Le dépôt GitHub, les chemins, les routes d'API, le nom du projet universitaire GRC et les données SQLite ne sont pas renommés. Les douze pages et le bandeau commun adoptent ce nom ; la marque définitive reste à valider.
+**Décisions confirmées par l'utilisateur :** le nom commercial provisoire affiché par le site est désormais **Akoma Boutique**. Le dépôt GitHub, les chemins, les routes d'API, le nom du projet universitaire GRC et les données SQLite ne sont pas renommés. Les douze pages et le bandeau commun adoptent ce nom ; la marque définitive reste à valider.
 
 Les conversations SAV côté client et administration sont relues automatiquement par HTTP toutes les **10 secondes** lorsque la page est visible et la connexion disponible. Ce n'est pas un chat instantané WebSocket : les nouvelles réponses arrivent à la prochaine lecture. L'actualisation ne déclenche jamais de mutation, ne réessaie pas un envoi incertain et n'écrase pas un brouillon en cours. Si le statut change pendant une édition, les anciennes actions sont bloquées jusqu'à une vérification.
 

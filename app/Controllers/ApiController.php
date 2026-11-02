@@ -3,7 +3,7 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Core\{ApiException, Database, Request, Response, Security};
-use App\Services\{AuthService, ProductService, OrderService, TicketService, GrcService, ImageUploadService, CrmInsightService};
+use App\Services\{AuthService, ProductService, OrderService, TicketService, GrcService, ImageUploadService, CrmInsightService, ProductReviewService};
 use PDO;
 
 final class ApiController
@@ -31,6 +31,8 @@ final class ApiController
             ['GET', '/products', null, 200, fn($u, $b, $id) => (new ProductService($this->db()))->listing($_GET)],
             ['GET', '/products/categories', null, 200, fn($u, $b, $id) => (new ProductService($this->db()))->categories()],
             ['GET', '/products/([0-9]+)', null, 200, fn($u, $b, $id) => ['product' => (new ProductService($this->db()))->detail($id)]],
+            ['GET', '/products/([0-9]+)/reviews', null, 200, fn($u, $b, $id) => (new ProductReviewService($this->db()))->publicReviews($id)],
+            ['POST', '/products/([0-9]+)/reviews', 'client', 201, fn($u, $b, $id) => ['review' => (new ProductReviewService($this->db()))->create($id, $u['id'], $b)]],
             ['POST', '/orders', 'client', 201, fn($u, $b, $id) => ['order' => (new OrderService($this->db()))->create($u, $b)]],
             ['GET', '/orders/me', 'client', 200, fn($u, $b, $id) => ['items' => (new OrderService($this->db()))->mine($u['id'])]],
             ['GET', '/loyalty/me', 'client', 200, fn($u, $b, $id) => (new GrcService($this->db()))->loyalty($u['id'])],
@@ -48,6 +50,8 @@ final class ApiController
             ['GET', '/admin/tickets', 'admin', 200, fn($u, $b, $id) => ['items' => (new TicketService($this->db()))->adminList()]],
             ['PATCH', '/admin/tickets/([0-9]+)', 'admin', 200, fn($u, $b, $id) => ['ticket' => (new TicketService($this->db()))->changeStatus($id, $b)]],
             ['GET', '/admin/categories', 'admin', 200, fn($u, $b, $id) => (new ProductService($this->db()))->adminCategories()],
+            ['GET', '/admin/product-reviews', 'admin', 200, fn($u, $b, $id) => (new ProductReviewService($this->db()))->adminReviews()],
+            ['PATCH', '/admin/product-reviews/([0-9]+)', 'admin', 200, fn($u, $b, $id) => ['review' => (new ProductReviewService($this->db()))->moderate($id, $b)]],
             ['GET', '/admin/products', 'admin', 200, fn($u, $b, $id) => ['items' => (new ProductService($this->db()))->adminList()]],
             ['POST', '/admin/product-image', 'admin', 201, fn($u, $b, $id) => (new ImageUploadService())->upload()],
             ['POST', '/admin/products', 'admin', 201, fn($u, $b, $id) => ['product' => (new ProductService($this->db()))->create($b)]],

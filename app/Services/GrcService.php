@@ -59,11 +59,41 @@ final class GrcService
         if ($customer === null) {
             throw new ApiException(404, 'NOT_FOUND', 'Ressource introuvable.');
         }
+        // Aggregate from historical order lines, not from the current product
+        // price or an editable client score. Exclude cancelled orders.
+        $metrics = $this->pdo->prepare("
+            SELECT COUNT(DISTINCT o.id) AS orders_count,
+                   COALESCE(SUM(oi.quantity), 0) AS items_count,
+                   COUNT(DISTINCT substr(o.created_at, 1, 7)) AS active_months,
+                   MIN(o.created_at) AS first_order_at,
+                   MAX(o.created_at) AS last_order_at,
+                   COUNT(DISTINCT CASE WHEN o.status = 'delivered' THEN o.id END) AS delivered_orders_count,
+                   COALESCE(SUM(CASE WHEN o.status = 'delivered' THEN oi.line_total_xaf ELSE 0 END), 0) AS delivered_spend_xaf
+            FROM orders o
+            LEFT JOIN order_items oi ON oi.order_id = o.id
+            WHERE o.user_id = :user_id AND o.status <> 'cancelled'
+        ");
+        $metrics->execute(['user_id' => $id]);
+        $row = $metrics->fetch(PDO::FETCH_ASSOC);
+        $delivered = (int)($row['delivered_orders_count'] ?? 0);
+        $statistics = [
+            'orders_count' => (int)($row['orders_count'] ?? 0),
+            'items_count' => (int)($row['items_count'] ?? 0),
+            'active_months' => (int)($row['active_months'] ?? 0),
+            'first_order_at' => $row['first_order_at'] ?? null,
+            'last_order_at' => $row['last_order_at'] ?? null,
+            'delivered_orders_count' => $delivered,
+            'delivered_spend_xaf' => (int)($row['delivered_spend_xaf'] ?? 0),
+            'average_delivered_basket_xaf' => $delivered > 0
+                ? (int)round((int)$row['delivered_spend_xaf'] / $delivered)
+                : 0,
+        ];
         return [
             'customer' => $customer,
             'orders' => (new OrderService($this->pdo))->mine($id),
             'tickets' => (new TicketService($this->pdo))->mine($id),
             'loyalty_balance' => $this->loyalty($id)['balance'],
+            'statistics' => $statistics,
         ];
     }
 

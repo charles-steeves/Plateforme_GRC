@@ -12,9 +12,9 @@ const dashboard = read('public/assets/js/admin.js');
 const pages = readdirSync(join(root, 'public')).filter(f => f.endsWith('.html'));
 assert.equal(pages.length, 12);
 for (const name of pages) {
-  assert.match(read('public/' + name), /Junelia's Shop/, name + ': shop name');
+  assert.match(read('public/' + name), /Akoma Boutique/, name + ': shop name');
 }
-assert.match(read('public/assets/js/app.js'), /Junelia's Shop — accueil/);
+assert.match(read('public/assets/js/app.js'), /Akoma Boutique — accueil/);
 assert.match(tickets, /AUTO_REFRESH_MS = 5000/);
 assert.match(tickets, /window\.setInterval\(/);
 assert.match(tickets, /document\.visibilityState !== 'visible'/);

@@ -102,3 +102,18 @@ CREATE TABLE IF NOT EXISTS idempotency_requests (
     created_at TEXT NOT NULL,
     UNIQUE(user_id, action, request_key)
 );
+
+-- Public customer product ratings are distinct from delivered-order feedback.
+-- One review per product/client; administrators can hide inappropriate content.
+CREATE TABLE IF NOT EXISTS product_reviews (
+    id INTEGER PRIMARY KEY,
+    product_id INTEGER NOT NULL REFERENCES products(id),
+    user_id INTEGER NOT NULL REFERENCES users(id),
+    rating INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 5),
+    comment TEXT NOT NULL DEFAULT '',
+    visible INTEGER NOT NULL DEFAULT 1 CHECK (visible IN (0,1)),
+    created_at TEXT NOT NULL,
+    UNIQUE(product_id, user_id)
+);
+CREATE INDEX IF NOT EXISTS idx_product_reviews_product_visible ON product_reviews(product_id, visible, created_at);
+CREATE INDEX IF NOT EXISTS idx_product_reviews_user ON product_reviews(user_id);

@@ -1,5 +1,6 @@
 import { api, isUncertainMutation as uncertain } from './api.js';
 import { mountGrcInsights } from './grc-analyses.js';
+import { mountAdminProductReviews } from './reviews-admin.js';
 import {
   el, money, date, badge, notice, field, button, heading, empty,
   renderError, busy, orderCard, productImage, isLocalImagePath,
@@ -134,7 +135,7 @@ function trendChart(rows) {
 async function dashboard(root) {
   const content = el('div', { className: 'stack' });
   const refresh = button('Actualiser les indicateurs', { className: 'button button-secondary', onClick: () => load() });
-  root.replaceChildren(heading('Tableau de bord GRC', 'Clients, commandes et qualité de service.'),
+  root.replaceChildren(heading('Tableau de bord', 'Clients, commandes et qualité de service.'),
     el('div', { className: 'cluster' }, refresh, el('span', { className: 'muted', role: 'status', id: 'dashboard-updated' }, '')), content);
   let generation = 0;
   let lastPending = null;
@@ -166,14 +167,9 @@ async function dashboard(root) {
           el('a', { href: '/admin-orders.html', className: 'button button-primary' }, 'Suivre les commandes'),
           el('a', { href: '/admin-tickets.html', className: 'button button-secondary' }, 'Répondre aux clients'),
           el('a', { href: '/admin-customers.html', className: 'button button-secondary' }, 'Connaître mes clients')));
-      const process = el('section', { className: 'panel stack crm-process' },
-        el('h2', {}, 'La GRC en pratique'),
-        el('div', { className: 'crm-process-grid' },
-          el('a', { href: '/admin-customers.html' }, el('strong', {}, 'GRC analytique'), el('span', {}, 'Clients et segmentation')),
-          el('a', { href: '/admin-orders.html' }, el('strong', {}, 'GRC opérationnelle'), el('span', {}, 'Commandes et suivi')),
-          el('a', { href: '/admin-tickets.html' }, el('strong', {}, 'GRC interactive'), el('span', {}, 'Échanges et SAV')),
-          el('a', { href: '/admin-orders.html' }, el('strong', {}, 'Fidélisation'), el('span', {}, 'Points et satisfaction'))));
-      content.replaceChildren(values, activity, charts, process);
+      // The previous four GRC shortcuts duplicated the sidebar and even
+      // pointed two cards to the same page. The navigation already covers them.
+      content.replaceChildren(values, activity, charts);
       document.getElementById('dashboard-updated').textContent = 'Actualisé à ' + new Intl.DateTimeFormat('fr-FR', { timeStyle: 'short', timeZone: 'Africa/Libreville' }).format(new Date());
       if (automatic && lastPending !== null && pending > lastPending) {
         const message = el('p', { className: 'notice notice-info', role: 'status' },
@@ -566,7 +562,23 @@ async function customers(root) {
           el('a', { href: `/admin-tickets.html?id=${ticket.id}` }, `Ticket n° ${ticket.id} : ${ticket.subject}`),
           el('div', { className: 'cluster' }, badge(ticket.status), el('span', { className: 'muted' }, date(ticket.created_at))));
       }) : [el('p', { className: 'muted' }, 'Aucun ticket SAV.') ]));
-      detail.replaceChildren(title, customerSummary(data.customer),
+      const stats = data.statistics;
+      if (!stats || !Number.isSafeInteger(stats.orders_count) || !Number.isSafeInteger(stats.items_count)
+          || !Number.isSafeInteger(stats.active_months) || !Number.isSafeInteger(stats.delivered_spend_xaf)
+          || !Number.isSafeInteger(stats.average_delivered_basket_xaf)) {
+        throw new Error('Les indicateurs du client sont indisponibles.');
+      }
+      const metrics = el('dl', { className: 'customer-purchase-metrics' },
+        ...[
+          ['Commandes', count(stats.orders_count)],
+          ['Articles commandés', count(stats.items_count)],
+          ['Mois avec achats', count(stats.active_months)],
+          ['Montant livré', money(stats.delivered_spend_xaf)],
+          ['Panier moyen livré', money(stats.average_delivered_basket_xaf)],
+          ['Premier achat', stats.first_order_at ? date(stats.first_order_at) : 'Aucun'],
+          ['Dernier achat', stats.last_order_at ? date(stats.last_order_at) : 'Aucun'],
+        ].map(([label, value]) => el('div', { className: 'metric-card' }, el('dt', {}, label), el('dd', {}, value))));
+      detail.replaceChildren(title, customerSummary(data.customer), metrics,
         el('p', { className: 'metric-value' }, `${count(data.loyalty_balance)} points de fidélité`), orderList, ticketList);
       if (focus) title.focus();
     } catch (error) {
@@ -629,7 +641,9 @@ export async function mountAdmin(root, { page, user }) {
     return;
   }
   const mount = {
-    admin: new URLSearchParams(location.search).get('view') === 'analyses' ? mountGrcInsights : dashboard, 'admin-products': products, 'admin-orders': orders, 'admin-customers': customers,
+    admin: new URLSearchParams(location.search).get('view') === 'analyses' ? mountGrcInsights
+      : new URLSearchParams(location.search).get('view') === 'reviews' ? mountAdminProductReviews : dashboard,
+    'admin-products': products, 'admin-orders': orders, 'admin-customers': customers,
   }[page];
   if (!mount) throw new Error('Cette page d’administration est inconnue.');
   await mount(root);

@@ -1,5 +1,6 @@
 import { requestId, completeRequest } from './request-id.js';
 import { api, isUncertainMutation } from './api.js';
+import { mountProductReviews, ratingText } from './reviews.js';
 import {
   el, money, notice, field, button, heading, empty,
   renderError, busy, orderCard, productImage,
@@ -9,6 +10,8 @@ import {
 } from './cart.js';
 
 const PER_PAGE = 12;
+const CATALOGUE_REFRESH_MS = 10000; // Refresh visible storefronts after admin updates.
+
 const MAX_QUANTITY = 20;
 // Shared across cart rerenders so another local control cannot unlock a
 // pending or uncertain order request by creating a fresh checkout form.
@@ -69,6 +72,7 @@ function productCard(product) {
       el('h2', {}, el('a', { href: `/product.html?id=${product.id}` }, product.name)),
       el('p', { className: 'price' }, money(product.price_xaf)),
       el('p', { className: 'muted' }, stockText(product)),
+      el('p', { className: 'product-rating' }, ratingText(product.rating_average, product.rating_count)),
       el('a', { className: 'button button-secondary', href: `/product.html?id=${product.id}` },
         'Découvrir le produit')));
 }
@@ -107,9 +111,9 @@ async function mountCatalogue(root) {
       el('div', { className: 'hero-art', 'aria-hidden': 'true' },
         el('img', { src: '/assets/images/product-placeholder.svg', alt: '', width: 480, height: 360 }))),
     categoryBrowse, form, results);
-  // Administrator-defined categories are derived from product data, never free
-  // text entered by a visitor. Keep the catalogue usable if this lookup fails.
-  void api('/products/categories').then(data => {
+  // Administrator-defined categories are derived from product data.
+  async function refreshCategories() {
+    const data = await api('/products/categories');
     if (!Array.isArray(data?.items)) return;
     const rows = data.items.filter(item => typeof item?.name === 'string'
       && item.name.length > 0 && item.name.length <= 120 && Number.isSafeInteger(item.count));
@@ -133,11 +137,15 @@ async function mountCatalogue(root) {
               el('span', { className: 'category-browse-symbol', 'aria-hidden': 'true' }, '↗'),
               el('strong', {}, row.name),
               el('small', {}, `${row.count} article${row.count > 1 ? 's' : ''}`)))));
-    }
-  }).catch(() => { /* Products can still load if the category list is unavailable. */ });
-  try {
-    const query = new URLSearchParams({ search, category, page: String(page), per_page: String(PER_PAGE) });
-    const data = await api(`/products?${query}`);
+    } else categoryBrowse.replaceChildren();
+  }
+  void refreshCategories().catch(() => { /* A transient category failure must not hide products. */ });
+  const query = new URLSearchParams({ search, category, page: String(page), per_page: String(PER_PAGE) });
+  let lastCatalog = null;
+  let refreshing = false;
+  let refreshCycle = 0;
+
+  function paintCatalogue(data) {
     if (!data || !Array.isArray(data.items) || !integer(data.page, 1)
       || !integer(data.per_page, 1) || data.per_page > 24 || !integer(data.total)) {
       throw new Error('Le catalogue reçu est incomplet. Impossible d’afficher des résultats fiables.');
@@ -146,17 +154,18 @@ async function mountCatalogue(root) {
     if (products.some(product => !isActive(product))) {
       throw new Error('Le catalogue contient un produit indisponible. Le service doit être vérifié.');
     }
+    const signature = JSON.stringify([data.items, data.total, data.page, data.per_page]);
+    if (signature === lastCatalog) return;
+    lastCatalog = signature;
     const pagination = el('nav', { className: 'pagination cluster', 'aria-label': 'Pagination du catalogue' });
     if (data.page > 1) pagination.append(el('a', {
       href: catalogueURL({ search, category, page: data.page - 1 }),
-      className: 'button button-secondary', rel: 'prev',
-    }, 'Page précédente'));
+      className: 'button button-secondary', rel: 'prev' }, 'Page précédente'));
     pagination.append(el('span', { className: 'muted' },
       `Page ${data.page} sur ${Math.max(1, Math.ceil(data.total / data.per_page))}`));
     if (data.page * data.per_page < data.total) pagination.append(el('a', {
       href: catalogueURL({ search, category, page: data.page + 1 }),
-      className: 'button button-secondary', rel: 'next',
-    }, 'Page suivante'));
+      className: 'button button-secondary', rel: 'next' }, 'Page suivante'));
     results.replaceChildren(
       el('p', { role: 'status', 'aria-live': 'polite' },
         `${data.total} produit${data.total === 1 ? '' : 's'} trouvé${data.total === 1 ? '' : 's'}.`),
@@ -164,11 +173,34 @@ async function mountCatalogue(root) {
         ? el('div', { className: 'product-grid grid' }, products.map(productCard))
         : empty('Aucun produit à afficher', 'Essayez un autre mot-clé ou retirez le filtre de catégorie.'),
       pagination);
-  } catch (error) {
-    renderError(results, error, () => mountCatalogue(root));
-  } finally {
-    results.setAttribute('aria-busy', 'false');
   }
+
+  async function reloadCatalogue(background = false) {
+    if (refreshing || !results.isConnected) return;
+    refreshing = true;
+    try {
+      const data = await api(`/products?${query}`);
+      if (!results.isConnected) return;
+      paintCatalogue(data);
+      if (background) void refreshCategories().catch(() => {});
+    } catch (error) {
+      if (!background && results.isConnected) renderError(results, error, () => mountCatalogue(root));
+    } finally {
+      refreshing = false;
+      results.setAttribute('aria-busy', 'false');
+    }
+  }
+  await reloadCatalogue();
+  // Only the visible storefront polls. A successful admin save already updates
+  // the common SQLite database; polling detects changes from other sessions.
+  const cycle = ++refreshCycle;
+  const refreshTimer = setInterval(() => {
+    if (!results.isConnected) { clearInterval(refreshTimer); return; }
+    if (cycle === refreshCycle && document.visibilityState === 'visible' && navigator.onLine) {
+      void reloadCatalogue(true);
+    }
+  }, CATALOGUE_REFRESH_MS);
+
 }
 
 async function mountProduct(root, user) {
@@ -217,12 +249,14 @@ async function mountProduct(root, user) {
       el('div', { className: 'panel stack' },
         el('p', { className: 'eyebrow' }, product.category), heading(product.name),
         el('p', { className: 'price' }, money(product.price_xaf)),
+        el('p', { className: 'product-rating' }, ratingText(product.rating_average, product.rating_count)),
         el('p', {}, stockText(product)),
         el('p', { className: 'product-description' }, product.description || 'Description non renseignée.'),
         user?.role === 'admin'
           ? el('p', { className: 'notice' }, 'Le panier et les commandes sont réservés aux comptes clients.')
           : form,
         messages)));
+    await mountProductReviews(content, productId, user);
   } catch (error) {
     if (error.status === 404) content.replaceChildren(heading('Produit introuvable'),
       empty('Ce produit n’est pas disponible', 'Il a peut-être été retiré du catalogue.'));

@@ -26,8 +26,8 @@ Méthode : cinq catégories de préparation à la soutenance, pondérées, pour 
 - PR [#9](https://github.com/Nemsis7036/GRC-Plateforme/pull/9) : upload sécurisé de photos produits et création facultative d'admins supplémentaires par CLI, **fusionnée**.
 - PR [#10](https://github.com/Nemsis7036/GRC-Plateforme/pull/10) : sidebar boutique et catégories proposées au lieu de saisies, **fusionnée**.
 - PR [#11](https://github.com/Nemsis7036/GRC-Plateforme/pull/11) : palette plus contrastée, catégories visuelles et graphiques GRC basés sur SQLite, **fusionnée**.
-- PR [#12](https://github.com/Nemsis7036/GRC-Plateforme/pull/12) : tickets SAV actualisés automatiquement sans perte de brouillon, sessions passives et nom provisoire Junelia's Shop, **ouverte lors de cette mise à jour**.
-- Le nom temporaire **Junelia's Shop** a été choisi par l'utilisateur pour l'interface ; la nature commerciale et la marque définitive restent à préciser.
+- PR [#12](https://github.com/Nemsis7036/GRC-Plateforme/pull/12) : tickets SAV actualisés automatiquement sans perte de brouillon, sessions passives et nom provisoire Akoma Boutique, **ouverte lors de cette mise à jour**.
+- Le nom temporaire **Akoma Boutique** a été choisi par l'utilisateur pour l'interface ; la nature commerciale et la marque définitive restent à préciser.
 - Les données de soutenance et les commandes restent simulées ; aucun paiement réel ni données personnelles réelles.
 
 **Consulter GitHub de nouveau** avant toute reprise ou fusion, car cet état est un instantané daté.

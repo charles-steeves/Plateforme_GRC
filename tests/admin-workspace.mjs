@@ -20,9 +20,13 @@ assert.match(css, /\.admin-sidebar-overlay/);
 assert.match(css, /@media \(max-width: 900px\)/);
 assert.match(admin, /function metric\(label, value\)/);
 assert.doesNotMatch(admin, /Comptes clients, administrateurs exclus\.|Commandes non annulées\.|Les indicateurs reflètent les commandes et les échanges enregistrés\./);
-for (const dimension of ['GRC analytique', 'GRC opérationnelle', 'GRC interactive', 'Fidélisation']) {
-  assert.ok(admin.includes(dimension), 'Missing lecture dimension: ' + dimension);
+// The former explanatory shortcut cards duplicated real admin links.
+assert.doesNotMatch(admin, /La GRC en pratique|crm-process-grid/);
+for (const destination of ['admin-customers', 'admin-orders', 'admin-products', 'admin-tickets', 'admin-reviews']) {
+  assert.ok(app.includes(destination), 'Missing admin destination: ' + destination);
 }
+assert.match(app, /view=reviews/);
+assert.match(admin, /mountAdminProductReviews/);
 assert.match(admin, /const timer = setInterval/);
 assert.match(admin, /}, 5000\)/);
 assert.match(admin, /document\.visibilityState === 'visible'/);

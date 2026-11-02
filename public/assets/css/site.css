@@ -894,3 +894,30 @@ body.store-workspace .store-sidebar button:focus-visible {
   body.admin-workspace .admin-sidebar-toggle { display: none !important; }
   body.admin-workspace .site-main { margin-left: 0; }
 }
+
+/* Final alignment rules shared by shop and administration. */
+.product-grid { align-items: stretch; }
+.product-card { height: 100%; }
+.product-card-content { display: flex; flex-direction: column; min-height: 0; }
+.product-card-content > .button { margin-top: auto; }
+body.admin-workspace .metrics { align-items: stretch; }
+body.admin-workspace .metric-card { height: 100%; display: flex; flex-direction: column; justify-content: space-between; }
+body.admin-workspace .admin-product-row { display: flex; align-items: center; gap: .75rem; padding-block: .35rem; border-bottom: 0; min-height: 76px; }
+body.admin-workspace .admin-product-row > div { min-width: 0; }
+body.admin-workspace .table-wrap td { vertical-align: middle; }
+body.admin-workspace .admin-sidebar .admin-nav a { align-items: center; }
+@media (max-width: 540px) { .product-card-content > .button { min-height: 44px; } }
+
+/* Purchase metrics are sourced from each customer's recorded order lines. */
+.customer-purchase-metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr)); align-items: stretch; gap: .65rem; margin: 0; }
+.customer-purchase-metrics .metric-card { padding: .9rem; min-width: 0; }
+.customer-purchase-metrics dt { font-size: .78rem; }
+.customer-purchase-metrics dd { font-size: clamp(.95rem, 1.5vw, 1.2rem); overflow-wrap: anywhere; }
+
+/* Star ratings and customer review panels */
+.product-rating { color: #9b650b; font-size: .88rem; font-weight: 650; margin: .35rem 0; }
+.product-reviews { margin-top: 1.35rem; }
+.product-review { border-bottom: 1px solid var(--line); padding-block: .85rem; }
+.product-review:last-child { border-bottom: 0; }
+.product-review p { overflow-wrap: anywhere; }
+.stars { color: #a56a0e; white-space: nowrap; letter-spacing: .03em; }

@@ -84,8 +84,18 @@ try {
   const secondAdmin = extraAccounts.find(a => a.email === 'admin2@example.test');
   ok(secondAdmin?.role === 'admin' && typeof secondAdmin.password === 'string',
     'second admin appended to private local credentials');
+
+  const changedAdmin = spawnSync('php', ['database/change-admin.php',
+    '--email=admin2@example.test', '--new-email=admin2-renewed@example.test'], {
+    cwd: root, env: { ...process.env, GRC_DB_PATH: dbPath }, encoding: 'utf8', timeout: 30000,
+  });
+  assert.equal(changedAdmin.status, 0, 'Existing admin renewal failed: ' + changedAdmin.stderr);
+  const renewed = JSON.parse(readFileSync(join(folder, 'demo-accounts.json'), 'utf8')).accounts
+    .find(a => a.email === 'admin2-renewed@example.test');
+  ok(renewed?.role === 'admin' && renewed.password !== secondAdmin.password,
+    'admin e-mail and password updated without touching client data');
   const addDuplicate = spawnSync('php', ['database/add-admin.php',
-    '--name=Doublon', '--email=admin2@example.test'], {
+    '--name=Doublon', '--email=admin2-renewed@example.test'], {
     cwd: root, env: { ...process.env, GRC_DB_PATH: dbPath },
     encoding: 'utf8', timeout: 30000,
   });
@@ -123,7 +133,7 @@ try {
     ok(response.status === 200 && response.headers.get('content-type')?.includes('text/html'),
       'HTML route should be available: ' + page);
     const html = await response.text();
-    ok(html.includes("Junelia's Shop") && html.includes('charset="utf-8"'),
+    ok(html.includes("Akoma Boutique") && html.includes('charset="utf-8"'),
       'Neutral identity and UTF-8 should be present: ' + page);
   }
   const cssResponse = await fetch(base + '/assets/css/site.css', { signal: AbortSignal.timeout(5000) });
@@ -171,7 +181,7 @@ try {
   ok(adminUser.role === 'admin', 'admin role from session');
   await outsider.login(clientAccounts[1]);
   const colleague = new Session(base);
-  const colleagueUser = await colleague.login(secondAdmin);
+  const colleagueUser = await colleague.login(renewed);
   ok(colleagueUser.role === 'admin', 'independent colleague admin can log in');
   ok((await colleague.get('/admin/dashboard')).status === 200, 'colleague admin accesses same dashboard');
   const adminGroups = await admin.get('/admin/categories');
@@ -179,6 +189,29 @@ try {
     'administrators can see complete list of defined categories');
   ok((await client.get('/admin/categories')).status === 403,
     'clients cannot query admin category groups');
+
+  // Product reviews are distinct from order satisfaction and support tickets.
+  const review = await client.post('/products/1/reviews', { rating: 5, comment: 'Bon produit de test.' });
+  ok(review.status === 201 && review.data.review.rating === 5, 'registered client rates a product');
+  const reviews = await visitor.get('/products/1/reviews');
+  ok(reviews.status === 200 && reviews.data.rating_average === 5 && reviews.data.rating_count === 1
+    && reviews.data.items[0].comment === 'Bon produit de test.', 'public review is attached to its product');
+  const ratedCatalogue = await visitor.get('/products');
+  ok(ratedCatalogue.data.items[0].rating_average === 5 && ratedCatalogue.data.items[0].rating_count === 1,
+    'product catalogue includes real average stars');
+  ok((await client.post('/products/1/reviews', { rating: 4, comment: 'Double' })).status === 409,
+    'one product review per client prevents duplicate ratings');
+  const adminReviews = await admin.get('/admin/product-reviews');
+  ok(adminReviews.status === 200 && adminReviews.data.items.some(x => x.id === review.data.review.id),
+    'admin can read the product reviews');
+  ok((await client.get('/admin/product-reviews')).status === 403, 'customer cannot moderate reviews');
+  ok((await admin.patch('/admin/product-reviews/' + review.data.review.id, { visible: false })).status === 200,
+    'administrator can hide a review');
+  ok((await visitor.get('/products/1/reviews')).data.rating_count === 0,
+    'hidden reviews do not affect publicly visible average');
+  ok((await admin.patch('/admin/product-reviews/' + review.data.review.id, { visible: true })).status === 200,
+    'administrator can restore a review');
+
 
   // Real HTTP multipart image: same CSRF and RBAC as other admin mutations.
   function imageForm(bytes, type) {

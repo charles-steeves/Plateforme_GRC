@@ -187,7 +187,7 @@ async function auth(root, page, user) {
     } });
     const submit = button(register ? 'Créer mon compte' : 'Se connecter', { type: 'submit', className: 'button button-primary' });
     const form = el('form', { className: 'panel stack auth-form' },
-        el('h2', {}, register ? 'Bienvenue dans la boutique' : 'Retrouvons-nous'),
+        el('h2', {}, register ? 'Bienvenue dans la boutique' : 'Connexion à votre compte'),
         register ? field('Nom complet', name) : null,
         field('Adresse e-mail', email),
         field('Mot de passe', password, register ? '12 caractères minimum.' : ''),
@@ -195,7 +195,7 @@ async function auth(root, page, user) {
     if (!register && new URLSearchParams(window.location.search).get('logged_out') === '1') {
         notice(message, 'Vous êtes déconnecté. Votre session a été fermée.', 'success');
     }
-    root.replaceChildren(heading(register ? 'Créer un compte' : 'Connexion', register ? 'Rejoignez-nous et suivez vos commandes.' : 'Accédez à votre espace personnel.'),
+    root.replaceChildren(heading(register ? 'Créer un compte' : 'Connexion', register ? 'Rejoignez-nous et suivez vos commandes.' : 'Clients et administrateurs utilisent cette connexion.'),
         el('div', { className: 'auth-layout' }, form,
             el('aside', { className: 'panel stack' }, el('p', { className: 'eyebrow' }, 'Une relation qui compte'),
                 el('h2', {}, register ? 'Bien plus qu’un panier' : 'Votre espace, vos échanges'),

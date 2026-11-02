@@ -22,7 +22,8 @@ function renderHeader(user, pending = false) {
   const nav = el('nav', { className: 'site-nav', id: 'primary-navigation', 'aria-label': 'Navigation principale' },
     navLink('La boutique', '/', ['index', 'product'].includes(page)),
     user?.role === 'client' ? navLink('Mon espace', '/account.html', page === 'account') : null,
-    user?.role === 'client' ? navLink('Mon SAV', '/tickets.html', page === 'tickets') : null,
+    navLink('Service client', user?.role === 'admin' ? '/admin-tickets.html' : '/tickets.html',
+      ['tickets', 'admin-tickets'].includes(page)),
     user?.role === 'admin' ? navLink('Administration', '/admin.html', isAdminPage) : null);
   const toggle = button('Menu', { className: 'menu-toggle button button-secondary', 'aria-expanded': 'false', 'aria-controls': nav.id });
   const media = matchMedia('(max-width: 800px)');
@@ -54,25 +55,30 @@ function renderHeader(user, pending = false) {
   } else if (!pending) actions.append(el('a', { className: 'button button-primary', href: '/login.html' }, 'Se connecter'));
   else actions.append(el('span', { className: 'muted status-line' }, 'Session…'));
   header.replaceChildren(el('div', { className: 'header-inner' },
-    el('a', { className: 'brand', href: '/', 'aria-label': "Junelia's Shop — accueil" },
-      el('span', { className: 'brand-mark', 'aria-hidden': 'true' }, 'JS'),
-      el('span', {}, "Junelia's Shop", el('small', {}, 'Vente & relation client'))), toggle, nav, actions));
+    el('a', { className: 'brand', href: '/', 'aria-label': "Akoma Boutique — accueil" },
+      el('span', { className: 'brand-mark', 'aria-hidden': 'true' }, 'AB'),
+      el('span', {}, "Akoma Boutique", el('small', {}, 'Vente & relation client'))), toggle, nav, actions));
 }
 function renderAdminNav(user) {
   const container = document.getElementById('section-navigation');
   const tabs = [
     ['admin', 'Vue d’ensemble', '◫', 'Indicateurs et suivi'],
-    ['admin-analyses', 'Analyses GRC', '∑', 'Calculs, RFM et enquêtes'],
+    ['admin-analyses', 'Analyses', '∑', 'Calculs, RFM et enquêtes'],
+    ['admin-reviews', 'Avis produits', '★', 'Notes et commentaires'],
     ['admin-customers', 'Clients', '♙', 'Portefeuille et fidélité'],
     ['admin-orders', 'Commandes', '▤', 'Ventes et transactions'],
     ['admin-products', 'Produits', '▦', 'Catalogue et stocks'],
     ['admin-tickets', 'Service client', '✉', 'Dialogue et SAV'],
   ];
-  const viewingAnalyses = page === 'admin' && new URLSearchParams(location.search).get('view') === 'analyses';
+  const view = page === 'admin' ? new URLSearchParams(location.search).get('view') : null;
+  const viewingAnalyses = view === 'analyses';
+  const viewingReviews = view === 'reviews';
   const nav = el('nav', { className: 'admin-nav', id: 'admin-sidebar-menu', 'aria-label': 'Administration GRC' },
     tabs.map(([key, label, symbol, detail]) => el('a', {
-      href: key === 'admin-analyses' ? '/admin.html?view=analyses' : `/${key}.html`, title: label,
-      ...((key === 'admin-analyses' ? viewingAnalyses : page === key && !viewingAnalyses) ? { 'aria-current': 'page' } : {}),
+      href: key === 'admin-analyses' ? '/admin.html?view=analyses'
+        : key === 'admin-reviews' ? '/admin.html?view=reviews' : `/${key}.html`, title: label,
+      ...((key === 'admin-analyses' ? viewingAnalyses : key === 'admin-reviews' ? viewingReviews
+        : page === key && !viewingAnalyses && !viewingReviews) ? { 'aria-current': 'page' } : {}),
     }, el('span', { className: 'admin-nav-icon', 'aria-hidden': 'true' }, symbol),
       el('span', { className: 'admin-nav-label' },
         el('strong', {}, label), el('small', {}, detail)))));
@@ -92,7 +98,7 @@ function renderAdminNav(user) {
   }));
   const sidebar = el('aside', { className: 'admin-sidebar', 'aria-label': 'Espace administration' },
     el('div', { className: 'admin-sidebar-heading' },
-      el('span', { className: 'admin-sidebar-title' }, 'ESPACE GRC')),
+      el('span', { className: 'admin-sidebar-title' }, 'ADMINISTRATION')),
     nav, el('div', { className: 'admin-sidebar-bottom' },
       el('a', { className: 'admin-sidebar-shop', href: '/', title: 'Voir la boutique' },
         el('span', { className: 'admin-nav-icon', 'aria-hidden': 'true' }, '⌂'),
@@ -144,8 +150,9 @@ function renderStoreNav(user) {
     ...(user?.role === 'client' ? [
       ['/account.html#mes-commandes', 'Mes commandes', '▣', page === 'account'],
       ['/account.html#ma-fidelite', 'Ma fidélité', '★', false],
-      ['/tickets.html', 'Service client', '✉', page === 'tickets'],
     ] : []),
+    [user?.role === 'admin' ? '/admin-tickets.html' : '/tickets.html',
+      'Service client', '✉', page === 'tickets' || page === 'admin-tickets'],
     ...(user?.role === 'admin' ? [['/admin.html', 'Administration', '◫', false]] : []),
   ];
   const nav = el('nav', { id: 'store-sidebar-menu', className: 'store-sidebar-nav', 'aria-label': 'Navigation boutique' },

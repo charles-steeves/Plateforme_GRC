@@ -279,6 +279,7 @@ export async function mountTickets(root, { user, admin = false }) {
       el('h3', {}, ticket.subject),
       el('p', { className: 'muted', 'data-ticket-updated': '' }, `Ouvert le ${date(ticket.created_at)} · Mis à jour le ${date(ticket.updated_at)}`),
       el('p', { className: 'muted' }, ticket.order_id ? `Commande liée : #${ticket.order_id}` : 'Sans commande liée'),
+      el('p', { className: 'muted' }, ({question: 'Question', reclamation: 'Réclamation', sav: 'Service après-vente'})[ticket.category] || 'Demande client'),
       el('p', { className: 'text-block' }, ticket.description),
       admin ? statusForm(ticket) : null,
       conversation, el('p', { className: 'notice notice-info', 'data-ticket-change-notice': '', hidden: true }),
@@ -389,6 +390,10 @@ export async function mountTickets(root, { user, admin = false }) {
     const formNotice = el('div', { 'aria-live': 'polite' });
     const subject = el('input', { type: 'text', id: 'ticket-subject', name: 'subject', required: true, maxLength: 160 });
     const description = el('textarea', { id: 'ticket-description', name: 'description', required: true, maxLength: 4000, rows: 5 });
+    const category = el('select', { id: 'ticket-category', name: 'category', required: true },
+      el('option', { value: 'question' }, 'Question sur un produit ou une commande'),
+      el('option', { value: 'reclamation' }, 'Réclamation'),
+      el('option', { value: 'sav' }, 'Service après-vente'));
     const orderSelect = el('select', { id: 'ticket-order', name: 'order_id' }, el('option', { value: '' }, 'Sans commande liée'));
     const orderNotice = el('div', { 'aria-live': 'polite' });
     const save = button('Ouvrir le ticket', { type: 'submit', className: 'button button-primary' });
@@ -417,9 +422,11 @@ export async function mountTickets(root, { user, admin = false }) {
         subject.disabled = true;
         description.disabled = true;
         orderSelect.disabled = true;
+        category.disabled = true;
         try {
           const payload = {
-            order_id: orderId, subject: subject.value.trim(), description: description.value.trim(), category: 'sav',
+            order_id: orderId, subject: subject.value.trim(), description: description.value.trim(),
+            category: category.value,
           };
           const key = requestId('ticket', user.id, payload);
           const data = await api('/tickets', { method: 'POST', body: { ...payload, request_id: key } });
@@ -441,12 +448,14 @@ export async function mountTickets(root, { user, admin = false }) {
           subject.disabled = false;
           description.disabled = false;
           orderSelect.disabled = ordersLoading;
+          category.disabled = false;
         }
       }).finally(() => { save.disabled = creating || createUncertain; });
-    } }, formNotice, verifyCreation, field('Sujet', subject, '160 caractères maximum.'),
+    } }, formNotice, verifyCreation,
+    field('Type de demande', category), field('Sujet', subject, '160 caractères maximum.'),
     field('Commande concernée (facultatif)', orderSelect), orderNotice,
     field('Décrivez votre demande', description, '4 000 caractères maximum.'), save);
-    const disclosure = el('details', { className: 'panel', open: false }, el('summary', {}, 'Ouvrir une nouvelle demande SAV'), form);
+    const disclosure = el('details', { className: 'panel', open: false }, el('summary', {}, 'Faire une demande au service client'), form);
     createRegion.replaceChildren(disclosure);
     let orderGeneration = 0;
     async function loadOrders() {

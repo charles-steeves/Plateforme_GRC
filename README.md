@@ -1,8 +1,8 @@
-# Junelia's Shop — nom temporaire
+# Akoma Boutique — boutique et relation client
 
 > Nom commercial **provisoire**, choisi pour l'interface, sans modification du nom technique du dépôt ni de la structure GRC.
 
-Plateforme universitaire de **vente en ligne et de gestion de la relation client (GRC)**, développée au Gabon. L'application présente les relations entre vente, suivi des commandes, fidélisation, segmentation, satisfaction et service après-vente. **Junelia's Shop est le nom temporaire ; l'identité et l'activité définitives restent à confirmer.** Le catalogue actuellement fourni sert uniquement de jeu d'essai.
+Plateforme universitaire de **vente en ligne et de gestion de la relation client (GRC)**, développée au Gabon. L'application présente les relations entre vente, suivi des commandes, fidélisation, segmentation, satisfaction et service après-vente. **Akoma Boutique est le nom de présentation de cette version.** Le catalogue actuellement fourni sert uniquement de jeu d'essai.
 
 > **Démonstration — données fictives.** Aucun paiement, aucune livraison et aucune donnée personnelle réels. Ne pas utiliser comme site de production.
 
@@ -69,6 +69,38 @@ php database/add-admin.php --name="Collègue 3" --email="admin3@example.test"
 Choisir vos propres noms/adresses distincts. Les nouveaux mots de passe générés sont ajoutés dans `storage/demo-accounts.json` **sur l'ordinateur hébergeant SQLite**, sans être poussés sur Git. Conserver le fichier privé et ne pas le projeter devant la classe. Les sessions de chaque navigateur sont indépendantes, mais deux personnes modifiant simultanément la **même fiche produit** doivent vérifier le résultat après sauvegarde.
 
 **Depuis un smartphone :** ouvrir une URL réseau pointant vers l'adresse LAN du PC serveur, et non `127.0.0.1` sur le téléphone. Le serveur doit être configuré pour le réseau privé de confiance, avec `GRC_ORIGIN` réglé sur l'origine exacte et le pare-feu autorisant uniquement ce réseau. Ne pas exposer directement `php -S` sur Internet. Voir `docs/BACKEND.md`.
+
+## Connexion administrateur et installation sans perte
+
+Le serveur utilise **une seule base SQLite** pour le catalogue, les commandes, les clients et les analyses GRC. Une copie du code GitHub ne contient **pas** les produits ou comptes saisis localement.
+
+Pour une installation neuve, exécuter **une seule fois** `php database/init.php`, puis démarrer sur le port choisi :
+
+```powershell
+php -S 127.0.0.1:8001 router.php
+```
+
+La commande officielle `php -S 127.0.0.1:8000 -t public public/router.php` reste également valable. Utiliser le même hôte et le même port dans le navigateur ; par exemple `http://127.0.0.1:8001/`. Ne pas démarrer simultanément deux serveurs sur le même port.
+
+Pour retrouver un administrateur **sur le PC qui héberge la base**, sans réinitialiser les produits :
+
+```powershell
+php database/doctor.php
+php database/admin-access.php
+php database/admin-access.php --show-password
+```
+
+La dernière commande affiche volontairement les identifiants fictifs **dans le terminal local uniquement**. Ne pas les montrer pendant la soutenance ni copier ce résultat dans la conversation. Aucun mot de passe n'est intégré aux pages web ou au dépôt. L'interface publique permet aux visiteurs de créer des comptes **clients**, jamais des comptes admin.
+
+Pour changer l'e-mail et renouveler le mot de passe de l'administrateur **sans réinitialiser la base** :
+
+```powershell
+php database/change-admin.php --email=admin@example.test --new-email=mon-admin@example.test
+```
+
+Un mot de passe aléatoire est alors généré et affiché dans le terminal **local**. Ne modifiez pas `storage/demo-accounts.json` à la main : l'e-mail et le mot de passe doivent aussi être actualisés dans SQLite. La page `/login.html` accueille les clients et les administrateurs et les redirige selon leur rôle.
+
+Pour conserver et transférer le catalogue d'un PC à un autre, il faut sauvegarder la base SQLite et le dossier `public/assets/images/uploads/` (ainsi que les comptes locaux si les comptes de test doivent suivre). Utiliser les outils de sauvegarde documentés dans `docs/BACKEND.md` ; **ne pas copier un fichier SQLite pendant des écritures**. Préférer une restauration cohérente à une simple copie de la base active. Le code seul ne contient pas les données.
 
 ## Accès à l'administration GRC
 
