@@ -95,6 +95,9 @@ jobs:
       - name: New GRC analytics navigation and formulas
         run: node tests/grc-insights-front.mjs
 
+      - name: SPIRA exercise scoring and safe session-recovery contract
+        run: node tests/td-scoring.mjs
+
       - name: Per-customer GRC statistics from recorded transactions
         run: php tests/customer-statistics.php
 

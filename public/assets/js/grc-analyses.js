@@ -2,6 +2,7 @@ import { api } from './api.js';
 import { el, button, field, heading, renderError } from './ui.js';
 import { clientValue, surveyScore } from './grc-formulas.js';
 import { mountGroupCalculations } from './grc-groups.js';
+import { mountTDExercise } from './td-exercise.js';
 
 const number = value => value === null || value === undefined ? '—' :
   new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 2 }).format(value);
@@ -55,13 +56,13 @@ function overview(data) {
 
 function rfm(data) {
   const block = section('Segmentation des clients');
-  block.append(table(['Client', 'Récence', 'Achats', 'CA', 'Score', 'Segment'],
+  block.append(table(['Client', 'Récence', 'Achats', 'CA', 'Score RFM', 'Segment', 'Points fidélité'],
     data.rfm.map(row => [
       row.name, row.days === null ? 'Aucun achat' : row.days + ' j',
-      number(row.frequency), money(row.amount), row.score + '/15', row.segment
+      number(row.frequency), money(row.amount), row.score + '/15', row.segment, number(row.loyalty_points)
     ])));
   block.append(el('p', { className: 'gi-footnote' },
-    'R = récence · F = fréquence · M = montant. Scores de 1 à 5 par critère.'));
+    'R = récence · F = fréquence · M = montant. Score analytique du site, distinct des points de fidélité et du barème de l’exercice SPIRA.'));
   return el('div', { className: 'gi-stack' }, block, management());
 }
 
@@ -155,10 +156,11 @@ export async function mountGrcInsights(root) {
   const tabs = el('nav', { className: 'gi-tabs', 'aria-label': 'Navigation des analyses' });
   const note = el('p', { className: 'gi-period muted' });
   const refresh = button('Actualiser', { className: 'button button-secondary' });
-  const views = { overview, rfm, calculations, groups: mountGroupCalculations, surveys };
+  const views = { overview, rfm, calculations, groups: mountGroupCalculations, td: mountTDExercise, surveys };
   const labels = [
     ['overview', 'Indicateurs'], ['rfm', 'Segmentation RFM'],
-    ['calculations', 'CLV & formules'], ['groups', 'Calculs par groupe'], ['surveys', 'Enquêtes']
+    ['calculations', 'CLV & formules'], ['groups', 'Calculs par groupe'],
+    ['td', 'Exercice SPIRA (TD)'], ['surveys', 'Enquêtes']
   ];
   let active = 'overview';
   let data = null;

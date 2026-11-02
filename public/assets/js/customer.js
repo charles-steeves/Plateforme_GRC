@@ -168,7 +168,8 @@ async function auth(root, page, user) {
     }
     const message = el('div', { 'aria-live': 'polite', tabindex: '-1' });
     const name = el('input', { id: 'auth-name', name: 'name', type: 'text', autocomplete: 'name', required: true, maxLength: 120 });
-    const email = el('input', { id: 'auth-email', name: 'email', type: 'email', autocomplete: 'username', required: true, maxLength: 254, spellcheck: 'false', autocapitalize: 'none' });
+    const email = el('input', { id: 'auth-email', name: 'email', type: register ? 'email' : 'text',
+      autocomplete: 'username', required: true, maxLength: 254, spellcheck: 'false', autocapitalize: 'none' });
     const password = el('input', { id: 'auth-password', name: 'password', type: 'password', autocomplete: register ? 'new-password' : 'current-password', required: true, ...(register ? { minLength: 12 } : {}) });
     function validatePassword() {
         const value = password.value;
@@ -189,7 +190,7 @@ async function auth(root, page, user) {
     const form = el('form', { className: 'panel stack auth-form' },
         el('h2', {}, register ? 'Bienvenue dans la boutique' : 'Connexion à votre compte'),
         register ? field('Nom complet', name) : null,
-        field('Adresse e-mail', email),
+        field(register ? 'Adresse e-mail' : 'Identifiant ou adresse e-mail', email),
         field('Mot de passe', password, register ? '12 caractères minimum.' : ''),
         reveal, message, submit);
     if (!register && new URLSearchParams(window.location.search).get('logged_out') === '1') {

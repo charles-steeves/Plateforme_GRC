@@ -186,3 +186,32 @@ php database/restore-bundle.php --from=storage/avant-presentation --replace --co
 
 Ne lancer cette commande que serveur arrêté et après vérification de la source ; elle remplace la base, les comptes et les photos. Le guide complet est dans [docs/BACKEND.md](docs/BACKEND.md).
 
+
+
+## Connexion simplifiée pour les comptes fictifs du TD
+
+Dans une base de démonstration générée par `database/init.php`, la connexion accepte désormais `admin` pour le compte administrateur principal et les prénoms `Amina`, `Brice`, `Chloé`, `Dorian`, `Estelle`, `Fabrice`, `Grâce` et `Hugo` pour les comptes fictifs correspondants. Les adresses e-mail restent stockées dans la base et les vrais comptes clients continuent d'utiliser leur adresse e-mail.
+
+Pour choisir **vous-même** le mot de passe du compte admin sans le placer dans une ligne de commande ni effacer les ventes, exécutez dans PowerShell (dans le dossier du projet) :
+
+```powershell
+Read-Host "Choisir un mot de passe admin (12 caractères minimum)" | php database/change-admin.php --email=admin@example.test --password-stdin
+```
+
+Saisissez par exemple une phrase de passe de votre choix (12 caractères minimum). Cette opération change le mot de passe de l'administrateur existant et met à jour le fichier de comptes local. Si vous avez déjà changé son adresse e-mail, remplacez `admin@example.test` par l'adresse actuelle. **N'utilisez pas `admin@1` ou une combinaison prédictible sur un site accessible par Cloudflare** ; un identifiant court n'oblige pas à avoir un mot de passe faible. Les utilisateurs et mots de passe ne sont jamais publiés dans GitHub.
+
+## Exercices du cours
+
+Le volet **Administration → Analyses → Exercice SPIRA (TD)** reprend les 26 clients de l'annexe 1 du TD 2022. Les saisies sont modifiables pour recalculer R, F et M, ainsi que les sommes, fréquences et moyennes. Ce tableau n'écrit pas dans la base SQLite. La colonne « achat sur nombre de mois » n'est pas une vraie date de dernier achat ; elle sert seulement de proxy explicite pour reproduire le barème fourni. Les quatre seuils de segmentation ne sont pas définis dans les annexes, ils restent donc à valider avec l'enseignante. Les points RFM et les points de fidélité de la boutique restent séparés.
+
+
+
+### Un mot de passe commun pour les huit clients **fictifs** (local seulement)
+
+Sur le PC de démonstration, vous pouvez choisir une phrase de passe commune pour Amina, Brice, Chloé, Dorian, Estelle, Fabrice, Grâce et Hugo, sans ouvrir le fichier JSON et **sans réinitialiser la base** :
+
+```powershell
+Read-Host "Mot de passe des clients fictifs (12 caractères minimum)" | php database/demo-client-access.php --password-stdin
+```
+
+Cette commande ne touche ni les comptes administrateurs ni les vrais clients inscrits. **Cette facilité est réservée à une base fictive locale.** Changez ces mots de passe avant toute exposition sur internet / Cloudflare.

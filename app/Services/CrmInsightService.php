@@ -39,7 +39,8 @@ final class CrmInsightService
         $buyers = (int)$tot['buyers'];
 
         $query = $this->pdo->prepare("SELECT u.id, u.name, COUNT(o.id) AS frequency,
-            COALESCE(SUM(o.total_xaf),0) AS amount, MAX(o.created_at) AS last_at
+            COALESCE(SUM(o.total_xaf),0) AS amount, MAX(o.created_at) AS last_at,
+            (SELECT COALESCE(SUM(lt.points_delta),0) FROM loyalty_transactions lt WHERE lt.user_id=u.id) AS loyalty_points
             FROM users u LEFT JOIN orders o ON o.user_id=u.id
                 AND o.status='delivered' AND o.created_at >= :start AND o.created_at < :end
             WHERE u.role='client'
@@ -55,7 +56,7 @@ final class CrmInsightService
             $scoring = self::score($days, $frequency, $amount);
             $segments[$scoring['segment']]++;
             $customers[] = ['id'=>(int)$row['id'], 'name'=>$row['name'], 'days'=>$days,
-                'frequency'=>$frequency, 'amount'=>$amount] + $scoring;
+                'frequency'=>$frequency, 'amount'=>$amount, 'loyalty_points'=>(int)$row['loyalty_points']] + $scoring;
         }
 
         $old = $this->pdo->prepare("SELECT DISTINCT user_id FROM orders

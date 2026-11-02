@@ -86,13 +86,14 @@ try {
     'second admin appended to private local credentials');
 
   const changedAdmin = spawnSync('php', ['database/change-admin.php',
-    '--email=admin2@example.test', '--new-email=admin2-renewed@example.test'], {
-    cwd: root, env: { ...process.env, GRC_DB_PATH: dbPath }, encoding: 'utf8', timeout: 30000,
+    '--email=admin2@example.test', '--new-email=admin2-renewed@example.test', '--password-stdin'], {
+    cwd: root, env: { ...process.env, GRC_DB_PATH: dbPath },
+    input: 'MotDePasseFacile@2026!\n', encoding: 'utf8', timeout: 30000,
   });
   assert.equal(changedAdmin.status, 0, 'Existing admin renewal failed: ' + changedAdmin.stderr);
   const renewed = JSON.parse(readFileSync(join(folder, 'demo-accounts.json'), 'utf8')).accounts
     .find(a => a.email === 'admin2-renewed@example.test');
-  ok(renewed?.role === 'admin' && renewed.password !== secondAdmin.password,
+  ok(renewed?.role === 'admin' && renewed.password === 'MotDePasseFacile@2026!',
     'admin e-mail and password updated without touching client data');
   const addDuplicate = spawnSync('php', ['database/add-admin.php',
     '--name=Doublon', '--email=admin2-renewed@example.test'], {
@@ -158,7 +159,11 @@ try {
   ok((await client.get('/admin/categories')).status === 401,
     'unauthenticated visitor cannot read private admin category management');
  
-  const clientUser = await client.login(clientAccounts[0]);
+  const simpleClients = spawnSync('php', ['database/demo-client-access.php','--password-stdin'],{
+    cwd:root, env:{...process.env,GRC_DB_PATH:dbPath}, input:'PhraseDeTest@2026!\n',encoding:'utf8',timeout:30000
+  });
+  assert.equal(simpleClients.status,0,'Test-client setup failed: '+simpleClients.stderr);
+  const clientUser = await client.login({ ...clientAccounts[0], email: 'Amina', password: 'PhraseDeTest@2026!' });
   ok(clientUser.role === 'client', 'client role from session');
   // Passive refresh must not reset the user idle timer. Test on disposable
   // PHP session files, never on the owner's real storage directory.
@@ -177,9 +182,9 @@ try {
   ok((await client.get('/tickets/me')).status === 200, 'regular ticket list read is authorized');
   ok(readFileSync(sessionFile, 'utf8') !== beforePassive,
     'interactive ticket navigation refreshes last_seen');
-  const adminUser = await admin.login(account('admin'));
+  const adminUser = await admin.login({ ...account('admin'), email: 'admin' });
   ok(adminUser.role === 'admin', 'admin role from session');
-  await outsider.login(clientAccounts[1]);
+  await outsider.login({ ...clientAccounts[1], email:'Brice', password:'PhraseDeTest@2026!' });
   const colleague = new Session(base);
   const colleagueUser = await colleague.login(renewed);
   ok(colleagueUser.role === 'admin', 'independent colleague admin can log in');

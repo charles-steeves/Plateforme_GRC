@@ -1,0 +1,26 @@
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { scoreTD, calculateTD, TD_SPIRA_2022 } from '../public/assets/js/td-scoring.js';
+
+assert.equal(TD_SPIRA_2022.length,26);
+assert.deepEqual(TD_SPIRA_2022[0],['A',5,14000000,5]);
+assert.deepEqual(TD_SPIRA_2022[25],['Z',7,2700000,6]);
+const rows=TD_SPIRA_2022.map(([name,purchases,amount,months])=>({name,purchases,amount,months}));
+const r=calculateTD(rows);
+assert.equal(r.clients,26);
+assert.equal(r.purchases,rows.reduce((x,y)=>x+y.purchases,0));
+assert.equal(r.amount,rows.reduce((x,y)=>x+y.amount,0));
+assert.deepEqual(scoreTD({purchases:5,amount:14000000,months:5}),{r:3,f:3,m:5,total:11});
+assert.deepEqual(scoreTD({purchases:1,amount:1900000,months:1}),{r:5,f:1,m:1,total:7});
+assert.deepEqual(scoreTD({purchases:7,amount:10000000,months:5}),{r:3,f:5,m:5,total:13});
+assert.equal(scoreTD({purchases:2,amount:2000000,months:7}).total,9);
+assert.equal(scoreTD({purchases:5,amount:4000000,months:2}).total,11);
+assert.throws(()=>scoreTD({purchases:2,amount:200,months:0}),RangeError);
+assert.throws(()=>scoreTD({purchases:-1,amount:200,months:2}),RangeError);
+const ui=readFileSync('public/assets/js/grc-analyses.js','utf8');
+assert.match(ui,/Exercice SPIRA \(TD\)/);
+assert.match(ui,/loyalty_points/);
+const api=readFileSync('public/assets/js/api.js','utf8');
+assert.match(api,/error\.code === 'CSRF_INVALID'/);
+assert.match(api,/await refreshCsrf\(\)/);
+console.log('OK — 26 TD students, annex thresholds, RFM/loyalty distinction, CSRF retry');

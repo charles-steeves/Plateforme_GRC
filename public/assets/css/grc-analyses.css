@@ -30,3 +30,9 @@
 .gi-error{color:#923622;min-height:1em;font-size:.82rem}
 @media(max-width:950px){.gi-columns{grid-template-columns:1fr}}
 @media(max-width:600px){.gi-chart-row{grid-template-columns:72px minmax(40px,1fr) minmax(60px,1fr)}.gi-tab{flex:1 1 43%}}
+
+/* Fixed-width editable TD table without squeezing the admin sidebar. */
+.gi-td-scroll{overflow:auto;max-width:100%;}
+.gi-td-input{width:110px;max-width:100%;min-height:38px;box-sizing:border-box;font:inherit;border:1px solid #bed4df;border-radius:6px;padding:.35rem .45rem;}
+.gi-td-scroll .gi-table td,.gi-td-scroll .gi-table th{text-align:right;}
+.gi-td-scroll .gi-table th:first-child{text-align:left;}

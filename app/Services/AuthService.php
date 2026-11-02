@@ -47,13 +47,19 @@ final class AuthService
     public function login(array $input): array
     {
         Validation::fields($input, ['email', 'password']);
-        $email = $this->email($input);
+        // The login form also accepts a simple alias for built-in demo users.
+        // Real registrations continue using a valid e-mail address.
+        $identity = strtolower(Validation::text($input, 'email', 2, 254));
+        $email = str_contains($identity, '@') ? $this->email($input) : null;
+        if ($email === null && preg_match('/^[\\p{L}][\\p{L}0-9_-]{1,39}$/uD', $identity) !== 1) {
+            Validation::invalid('Identifiant de connexion invalide.');
+        }
         $password = $input['password'] ?? null;
         if (!is_string($password) || strlen($password) > 72 || preg_match('//u', $password) !== 1 || str_contains($password, "\0")) {
             Validation::invalid('Mot de passe invalide.');
         }
-        (new LoginLimiter($this->pdo))->record($email);
-        $user = $this->users->byEmail($email);
+        (new LoginLimiter($this->pdo))->record($identity);
+        $user = $email === null ? $this->users->byDemoAlias($identity) : $this->users->byEmail($email);
         $valid = password_verify($password, $user['password_hash'] ?? $this->users->dummyHash());
         if (!$user || !$valid) {
             throw new ApiException(401, 'INVALID_CREDENTIALS', 'Identifiants incorrects.');

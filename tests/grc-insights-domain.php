@@ -12,6 +12,8 @@ $db->exec("CREATE TABLE users(id INTEGER PRIMARY KEY, name TEXT, role TEXT)");
 $db->exec("CREATE TABLE orders(id INTEGER PRIMARY KEY, user_id INTEGER, status TEXT, total_xaf INTEGER, created_at TEXT)");
 $db->exec("CREATE TABLE tickets(id INTEGER PRIMARY KEY, status TEXT)");
 $db->exec("CREATE TABLE feedback(id INTEGER PRIMARY KEY, rating INTEGER)");
+$db->exec("CREATE TABLE loyalty_transactions(id INTEGER PRIMARY KEY, user_id INTEGER, points_delta INTEGER)");
+$db->exec("INSERT INTO loyalty_transactions VALUES(1,2,50),(2,2,-10)");
 $db->exec("INSERT INTO users VALUES(1,'Administrateur','admin'),(2,'Client actif','client'),(3,'Client sans achat','client')");
 $today = new DateTimeImmutable('today', new DateTimeZone('UTC'));
 $stamp = static fn(int $days): string => $today->modify("-$days days")->format('Y-m-d\T12:00:00\Z');
@@ -30,7 +32,8 @@ if ($r['registered_customers'] !== 2 || $r['buyers'] !== 1 || $r['orders'] !== 2
     throw new RuntimeException('Calcul annuel incorrect.');
 if ($r['retention'] != 100 || $r['pending_tickets'] !== 1 || $r['feedback_count'] !== 1 ||
     $r['satisfaction'] != 5) throw new RuntimeException('Indicateurs GRC incorrects.');
-if (count($r['rfm']) !== 2 || array_sum($r['segments']) !== 2)
+if (count($r['rfm']) !== 2 || array_sum($r['segments']) !== 2
+    || $r['rfm'][0]['loyalty_points'] !== 40)
     throw new RuntimeException('Segmentation RFM incomplète.');
 $inactive = array_values(array_filter($r['rfm'], static fn(array $c): bool => $c['id'] === 3));
 if (count($inactive) !== 1 || $inactive[0]['segment'] !== 'À réactiver' ||

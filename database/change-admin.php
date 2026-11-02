@@ -28,10 +28,12 @@ $transaction = false;
 $installed = false;
 $recoveryFailed = false;
 try {
-    $options = databaseOptions($argv, ['email' => true, 'new-email' => true, 'help' => false]);
+    $options = databaseOptions($argv, ['email' => true, 'new-email' => true,
+        'password-stdin' => false, 'help' => false]);
     if (isset($options['help'])) {
         echo "Usage: php database/change-admin.php --email=ancien@example.test [--new-email=nouveau@example.test]\n";
-        echo "Un nouveau mot de passe local est généré sans être passé en argument. Aucune base n'est réinitialisée.\n";
+        echo "Par défaut, un mot de passe est généré. --password-stdin lit un mot de passe choisi sur l'entrée standard.\n";
+        echo "Aucune base n'est réinitialisée. N'utilisez pas de mot de passe faible sur un site partagé.\n";
         exit(0);
     }
     requireDatabaseRuntime();
@@ -55,7 +57,16 @@ try {
         if (($account['role'] ?? '') === 'admin' && strtolower((string)($account['email'] ?? '')) === $email) {
             $found = true;
             $account['email'] = $newEmail;
-            $password = bin2hex(random_bytes(16));
+            if (isset($options['password-stdin'])) {
+                $line = fgets(STDIN);
+                $password = is_string($line) ? rtrim($line, "\r\n") : '';
+                if (preg_match('//u', $password) !== 1 || str_contains($password, "\0")
+                    || preg_match_all('/./us', $password) < 12 || strlen($password) > 72) {
+                    throw new RuntimeException('Choisissez un mot de passe de 12 à 72 caractères, sans caractère interdit.');
+                }
+            } else {
+                $password = bin2hex(random_bytes(16));
+            }
             $account['password'] = $password;
             break;
         }
@@ -85,7 +96,11 @@ try {
     $pdo->exec('COMMIT');
     $transaction = false;
     echo "Compte administrateur mis à jour : " . $newEmail . PHP_EOL;
-    echo "Nouveau mot de passe local : " . $password . PHP_EOL;
+    if (!isset($options['password-stdin'])) {
+        echo "Nouveau mot de passe local : " . $password . PHP_EOL;
+    } else {
+        echo "Mot de passe personnel enregistré dans SQLite et dans les comptes privés." . PHP_EOL;
+    }
     echo "Conservez-le en privé. Ne partagez pas cette sortie ni le fichier JSON.\n";
 } catch (Throwable $error) {
     if ($transaction && $pdo instanceof PDO) {

@@ -104,7 +104,18 @@ export async function api(path, options = {}) {
       throw failure;
     }
   }
-  const data = await request(path, { ...options, method, token });
+  let data;
+  try {
+    data = await request(path, { ...options, method, token });
+  } catch (error) {
+    // A stale CSRF token is rejected before the server executes any mutation.
+    // Refresh exactly once: do not replay requests after network/5xx errors.
+    if (method !== 'GET' && error.code === 'CSRF_INVALID' && error.status === 403) {
+      csrfToken = null;
+      const freshToken = await refreshCsrf();
+      data = await request(path, { ...options, method, token: freshToken });
+    } else throw error;
+  }
   if (path === '/auth/login' && method === 'POST') {
     csrfToken = null;
     // The login already succeeded. A transient token refresh failure must not
