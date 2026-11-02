@@ -224,7 +224,7 @@ async function products(root) {
     className: 'button button-primary', onClick: () => { if (mutationPending || needsRefresh) return; edit(); editor.querySelector('input')?.focus(); },
   });
   root.replaceChildren(heading('Produits et stocks', 'Créez, modifiez ou désactivez les produits du catalogue.'),
-    el('div', { className: 'cluster' }, refresh, newProduct), feedback, el('div', { className: 'split' }, list, editor));
+    el('div', { className: 'cluster' }, refresh, newProduct), feedback, el('div', { className: 'split admin-product-layout' }, list, editor));
   let generation = 0;
   let editing = null;
   let mutationPending = false;

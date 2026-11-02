@@ -215,3 +215,26 @@ Read-Host "Mot de passe des clients fictifs (12 caractères minimum)" | php data
 ```
 
 Cette commande ne touche ni les comptes administrateurs ni les vrais clients inscrits. **Cette facilité est réservée à une base fictive locale.** Changez ces mots de passe avant toute exposition sur internet / Cloudflare.
+
+
+## Vérifier l'accès administrateur sans perdre les ventes
+
+L'administration utilise **le même serveur SQLite** que la boutique, mais seuls les comptes de rôle `admin` peuvent l'ouvrir. Le lien `/login.html?next=%2Fadmin.html` affiche une connexion orientée administration ; il n'accorde aucun privilège aux clients. Si un compte client est déjà connecté, choisir **Changer de compte**.
+
+Le fichier `storage/demo-accounts.json` peut être absent ou obsolète : la commande suivante vérifie le mot de passe **directement dans SQLite**, sans l'afficher ni supprimer les données :
+
+```powershell
+Read-Host "Mot de passe admin actuel" | php database/admin-login.php --check
+```
+
+Si la vérification échoue, choisissez localement un nouveau mot de passe (12 caractères minimum) pour l'administrateur **déjà présent** :
+
+```powershell
+Read-Host "Nouveau mot de passe admin" | php database/admin-login.php --set-password
+```
+
+Le script refuse de créer un nouvel administrateur et n'effectue aucune réinitialisation. Si plusieurs administrateurs existent et que le principal n'a pas l'identifiant interne 1, sélectionnez le compte avec `--email=adresse-actuelle`. Sur une installation de test, utilisez un navigateur privé à `http://127.0.0.1:8001/login.html?next=%2Fadmin.html`. Si le mot de passe est vérifié dans SQLite mais la connexion HTTP échoue, examinez les messages exacts du navigateur, le journal privé du serveur et `php database/doctor.php` : les erreurs d'origine, de cookie et de jeton CSRF sont distinctes d'un mauvais mot de passe.
+
+### Modification des produits sur mobile
+
+Sur téléphone/tablette, **Administration → Produits** affiche des fiches avec le bouton **Modifier ce produit**, qui ouvre le même formulaire que sur ordinateur, y compris pour changer le prix et le stock. Les droits et l'API de sauvegarde sont identiques sur tous les appareils. La mise à jour se voit ensuite dans le catalogue public, sans recréer le produit.
