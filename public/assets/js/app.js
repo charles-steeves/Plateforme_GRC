@@ -62,15 +62,17 @@ function renderAdminNav(user) {
   const container = document.getElementById('section-navigation');
   const tabs = [
     ['admin', 'Vue d’ensemble', '◫', 'Indicateurs et suivi'],
+    ['admin-analyses', 'Analyses GRC', '∑', 'Calculs, RFM et enquêtes'],
     ['admin-customers', 'Clients', '♙', 'Portefeuille et fidélité'],
     ['admin-orders', 'Commandes', '▤', 'Ventes et transactions'],
     ['admin-products', 'Produits', '▦', 'Catalogue et stocks'],
     ['admin-tickets', 'Service client', '✉', 'Dialogue et SAV'],
   ];
+  const viewingAnalyses = page === 'admin' && new URLSearchParams(location.search).get('view') === 'analyses';
   const nav = el('nav', { className: 'admin-nav', id: 'admin-sidebar-menu', 'aria-label': 'Administration GRC' },
     tabs.map(([key, label, symbol, detail]) => el('a', {
-      href: `/${key}.html`, title: label,
-      ...(page === key ? { 'aria-current': 'page' } : {}),
+      href: key === 'admin-analyses' ? '/admin.html?view=analyses' : `/${key}.html`, title: label,
+      ...((key === 'admin-analyses' ? viewingAnalyses : page === key && !viewingAnalyses) ? { 'aria-current': 'page' } : {}),
     }, el('span', { className: 'admin-nav-icon', 'aria-hidden': 'true' }, symbol),
       el('span', { className: 'admin-nav-label' },
         el('strong', {}, label), el('small', {}, detail)))));

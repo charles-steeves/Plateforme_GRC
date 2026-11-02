@@ -1,4 +1,5 @@
 import { api, isUncertainMutation as uncertain } from './api.js';
+import { mountGrcInsights } from './grc-analyses.js';
 import {
   el, money, date, badge, notice, field, button, heading, empty,
   renderError, busy, orderCard, productImage, isLocalImagePath,
@@ -628,7 +629,7 @@ export async function mountAdmin(root, { page, user }) {
     return;
   }
   const mount = {
-    admin: dashboard, 'admin-products': products, 'admin-orders': orders, 'admin-customers': customers,
+    admin: new URLSearchParams(location.search).get('view') === 'analyses' ? mountGrcInsights : dashboard, 'admin-products': products, 'admin-orders': orders, 'admin-customers': customers,
   }[page];
   if (!mount) throw new Error('Cette page d’administration est inconnue.');
   await mount(root);

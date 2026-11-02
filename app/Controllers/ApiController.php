@@ -3,7 +3,7 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Core\{ApiException, Database, Request, Response, Security};
-use App\Services\{AuthService, ProductService, OrderService, TicketService, GrcService, ImageUploadService};
+use App\Services\{AuthService, ProductService, OrderService, TicketService, GrcService, ImageUploadService, CrmInsightService};
 use PDO;
 
 final class ApiController
@@ -40,6 +40,7 @@ final class ApiController
             ['POST', '/tickets/([0-9]+)/messages', 'authenticated', 201, fn($u, $b, $id) => ['message' => (new TicketService($this->db()))->message($id, $u, $b)]],
             ['POST', '/feedback', 'client', 201, fn($u, $b, $id) => ['feedback' => (new GrcService($this->db()))->feedback($u['id'], $b)]],
             ['GET', '/admin/dashboard', 'admin', 200, fn($u, $b, $id) => (new GrcService($this->db()))->dashboard()],
+            ['GET', '/admin/insights', 'admin', 200, fn($u, $b, $id) => (new CrmInsightService($this->db()))->report()],
             ['GET', '/admin/customers', 'admin', 200, fn($u, $b, $id) => (new GrcService($this->db()))->customers($_GET)],
             ['GET', '/admin/customers/([0-9]+)', 'admin', 200, fn($u, $b, $id) => (new GrcService($this->db()))->customer($id)],
             ['GET', '/admin/orders', 'admin', 200, fn($u, $b, $id) => ['items' => (new OrderService($this->db()))->adminList()]],

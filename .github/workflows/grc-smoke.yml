@@ -83,6 +83,12 @@ jobs:
       - name: In-memory GRC business logic regression
         run: php tests/domain-integration.php
 
+      - name: New GRC analytics (in-memory SQLite, no active data)
+        run: php tests/grc-insights-domain.php
+
+      - name: New GRC analytics navigation and formulas
+        run: node tests/grc-insights-front.mjs
+
       - name: Complete client/admin journey with isolated PHP and SQLite
         run: node tests/http-journey.mjs
 

@@ -1,0 +1,32 @@
+/* Nouvelle vue analytique indépendante du tableau de bord et de la boutique. */
+.gi-stack{display:grid;gap:1.1rem;min-width:0}
+.gi-top{display:flex;flex-wrap:wrap;gap:.9rem;justify-content:space-between;align-items:center;margin-bottom:.8rem}
+.gi-tabs{display:flex;gap:.5rem;flex-wrap:wrap}
+.gi-tab{background:#fff;border:1px solid #cbdfe9;color:#134666;border-radius:10px}
+.gi-tab:hover,.gi-tab.gi-active{background:#18709b;color:#fff;border-color:#18709b}
+.gi-period{font-size:.85rem;margin-bottom:.8rem}
+.gi-section{min-width:0}
+.gi-section h2{font-size:1.25rem;margin-bottom:.9rem}
+.gi-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:.8rem}
+.gi-tile{display:grid;align-content:center;gap:.35rem;min-width:0;padding:1rem;border:1px solid #dceaf1;background:#fff;border-radius:14px}
+.gi-tile span{font-size:.8rem;color:#57718a}
+.gi-tile strong{font-size:clamp(1.12rem,2vw,1.6rem);color:#134666;overflow-wrap:anywhere}
+.gi-columns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1.1rem}
+.gi-chart{display:grid;gap:.7rem}
+.gi-chart-row{display:grid;grid-template-columns:minmax(76px,1fr) minmax(70px,3fr) minmax(90px,1.4fr);gap:.6rem;align-items:center;font-size:.82rem}
+.gi-chart-row strong{text-align:right;color:#134666;font-size:.8rem;overflow-wrap:anywhere}
+.gi-chart-row progress{width:100%;height:13px;accent-color:#18709b}
+.gi-scroll{max-width:100%;overflow-x:auto}
+.gi-table{width:100%;border-collapse:collapse;font-size:.84rem}
+.gi-table th,.gi-table td{padding:.7rem .6rem;white-space:nowrap;text-align:left;border-bottom:1px solid #dceaf1}
+.gi-table thead th{background:#e9f6fd;color:#134666}
+.gi-controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));align-items:end;gap:.75rem}
+.gi-controls .field{margin:0}
+.gi-controls button{min-height:46px}
+.gi-actions{display:flex;gap:.6rem;flex-wrap:wrap}
+.gi-action{display:inline-flex;align-items:center;padding:.7rem .9rem;border:1px solid #bdd8e7;color:#134666;background:#e9f6fd;text-decoration:none;border-radius:10px;font-size:.85rem;font-weight:600}
+.gi-action:hover{background:#18709b;color:#fff}
+.gi-footnote{font-size:.82rem;color:#61798e;margin:.8rem 0 0}
+.gi-error{color:#923622;min-height:1em;font-size:.82rem}
+@media(max-width:950px){.gi-columns{grid-template-columns:1fr}}
+@media(max-width:600px){.gi-chart-row{grid-template-columns:72px minmax(40px,1fr) minmax(60px,1fr)}.gi-tab{flex:1 1 43%}}
