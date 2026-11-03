@@ -61,7 +61,12 @@ try {
         $db = null;
     }
     if (!is_file($accounts)) {
-        $problems[] = 'Le fichier de comptes de connexion est absent. Ne pas écraser une base existante pour le recréer.';
+        if (is_file($dbPath)) {
+            echo "Avertissement : demo-accounts.json est absent. Les comptes de connexion restent enregistrés dans SQLite.\n";
+            echo "En cas de perte du mot de passe administrateur, consulter php database/admin-login.php --help. Ne pas réinitialiser la base.\n";
+        } else {
+            $problems[] = 'Le fichier de comptes et la base sont absents : initialiser une seule fois avec php database/init.php.';
+        }
     }
 } catch (Throwable $error) {
     // No file paths, records or exception details in the public browser.

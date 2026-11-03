@@ -31,7 +31,11 @@ final class ProductService
         }
         $search = Validation::text($query, 'search', 0, 254, '');
         $category = Validation::text($query, 'category', 0, 120, '');
-        $result = $this->products->listing($search, $category, $perPage, ($page - 1) * $perPage);
+        $sort = Validation::text($query, 'sort', 0, 30, '');
+        if (!in_array($sort, ['', 'price_asc', 'price_desc', 'name', 'newest', 'rating'], true)) {
+            throw new ApiException(422, 'VALIDATION_ERROR', 'Tri du catalogue invalide.');
+        }
+        $result = $this->products->listing($search, $category, $perPage, ($page - 1) * $perPage, $sort);
         return ['items' => $result['items'], 'page' => $page, 'per_page' => $perPage, 'total' => $result['total']];
     }
 

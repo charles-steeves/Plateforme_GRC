@@ -17,7 +17,7 @@ final class ProductRepository
     }
 
     /** @return array{items: array, total: int} */
-    public function listing(string $search, string $category, int $limit, int $offset): array
+    public function listing(string $search, string $category, int $limit, int $offset, string $sort = ''): array
     {
         $conditions = ['p.active = 1'];
         $parameters = [];
@@ -33,7 +33,16 @@ final class ProductRepository
         $where = implode(' AND ', $conditions);
         $count = $this->pdo->prepare('SELECT COUNT(*) FROM products p WHERE ' . $where);
         $count->execute($parameters);
-        $statement = $this->pdo->prepare('SELECT ' . self::COLUMNS . ' FROM products p WHERE ' . $where . ' ORDER BY p.id LIMIT :limit OFFSET :offset');
+        $sorts = [
+            '' => 'p.id ASC',
+            'price_asc' => 'p.price_xaf ASC, p.id ASC',
+            'price_desc' => 'p.price_xaf DESC, p.id ASC',
+            'name' => 'p.name COLLATE NOCASE ASC, p.id ASC',
+            'newest' => 'p.created_at DESC, p.id DESC',
+            'rating' => 'rating_average DESC NULLS LAST, p.id ASC',
+        ];
+        $orderBy = $sorts[$sort] ?? $sorts[''];
+        $statement = $this->pdo->prepare('SELECT ' . self::COLUMNS . ' FROM products p WHERE ' . $where . ' ORDER BY ' . $orderBy . ' LIMIT :limit OFFSET :offset');
         foreach ($parameters as $name => $value) {
             $statement->bindValue(':' . $name, $value, PDO::PARAM_STR);
         }

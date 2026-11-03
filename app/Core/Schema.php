@@ -20,6 +20,18 @@ CREATE TABLE IF NOT EXISTS product_reviews (
 )
 SQL;
 
+    /** Ajout non destructif : remarques jointes aux commandes existantes et nouvelles. */
+    public static function ensureOrderCustomerNote(PDO $pdo): void
+    {
+        $rows = $pdo->query('PRAGMA table_info(orders)')->fetchAll(PDO::FETCH_ASSOC);
+        if ($rows === []) {
+            throw new \RuntimeException('Table des commandes absente.');
+        }
+        if (!in_array('customer_note', array_column($rows, 'name'), true)) {
+            $pdo->exec("ALTER TABLE orders ADD COLUMN customer_note TEXT NOT NULL DEFAULT ''");
+        }
+    }
+
     public static function ensureProductReviews(PDO $pdo): void
     {
         $exists = $pdo->query("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'product_reviews' LIMIT 1")->fetchColumn();

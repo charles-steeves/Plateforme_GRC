@@ -26,6 +26,7 @@ CREATE TABLE orders (
     user_id INTEGER NOT NULL REFERENCES users(id),
     status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'confirmed', 'delivered', 'cancelled')),
     total_xaf INTEGER NOT NULL CHECK (typeof(total_xaf) = 'integer' AND total_xaf >= 0),
+    customer_note TEXT NOT NULL DEFAULT '',
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
 );

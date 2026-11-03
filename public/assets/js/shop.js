@@ -54,10 +54,11 @@ function stockText(product) {
     : 'Rupture de stock';
 }
 
-function catalogueURL({ search = '', category = '', page = 1 }) {
+function catalogueURL({ search = '', category = '', sort = '', page = 1 }) {
   const params = new URLSearchParams();
   if (search) params.set('search', search);
   if (category) params.set('category', category);
+  if (sort) params.set('sort', sort);
   if (page > 1) params.set('page', String(page));
   const query = params.toString();
   return `/index.html${query ? `?${query}` : ''}`;
@@ -81,16 +82,24 @@ async function mountCatalogue(root) {
   const params = new URLSearchParams(window.location.search);
   const search = params.get('search') || '';
   const category = params.get('category') || '';
+  const sorts = ['', 'price_asc', 'price_desc', 'name', 'newest', 'rating'];
+  const sort = sorts.includes(params.get('sort')) ? params.get('sort') : '';
   const page = id(params.get('page') || '1') || 1;
   const searchInput = el('input', { id: 'catalogue-search', name: 'search', type: 'search',
     value: search, maxLength: 200, placeholder: 'Téléphone, casque, accessoire…' });
   const categoryInput = el('select', { id: 'catalogue-category', name: 'category' },
     el('option', { value: '' }, 'Toutes les catégories'));
   if (category) categoryInput.append(el('option', { value: category, selected: true }, category));
+  const sortInput = el('select', { id: 'catalogue-sort', name: 'sort' },
+    [['', 'Ordre habituel'], ['price_asc', 'Prix croissant'], ['price_desc', 'Prix décroissant'],
+      ['name', 'Nom A à Z'], ['newest', 'Nouveautés'], ['rating', 'Meilleures notes']]
+      .map(([value, label]) => el('option', { value, selected: value === sort }, label)));
+  sortInput.value = sort;
   const form = el('form', { id: 'catalogue-filters', className: 'panel catalogue-toolbar', action: '/index.html', method: 'get',
     role: 'search', 'aria-label': 'Rechercher dans le catalogue' },
   field('Rechercher un produit', searchInput),
   field('Catégorie', categoryInput),
+  field('Trier par', sortInput),
   el('div', { className: 'catalogue-toolbar-actions' },
     button('Rechercher', { type: 'submit', className: 'button button-primary' }),
     el('a', { href: '/index.html', className: 'button button-secondary' }, 'Effacer les filtres')));
@@ -133,14 +142,14 @@ async function mountCatalogue(root) {
           el('a', { href: '#catalogue-filters' }, 'Toutes les catégories')),
         el('div', { className: 'category-browse-grid' },
           rows.slice(0, 6).map(row =>
-            el('a', { className: 'category-browse-card', href: catalogueURL({ category: row.name }) },
+            el('a', { className: 'category-browse-card', href: catalogueURL({ category: row.name, sort }) },
               el('span', { className: 'category-browse-symbol', 'aria-hidden': 'true' }, '↗'),
               el('strong', {}, row.name),
               el('small', {}, `${row.count} article${row.count > 1 ? 's' : ''}`)))));
     } else categoryBrowse.replaceChildren();
   }
   void refreshCategories().catch(() => { /* A transient category failure must not hide products. */ });
-  const query = new URLSearchParams({ search, category, page: String(page), per_page: String(PER_PAGE) });
+  const query = new URLSearchParams({ search, category, sort, page: String(page), per_page: String(PER_PAGE) });
   let lastCatalog = null;
   let refreshing = false;
   let refreshCycle = 0;
@@ -159,12 +168,12 @@ async function mountCatalogue(root) {
     lastCatalog = signature;
     const pagination = el('nav', { className: 'pagination cluster', 'aria-label': 'Pagination du catalogue' });
     if (data.page > 1) pagination.append(el('a', {
-      href: catalogueURL({ search, category, page: data.page - 1 }),
+      href: catalogueURL({ search, category, sort, page: data.page - 1 }),
       className: 'button button-secondary', rel: 'prev' }, 'Page précédente'));
     pagination.append(el('span', { className: 'muted' },
       `Page ${data.page} sur ${Math.max(1, Math.ceil(data.total / data.per_page))}`));
     if (data.page * data.per_page < data.total) pagination.append(el('a', {
-      href: catalogueURL({ search, category, page: data.page + 1 }),
+      href: catalogueURL({ search, category, sort, page: data.page + 1 }),
       className: 'button button-secondary', rel: 'next' }, 'Page suivante'));
     results.replaceChildren(
       el('p', { role: 'status', 'aria-live': 'polite' },
@@ -224,7 +233,7 @@ async function mountProduct(root, user) {
       value: 1, required: true, inputMode: 'numeric', disabled: product.stock_quantity === 0 });
     const messages = el('div', { 'aria-live': 'polite' });
     const add = button('Ajouter au panier', { type: 'submit', className: 'button button-primary',
-      disabled: product.stock_quantity === 0 || user?.role === 'admin' });
+      disabled: product.stock_quantity === 0 || user?.role !== 'client' });
     const form = el('form', { className: 'stack', onSubmit: event => {
       event.preventDefault();
       if (!form.reportValidity()) return;
@@ -254,7 +263,11 @@ async function mountProduct(root, user) {
         el('p', { className: 'product-description' }, product.description || 'Description non renseignée.'),
         user?.role === 'admin'
           ? el('p', { className: 'notice' }, 'Le panier et les commandes sont réservés aux comptes clients.')
-          : form,
+          : user?.role !== 'client'
+            ? el('div', { className: 'stack' }, el('p', {}, 'Connectez-vous pour ajouter un article au panier.'),
+              el('a', { className: 'button button-primary',
+                href: `/login.html?next=${encodeURIComponent(`/product.html?id=${product.id}`)}` }, 'Se connecter pour ajouter'))
+            : form,
         messages)));
     await mountProductReviews(content, productId, user);
   } catch (error) {
@@ -290,6 +303,14 @@ function validOrder(order) {
 
 async function mountCart(root, user) {
   if (checkoutPending) return;
+  if (user?.role !== 'client') {
+    root.replaceChildren(heading('Mon panier', 'Un compte client est nécessaire pour ajouter des articles et commander.'),
+      el('section', { className: 'panel stack' },
+        el('a', { className: 'button button-primary', href: '/login.html?next=%2Fcart.html' }, 'Se connecter'),
+        el('a', { className: 'button button-secondary', href: '/register.html?next=%2Fcart.html' }, 'Créer un compte client'),
+        el('a', { href: '/' }, 'Parcourir le catalogue sans connexion')));
+    return;
+  }
   const stage = el('section', { className: 'stack', 'aria-busy': 'true' },
     el('p', { role: 'status' }, 'Vérification des produits et du stock…'));
   root.replaceChildren(heading('Mon panier',
@@ -399,6 +420,8 @@ async function mountCart(root, user) {
         'La confirmation d’une commande précédente n’a pas pu être vérifiée. Consultez votre historique avant toute nouvelle tentative.'),
       el('a', { href: '/account.html', className: 'button button-primary' }, 'Vérifier mes commandes'));
     } else {
+      const customerNote = el('textarea', { id: 'cart-customer-note', name: 'customer_note', rows: 3,
+        maxLength: 1500, placeholder: 'Précisions facultatives pour cette commande…' });
       const confirmation = el('input', { id: 'cart-confirmation', type: 'checkbox', required: true });
       const submit = button('Confirmer ma commande', { type: 'submit',
         className: 'button button-primary', disabled: invalid });
@@ -423,8 +446,9 @@ async function mountCart(root, user) {
           await busy(submit, async () => {
             notice(messages, 'Enregistrement de votre commande…', 'info');
             try {
-              const payload = { items: cart.map(item => ({ product_id: item.product_id, quantity: item.quantity })) };
-              const key = requestId('order', user.id, [...payload.items].sort((a, b) => a.product_id - b.product_id));
+              const payload = { items: cart.map(item => ({ product_id: item.product_id, quantity: item.quantity })),
+                customer_note: customerNote.value.trim() };
+              const key = requestId('order', user.id, {items: [...payload.items].sort((a, b) => a.product_id - b.product_id),customer_note: payload.customer_note});
               const data = await api('/orders', { method: 'POST', body: { ...payload, request_id: key } });
               const order = data?.order;
               if (!validOrder(order)) {
@@ -474,7 +498,8 @@ async function mountCart(root, user) {
           checkoutPending = false;
           if (uncertain || submitted) submit.disabled = true;
         }
-      } }, el('label', { className: 'checkbox-field', htmlFor: 'cart-confirmation' }, confirmation,
+      } }, field('Remarque pour cette commande (facultative)', customerNote, '1 500 caractères maximum. Cette remarque accompagne la commande.'),
+        el('label', { className: 'checkbox-field', htmlFor: 'cart-confirmation' }, confirmation,
         el('span', {}, 'Je confirme les articles et les quantités de ma commande.')), submit);
       summary.append(checkout);
     }
