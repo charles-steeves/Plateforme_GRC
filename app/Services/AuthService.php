@@ -64,6 +64,9 @@ final class AuthService
         if (!$user || !$valid) {
             throw new ApiException(401, 'INVALID_CREDENTIALS', 'Identifiants incorrects.');
         }
+        if (\App\Core\Config::isQuickTunnelRequest() && $user['role'] === 'admin') {
+            throw new ApiException(403, 'LOCAL_ADMIN_ONLY', 'La connexion administrateur est disponible sur le PC local.');
+        }
         Security::login((int)$user['id']);
         unset($user['password_hash']);
         return $user;

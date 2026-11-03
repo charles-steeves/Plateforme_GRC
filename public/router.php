@@ -7,6 +7,18 @@ use App\Core\{ApiException, Config, Response};
 
 Response::headers();
 Config::expectedOrigin();
+\App\Core\FirstRun::ensure();
+/*
+ * A Quick Tunnel publishes the storefront, never the administrative UI or
+ * private management APIs. Customers can still register, shop and use SAV.
+ */
+$incomingPath = (string) (parse_url((string) ($_SERVER['REQUEST_URI'] ?? '/'), PHP_URL_PATH) ?: '/');
+if (Config::isQuickTunnelRequest()
+    && (preg_match('~^/admin(?:-[a-z]+)?\.html$~D', $incomingPath) === 1
+        || str_starts_with($incomingPath, '/api/v1/admin/'))) {
+    throw new ApiException(404, 'NOT_FOUND', 'Ressource introuvable.');
+}
+
 $rawPath = parse_url((string)($_SERVER['REQUEST_URI'] ?? '/'), PHP_URL_PATH);
 $path = is_string($rawPath) ? rawurldecode($rawPath) : '';
 if ($path === '' || preg_match('/[\x00-\x20\x7F\\\\]/', $path)) {
