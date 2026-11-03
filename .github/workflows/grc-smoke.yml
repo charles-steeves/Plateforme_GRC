@@ -107,6 +107,12 @@ jobs:
       - name: Product catalogue refresh and aligned UI contract
         run: node tests/catalogue-refresh-contract.mjs
 
+      - name: Installer le projet sans reset et vérifier le catalogue client
+        run: node tests/client-ui-contract.mjs
+
+      - name: Migrer les remarques de commande sans écraser les ventes
+        run: php tests/order-note-migration.php
+
       - name: Complete client/admin journey with isolated PHP and SQLite
         run: node tests/http-journey.mjs
 
