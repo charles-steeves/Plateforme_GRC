@@ -7,6 +7,7 @@ use App\Core\{ApiException, Config, Response};
 
 Response::headers();
 Config::expectedOrigin();
+\App\Core\FirstRun::ensure();
 $rawPath = parse_url((string)($_SERVER['REQUEST_URI'] ?? '/'), PHP_URL_PATH);
 $path = is_string($rawPath) ? rawurldecode($rawPath) : '';
 if ($path === '' || preg_match('/[\x00-\x20\x7F\\\\]/', $path)) {
