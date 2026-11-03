@@ -68,6 +68,21 @@ final class Config
      * connection must still be confined to this PC (127.0.0.1 / ::1).
      * No wildcard for other domains or machines on the LAN.
      */
+    /**
+     * A local developer server must not fail merely because a previous
+     * GRC_ORIGIN environment variable points to a different port or tunnel.
+     */
+    public static function isLoopbackHostRequest(): bool
+    {
+        $peer = (string) ($_SERVER['REMOTE_ADDR'] ?? '');
+        $host = strtolower((string) ($_SERVER['HTTP_HOST'] ?? ''));
+        if (!in_array($peer, ['127.0.0.1', '::1'], true)) return false;
+        if (preg_match('~^(?:localhost|127\.0\.0\.1|\[::1\])(?::([0-9]{1,5}))?$~D', $host, $m) !== 1) {
+            return false;
+        }
+        return !isset($m[1]) || (int) $m[1] === (int) ($_SERVER['SERVER_PORT'] ?? 0);
+    }
+
     public static function isQuickTunnelRequest(): bool
     {
         $peer = (string) ($_SERVER['REMOTE_ADDR'] ?? '');
@@ -95,6 +110,11 @@ final class Config
             // Cloudflare changes its temporary hostname on every launch.
             // Local admin permissions and role checks are NOT relaxed.
             return 'https://' . $host;
+        }
+        if (self::isLoopbackHostRequest()) {
+            // Always recognize the current local port, even if GRC_ORIGIN
+            // was left set for yesterday's server. No external host is trusted.
+            return (self::isHttps() ? 'https://' : 'http://') . $host;
         }
         $configured = getenv('GRC_ORIGIN');
         if ($configured !== false && $configured !== '') {
