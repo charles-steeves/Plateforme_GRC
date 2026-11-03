@@ -54,10 +54,11 @@ function stockText(product) {
     : 'Rupture de stock';
 }
 
-function catalogueURL({ search = '', category = '', page = 1 }) {
+function catalogueURL({ search = '', category = '', sort = '', page = 1 }) {
   const params = new URLSearchParams();
   if (search) params.set('search', search);
   if (category) params.set('category', category);
+  if (sort) params.set('sort', sort);
   if (page > 1) params.set('page', String(page));
   const query = params.toString();
   return `/index.html${query ? `?${query}` : ''}`;
@@ -81,16 +82,24 @@ async function mountCatalogue(root) {
   const params = new URLSearchParams(window.location.search);
   const search = params.get('search') || '';
   const category = params.get('category') || '';
+  const sorts = ['', 'price_asc', 'price_desc', 'name', 'newest', 'rating'];
+  const sort = sorts.includes(params.get('sort')) ? params.get('sort') : '';
   const page = id(params.get('page') || '1') || 1;
   const searchInput = el('input', { id: 'catalogue-search', name: 'search', type: 'search',
     value: search, maxLength: 200, placeholder: 'Téléphone, casque, accessoire…' });
   const categoryInput = el('select', { id: 'catalogue-category', name: 'category' },
     el('option', { value: '' }, 'Toutes les catégories'));
   if (category) categoryInput.append(el('option', { value: category, selected: true }, category));
+  const sortInput = el('select', { id: 'catalogue-sort', name: 'sort' },
+    [['', 'Ordre habituel'], ['price_asc', 'Prix croissant'], ['price_desc', 'Prix décroissant'],
+      ['name', 'Nom A à Z'], ['newest', 'Nouveautés'], ['rating', 'Meilleures notes']]
+      .map(([value, label]) => el('option', { value, selected: value === sort }, label)));
+  sortInput.value = sort;
   const form = el('form', { id: 'catalogue-filters', className: 'panel catalogue-toolbar', action: '/index.html', method: 'get',
     role: 'search', 'aria-label': 'Rechercher dans le catalogue' },
   field('Rechercher un produit', searchInput),
   field('Catégorie', categoryInput),
+  field('Trier par', sortInput),
   el('div', { className: 'catalogue-toolbar-actions' },
     button('Rechercher', { type: 'submit', className: 'button button-primary' }),
     el('a', { href: '/index.html', className: 'button button-secondary' }, 'Effacer les filtres')));
@@ -133,14 +142,14 @@ async function mountCatalogue(root) {
           el('a', { href: '#catalogue-filters' }, 'Toutes les catégories')),
         el('div', { className: 'category-browse-grid' },
           rows.slice(0, 6).map(row =>
-            el('a', { className: 'category-browse-card', href: catalogueURL({ category: row.name }) },
+            el('a', { className: 'category-browse-card', href: catalogueURL({ category: row.name, sort }) },
               el('span', { className: 'category-browse-symbol', 'aria-hidden': 'true' }, '↗'),
               el('strong', {}, row.name),
               el('small', {}, `${row.count} article${row.count > 1 ? 's' : ''}`)))));
     } else categoryBrowse.replaceChildren();
   }
   void refreshCategories().catch(() => { /* A transient category failure must not hide products. */ });
-  const query = new URLSearchParams({ search, category, page: String(page), per_page: String(PER_PAGE) });
+  const query = new URLSearchParams({ search, category, sort, page: String(page), per_page: String(PER_PAGE) });
   let lastCatalog = null;
   let refreshing = false;
   let refreshCycle = 0;
@@ -159,12 +168,12 @@ async function mountCatalogue(root) {
     lastCatalog = signature;
     const pagination = el('nav', { className: 'pagination cluster', 'aria-label': 'Pagination du catalogue' });
     if (data.page > 1) pagination.append(el('a', {
-      href: catalogueURL({ search, category, page: data.page - 1 }),
+      href: catalogueURL({ search, category, sort, page: data.page - 1 }),
       className: 'button button-secondary', rel: 'prev' }, 'Page précédente'));
     pagination.append(el('span', { className: 'muted' },
       `Page ${data.page} sur ${Math.max(1, Math.ceil(data.total / data.per_page))}`));
     if (data.page * data.per_page < data.total) pagination.append(el('a', {
-      href: catalogueURL({ search, category, page: data.page + 1 }),
+      href: catalogueURL({ search, category, sort, page: data.page + 1 }),
       className: 'button button-secondary', rel: 'next' }, 'Page suivante'));
     results.replaceChildren(
       el('p', { role: 'status', 'aria-live': 'polite' },
