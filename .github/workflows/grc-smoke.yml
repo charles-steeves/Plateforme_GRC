@@ -107,6 +107,17 @@ jobs:
       - name: Product catalogue refresh and aligned UI contract
         run: node tests/catalogue-refresh-contract.mjs
 
+      - name: Valider la syntaxe PowerShell du lanceur Windows
+        shell: pwsh
+        run: |
+          $tokens = $null
+          $syntaxErrors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path './start.ps1').Path, [ref]$tokens, [ref]$syntaxErrors) | Out-Null
+          if ($syntaxErrors.Count -gt 0) {
+            $syntaxErrors | ForEach-Object { Write-Error $_.Message }
+            exit 1
+          }
+
       - name: Installer le projet sans reset et vérifier le catalogue client
         run: node tests/client-ui-contract.mjs
 
