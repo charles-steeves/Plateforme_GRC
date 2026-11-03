@@ -32,8 +32,10 @@ if ($env:GRC_DB_PATH) {
         if ($LASTEXITCODE -ne 0) {
             throw 'Initialisation non effectuée. Consultez les messages ci-dessus. Ne lancez pas --reset.'
         }
-    } elseif (-not (Test-Path -LiteralPath $db) -or -not (Test-Path -LiteralPath $accounts)) {
-        throw 'Installation incomplète : base SQLite ou fichier de comptes absent. Restaurez une sauvegarde ; aucune réinitialisation automatique.'
+    } elseif (-not (Test-Path -LiteralPath $db)) {
+        throw 'Base SQLite absente mais fichier de comptes existant : restaurez la base depuis une sauvegarde, sans réinitialiser.'
+    } elseif (-not (Test-Path -LiteralPath $accounts)) {
+        Write-Warning 'La base SQLite existe, mais pas le fichier auxiliaire de comptes de démo. La boutique peut fonctionner ; en cas de mot de passe admin perdu, utilisez php database/admin-login.php --help.'
     }
 }
 
