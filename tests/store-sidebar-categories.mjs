@@ -24,7 +24,10 @@ assert.match(shop, /el\('select', \{ id: 'catalogue-category', name: 'category' 
 assert.doesNotMatch(shop, /el\('input', \{ id: 'catalogue-category'/);
 assert.match(shop, /api\('\/products\/categories'\)/);
 assert.match(shop, /id: 'catalogue-filters'/);
-assert.match(admin, /'product-category-options'/);
+assert.match(admin, /el\('select', \{ id: 'product-category', name: 'category'/);
+assert.match(admin, /'Créer la catégorie'/);
+assert.match(admin, /api\('\/admin\/categories', \{ method: 'POST'/);
+assert.match(admin, /selectProductOnMobile\(product\)/);
 assert.match(admin, /api\('\/admin\/categories'\)/);
 assert.match(read('public/assets/js/customer.js'), /id: 'mes-commandes'/);
 assert.match(read('public/assets/js/customer.js'), /id: 'ma-fidelite'/);
