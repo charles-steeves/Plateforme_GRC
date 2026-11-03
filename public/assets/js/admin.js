@@ -223,26 +223,94 @@ async function products(root) {
   const newProduct = button('Nouveau produit', {
     className: 'button button-primary', onClick: () => { if (mutationPending || needsRefresh) return; edit(); editor.querySelector('input')?.focus(); },
   });
+  const categoryName = el('input', { id: 'admin-new-category-name', type: 'text', name: 'name',
+    required: true, maxLength: 120, placeholder: 'Ex. Informatique, Téléphones, Accessoires' });
+  const categoryCreate = button('Créer la catégorie', { type: 'submit', className: 'button button-secondary' });
+  const categoryFeedback = el('div', { 'aria-live': 'polite' });
+  const categoryList = el('div', { className: 'cluster admin-category-list', 'aria-label': 'Catégories enregistrées' });
+  const categoryForm = el('form', { className: 'admin-category-form' },
+    field('Nom de la nouvelle catégorie', categoryName), categoryCreate);
+  const categoryPanel = el('section', { className: 'panel stack admin-category-manager' },
+    el('h2', {}, 'Catégories du catalogue'),
+    el('p', { className: 'muted' }, 'Créez un rayon, puis choisissez-le dans la fiche d’un produit. Les produits existants restent inchangés.'),
+    categoryForm, categoryFeedback, categoryList);
   root.replaceChildren(heading('Produits et stocks', 'Créez, modifiez ou désactivez les produits du catalogue.'),
-    el('div', { className: 'cluster' }, refresh, newProduct), feedback, el('div', { className: 'split admin-product-layout' }, list, editor));
+    el('div', { className: 'cluster' }, refresh, newProduct), categoryPanel,
+    feedback, el('div', { className: 'split admin-product-layout' }, list, editor));
   let generation = 0;
   let editing = null;
   let mutationPending = false;
   let needsRefresh = false;
+  let categoryPending = false;
+  let knownCategories = [];
+  let activeCategorySelect = null;
+
+  function categoryChoices(select, selected = select.value) {
+    const names = knownCategories.map(item => item.name);
+    const options = [el('option', { value: '' }, 'Choisir une catégorie')];
+    for (const name of names) options.push(el('option', { value: name }, name));
+    if (selected && !names.some(name => name.toLocaleLowerCase('fr') === selected.toLocaleLowerCase('fr'))) {
+      options.push(el('option', { value: selected }, selected));
+    }
+    select.replaceChildren(...options);
+    select.value = selected || '';
+  }
+
+  function showCategories() {
+    categoryList.replaceChildren(...knownCategories.map(item =>
+      el('span', { className: 'badge' },
+        item.name + ' · ' + item.count + ' produit' + (item.count > 1 ? 's' : ''))));
+  }
+
+  async function loadCategories() {
+    const data = await api('/admin/categories');
+    if (!Array.isArray(data?.items) || data.items.some(item =>
+      typeof item?.name !== 'string' || !Number.isSafeInteger(item.count) || item.count < 0)) {
+      throw new Error('La liste des catégories est invalide.');
+    }
+    knownCategories = data.items;
+    showCategories();
+    if (activeCategorySelect?.isConnected) categoryChoices(activeCategorySelect);
+  }
+
+  categoryForm.addEventListener('submit', async event => {
+    event.preventDefault();
+    if (categoryPending || mutationPending || needsRefresh || !categoryForm.reportValidity()) return;
+    const name = categoryName.value.trim();
+    if (!name) return;
+    categoryPending = true;
+    categoryCreate.disabled = true;
+    categoryFeedback.replaceChildren();
+    try {
+      const data = await api('/admin/categories', { method: 'POST', body: { name } });
+      if (typeof data?.category?.name !== 'string' || !data.category.name) {
+        throw new Error('La création de la catégorie n’a pas été confirmée.');
+      }
+      const created = data.category.name;
+      categoryName.value = '';
+      // A successful write is never repeated if the subsequent list read fails.
+      knownCategories.push({ name: created, count: 0 });
+      knownCategories.sort((a, b) => a.name.localeCompare(b.name, 'fr'));
+      showCategories();
+      if (activeCategorySelect?.isConnected) categoryChoices(activeCategorySelect, created);
+      notice(categoryFeedback, 'Catégorie « ' + created + ' » créée. Sélectionnez-la dans le produit à enregistrer.', 'success');
+      void loadCategories().catch(() => {});
+    } catch (error) {
+      notice(categoryFeedback, uncertain(error)
+        ? 'Vérifiez la liste des catégories avant de recommencer : le serveur a peut-être enregistré la création.'
+        : error.message || 'Impossible de créer la catégorie.');
+      if (uncertain(error)) void loadCategories().catch(() => {});
+    } finally { categoryPending = false; categoryCreate.disabled = false; }
+  });
 
   function edit(product = null) {
     editing = product;
     const original = product ? { ...product, active: Boolean(product.active) } : null;
     const name = el('input', { id: 'product-name', name: 'name', type: 'text', required: true, maxLength: 120, value: product?.name ?? '' });
     const description = el('textarea', { id: 'product-description', name: 'description', rows: 4, maxLength: 4000 }, product?.description ?? '');
-    const category = el('input', { id: 'product-category', name: 'category', type: 'text',
-      list: 'product-category-options', required: true, maxLength: 120, value: product?.category ?? '' });
-    const categoryOptions = el('datalist', { id: 'product-category-options' });
-    void api('/admin/categories').then(data => {
-      if (!Array.isArray(data?.items) || !categoryOptions.isConnected) return;
-      categoryOptions.replaceChildren(...data.items.filter(item => typeof item?.name === 'string')
-        .map(item => el('option', { value: item.name })));
-    }).catch(() => { /* A new group can still be entered without suggestions. */ });
+    const category = el('select', { id: 'product-category', name: 'category', required: true });
+    activeCategorySelect = category;
+    categoryChoices(category, product?.category ?? '');
     const price = integerControl('price_xaf', product?.price_xaf ?? 0, 'Prix (FCFA)');
     const stock = integerControl('stock_quantity', product?.stock_quantity ?? 0, 'Quantité disponible');
     const image = el('input', { id: 'product-image', name: 'image_url', type: 'text', maxLength: 500, value: product?.image_url ?? '/assets/images/product-placeholder.svg', placeholder: '/assets/images/product-placeholder.svg' });
@@ -282,7 +350,7 @@ async function products(root) {
     const save = button(product ? 'Enregistrer les modifications' : 'Créer le produit', { type: 'submit', className: 'button button-primary' });
     const form = el('form', { className: 'stack' },
       field('Nom du produit', name), field('Description', description),
-      field('Groupe de produits', category, 'Choisissez un groupe existant ou saisissez un nouveau nom.'), categoryOptions,
+      field('Catégorie du produit', category, 'Choisissez une catégorie. Le formulaire de création se trouve au-dessus.'),
       price.field, stock.field,
       el('div', { className: 'product-upload-panel stack' },
         field('Photo du produit', imageFile, 'Sélectionnez une image depuis votre appareil (JPG, PNG, WebP ; 1,9 Mo maximum).'),
@@ -424,7 +492,12 @@ async function products(root) {
     }
   }
   edit();
-  await load();
+  await Promise.all([
+    load(),
+    loadCategories().catch(error => {
+      notice(categoryFeedback, error.message || 'Impossible de charger les catégories.');
+    }),
+  ]);
 }
 
 async function orders(root) {
