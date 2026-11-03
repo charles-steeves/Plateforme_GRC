@@ -59,7 +59,7 @@ function session(){
       if(set?.length)cookie=set[0].split(';')[0];
       token=r.json?.data?.csrf_token;
       assert.ok(token);
-      if(host===publicHost)assert.ok(set?.[0]?.includes('Secure'),'Cookie Cloudflare doit rester HTTPS');
+      if(host===publicHost)assert.ok(set?.some(value=>/;\s*secure\b/i.test(value)),'Cookie Cloudflare doit rester HTTPS');
       return r;
     },
     async post(path,body,host=localHost) {
