@@ -1,0 +1,39 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "GRC : démarrer le site (8000)",
+      "type": "shell",
+      "command": "php",
+      "args": [
+        "-S",
+        "127.0.0.1:8000",
+        "-t",
+        "public",
+        "public/router.php"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "isBackground": true,
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "GRC : diagnostic PHP/SQLite",
+      "type": "shell",
+      "command": "php",
+      "args": [
+        "database/doctor.php"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
+    }
+  ]
+}
