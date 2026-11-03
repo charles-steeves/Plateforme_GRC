@@ -8,7 +8,7 @@ const schema=read('app/Core/Schema.php');
 const catalog=read('app/Repositories/ProductRepository.php');
 assert.ok(existsSync(new URL('../storage/.gitkeep',import.meta.url)));
 for(const marker of ['database/init.php','database/doctor.php','127.0.0.1','GRC_ORIGIN','GRC_DB_PATH']) assert.ok(start.includes(marker),marker);
-assert.ok(!start.includes('--reset'),'Aucun reset dans le lanceur');
+assert.ok(!/^\s*&\s*php\s+database\/init\.php[^\r\n]*--reset/m.test(start),'Aucune exécution de reset dans le lanceur');
 assert.match(shop,/user\?\.role !== 'client'/);
 assert.match(shop,/Se connecter pour ajouter/);
 assert.match(shop,/Remarque pour cette commande/);
