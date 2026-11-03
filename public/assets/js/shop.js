@@ -224,7 +224,7 @@ async function mountProduct(root, user) {
       value: 1, required: true, inputMode: 'numeric', disabled: product.stock_quantity === 0 });
     const messages = el('div', { 'aria-live': 'polite' });
     const add = button('Ajouter au panier', { type: 'submit', className: 'button button-primary',
-      disabled: product.stock_quantity === 0 || user?.role === 'admin' });
+      disabled: product.stock_quantity === 0 || user?.role !== 'client' });
     const form = el('form', { className: 'stack', onSubmit: event => {
       event.preventDefault();
       if (!form.reportValidity()) return;
@@ -254,7 +254,11 @@ async function mountProduct(root, user) {
         el('p', { className: 'product-description' }, product.description || 'Description non renseignée.'),
         user?.role === 'admin'
           ? el('p', { className: 'notice' }, 'Le panier et les commandes sont réservés aux comptes clients.')
-          : form,
+          : user?.role !== 'client'
+            ? el('div', { className: 'stack' }, el('p', {}, 'Connectez-vous pour ajouter un article au panier.'),
+              el('a', { className: 'button button-primary',
+                href: `/login.html?next=${encodeURIComponent(`/product.html?id=${product.id}`)}` }, 'Se connecter pour ajouter'))
+            : form,
         messages)));
     await mountProductReviews(content, productId, user);
   } catch (error) {
@@ -290,6 +294,14 @@ function validOrder(order) {
 
 async function mountCart(root, user) {
   if (checkoutPending) return;
+  if (user?.role !== 'client') {
+    root.replaceChildren(heading('Mon panier', 'Un compte client est nécessaire pour ajouter des articles et commander.'),
+      el('section', { className: 'panel stack' },
+        el('a', { className: 'button button-primary', href: '/login.html?next=%2Fcart.html' }, 'Se connecter'),
+        el('a', { className: 'button button-secondary', href: '/register.html?next=%2Fcart.html' }, 'Créer un compte client'),
+        el('a', { href: '/' }, 'Parcourir le catalogue sans connexion')));
+    return;
+  }
   const stage = el('section', { className: 'stack', 'aria-busy': 'true' },
     el('p', { role: 'status' }, 'Vérification des produits et du stock…'));
   root.replaceChildren(heading('Mon panier',
@@ -399,6 +411,8 @@ async function mountCart(root, user) {
         'La confirmation d’une commande précédente n’a pas pu être vérifiée. Consultez votre historique avant toute nouvelle tentative.'),
       el('a', { href: '/account.html', className: 'button button-primary' }, 'Vérifier mes commandes'));
     } else {
+      const customerNote = el('textarea', { id: 'cart-customer-note', name: 'customer_note', rows: 3,
+        maxLength: 1500, placeholder: 'Précisions facultatives pour cette commande…' });
       const confirmation = el('input', { id: 'cart-confirmation', type: 'checkbox', required: true });
       const submit = button('Confirmer ma commande', { type: 'submit',
         className: 'button button-primary', disabled: invalid });
@@ -423,8 +437,9 @@ async function mountCart(root, user) {
           await busy(submit, async () => {
             notice(messages, 'Enregistrement de votre commande…', 'info');
             try {
-              const payload = { items: cart.map(item => ({ product_id: item.product_id, quantity: item.quantity })) };
-              const key = requestId('order', user.id, [...payload.items].sort((a, b) => a.product_id - b.product_id));
+              const payload = { items: cart.map(item => ({ product_id: item.product_id, quantity: item.quantity })),
+                customer_note: customerNote.value.trim() };
+              const key = requestId('order', user.id, {items: [...payload.items].sort((a, b) => a.product_id - b.product_id),customer_note: payload.customer_note});
               const data = await api('/orders', { method: 'POST', body: { ...payload, request_id: key } });
               const order = data?.order;
               if (!validOrder(order)) {
@@ -474,7 +489,8 @@ async function mountCart(root, user) {
           checkoutPending = false;
           if (uncertain || submitted) submit.disabled = true;
         }
-      } }, el('label', { className: 'checkbox-field', htmlFor: 'cart-confirmation' }, confirmation,
+      } }, field('Remarque pour cette commande (facultative)', customerNote, '1 500 caractères maximum. Cette remarque accompagne la commande.'),
+        el('label', { className: 'checkbox-field', htmlFor: 'cart-confirmation' }, confirmation,
         el('span', {}, 'Je confirme les articles et les quantités de ma commande.')), submit);
       summary.append(checkout);
     }
