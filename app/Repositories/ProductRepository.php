@@ -52,30 +52,43 @@ final class ProductRepository
         return ['items' => array_map(self::serialize(...), $statement->fetchAll(PDO::FETCH_ASSOC)), 'total' => (int) $count->fetchColumn()];
     }
 
-    /** Categories are defined by administrators when creating/editing products.
-     *  Only currently available product groups are shown to visitors.
-     *  This is read-only and works with already initialized SQLite files.
-     */
-    public function activeCategories(): array
+    /** Both independent categories and legacy product categories remain visible. */
+    private function categoriesWithCounts(bool $activeOnly): array
     {
+        $filter = $activeOnly ? ' WHERE active = 1' : '';
         $rows = $this->pdo->query(
-            "SELECT category, COUNT(*) AS total FROM products WHERE active = 1
-             GROUP BY category ORDER BY category COLLATE NOCASE"
+            "SELECT g.name AS name, COALESCE(t.total, 0) AS total
+             FROM (SELECT name FROM product_categories
+                   UNION SELECT category AS name FROM products) g
+             LEFT JOIN (
+                SELECT category, COUNT(*) AS total
+                FROM products" . $filter . "
+                GROUP BY category
+             ) t ON t.category = g.name COLLATE NOCASE
+             ORDER BY g.name COLLATE NOCASE"
         )->fetchAll(PDO::FETCH_ASSOC);
         return array_map(static fn(array $row): array => [
-            'name' => $row['category'], 'count' => (int)$row['total'],
+            'name' => (string)$row['name'], 'count' => (int)$row['total'],
         ], $rows);
+    }
+
+    public function activeCategories(): array
+    {
+        return $this->categoriesWithCounts(true);
     }
 
     public function allCategories(): array
     {
-        $rows = $this->pdo->query(
-            "SELECT category, COUNT(*) AS total FROM products
-             GROUP BY category ORDER BY category COLLATE NOCASE"
-        )->fetchAll(PDO::FETCH_ASSOC);
-        return array_map(static fn(array $row): array => [
-            'name' => $row['category'], 'count' => (int)$row['total'],
-        ], $rows);
+        return $this->categoriesWithCounts(false);
+    }
+
+    /** No existing product row is altered when a new empty category is created. */
+    public function insertCategory(string $name): void
+    {
+        $stmt = $this->pdo->prepare(
+            'INSERT INTO product_categories(name, created_at) VALUES(:name, :created_at)'
+        );
+        $stmt->execute(['name' => $name, 'created_at' => gmdate('Y-m-d\\TH:i:s\\Z')]);
     }
 
     public function find(int $id, bool $publicOnly = false): ?array
