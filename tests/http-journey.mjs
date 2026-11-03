@@ -158,6 +158,57 @@ try {
     'public categories are generated from products without schema changes');
   ok((await client.get('/admin/categories')).status === 401,
     'unauthenticated visitor cannot read private admin category management');
+
+  // Vérification réellement complète d'un NOUVEAU compte, pas seulement
+  // d'un utilisateur préchargé dans seed.php : inscription -> connexion
+  // -> boutique -> tri -> commande avec remarque -> SAV.
+  const newcomerPassword = 'NouveauCompte2026!solide';
+  const newcomerEmail = 'nouveau-client@example.test';
+  const signup = new Session(base);
+  await signup.token();
+  const signupResponse = await signup.post('/auth/register', {
+    name:'Nouveau Client', email:newcomerEmail, password:newcomerPassword,
+  });
+  ok(signupResponse.status === 201 && signupResponse.data?.user?.role === 'client',
+    'fresh customer successfully registers over real HTTP');
+  ok((await signup.get('/auth/me')).status === 401,
+    'registration never silently opens an authenticated session');
+  const freshClient = new Session(base);
+  const newlyConnected = await freshClient.login({email:newcomerEmail,password:newcomerPassword});
+  ok(newlyConnected.role === 'client' && newlyConnected.email === newcomerEmail,
+    'freshly registered customer signs in with own e-mail and password');
+  const priceAsc = await freshClient.get('/products?sort=price_asc');
+  ok(priceAsc.status === 200 && priceAsc.data.items.every((item,idx,all)=>idx===0||all[idx-1].price_xaf<=item.price_xaf),
+    'visitor catalogue sorts by ascending price');
+  const priceDesc = await visitor.get('/products?sort=price_desc');
+  ok(priceDesc.status === 200 && priceDesc.data.items.every((item,idx,all)=>idx===0||all[idx-1].price_xaf>=item.price_xaf),
+    'anonymous visitor can sort by descending price');
+  ok((await visitor.get('/products?sort=price_random')).status === 422,
+    'unexpected catalogue sort values are safely rejected');
+  ok((await freshClient.get('/admin/dashboard')).status === 403,
+    'newly created client never gains administrator privileges');
+  const freshNote = 'Merci de vérifier la disponibilité avant confirmation.';
+  const freshOrderBody = {
+    request_id:'new-client-order-note-2026',
+    items:[{product_id:2,quantity:1}],
+    customer_note:freshNote,
+  };
+  const freshOrder = await freshClient.post('/orders',freshOrderBody);
+  ok(freshOrder.status === 201 && freshOrder.data?.order?.customer_note === freshNote,
+    'first customer order persists the optional note');
+  ok((await freshClient.get('/orders/me')).data.items.some(o=>o.id===freshOrder.data.order.id && o.customer_note===freshNote),
+    'new customer reads the note in their private order history');
+  ok((await freshClient.post('/orders',{...freshOrderBody, customer_note:'Remarque différente'})).status===409,
+    'reusing an idempotency key with different order note is refused');
+  ok((await freshClient.post('/orders',{items:[{product_id:2,quantity:1}],customer_note:'X'.repeat(1501)})).status===422,
+    'order note longer than 1500 characters is rejected');
+  const freshTicket = await freshClient.post('/tickets',{
+    subject:'Question sur ma première commande',
+    description:'J’aimerais confirmer une information sur cette commande.',
+    category:'question',order_id:freshOrder.data.order.id,
+  });
+  ok(freshTicket.status === 201 && freshTicket.data?.ticket?.order_id===freshOrder.data.order.id,
+    'fresh customer opens a service conversation linked to the order');
  
   const simpleClients = spawnSync('php', ['database/demo-client-access.php','--password-stdin'],{
     cwd:root, env:{...process.env,GRC_DB_PATH:dbPath}, input:'PhraseDeTest@2026!\n',encoding:'utf8',timeout:30000
