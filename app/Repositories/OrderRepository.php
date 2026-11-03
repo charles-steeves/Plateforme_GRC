@@ -50,6 +50,7 @@ final class OrderRepository
             'id' => (int) $row['id'],
             'status' => $row['status'],
             'total_xaf' => (int) $row['total_xaf'],
+            'customer_note' => (string) ($row['customer_note'] ?? ''),
             'created_at' => $row['created_at'],
             'updated_at' => $row['updated_at'],
             'items' => $items,
