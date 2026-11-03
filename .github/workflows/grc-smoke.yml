@@ -128,6 +128,9 @@ jobs:
       - name: Démarrer un clone vierge et tester Cloudflare + authentification admin locale
         run: node tests/first-run-cloudflare.mjs
 
+      - name: Vérifier les corrections de présentation et des permissions Cloudflare
+        run: node tests/presentation-polish.mjs
+
       - name: Complete client/admin journey with isolated PHP and SQLite
         run: node tests/http-journey.mjs
 

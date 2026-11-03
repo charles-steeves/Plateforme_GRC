@@ -62,7 +62,7 @@ function rfm(data) {
       number(row.frequency), money(row.amount), row.score + '/15', row.segment, number(row.loyalty_points)
     ])));
   block.append(el('p', { className: 'gi-footnote' },
-    'R = récence · F = fréquence · M = montant. Score analytique du site, distinct des points de fidélité et du barème de l’exercice SPIRA.'));
+    'R = récence · F = fréquence · M = montant. Les clients sans achat livré ont un score nul ; les points de fidélité sont indépendants.'));
   return el('div', { className: 'gi-stack' }, block, management());
 }
 
@@ -160,7 +160,7 @@ export async function mountGrcInsights(root) {
   const labels = [
     ['overview', 'Indicateurs'], ['rfm', 'Segmentation RFM'],
     ['calculations', 'CLV & formules'], ['groups', 'Calculs par groupe'],
-    ['td', 'Exercice SPIRA (TD)'], ['surveys', 'Enquêtes']
+    ['td', 'Analyse des achats clients'], ['surveys', 'Enquêtes']
   ];
   let active = 'overview';
   let data = null;
@@ -177,7 +177,7 @@ export async function mountGrcInsights(root) {
     const control = button(label, { className: 'gi-tab', onClick: () => { active = key; paint(); } });
     tabs.append(control); tabButtons.set(key, control);
   }
-  root.replaceChildren(heading('Analyses GRC', 'Indicateurs, clients et calculs de fidélisation.'),
+  root.replaceChildren(heading('Analyses', 'Indicateurs, clients et calculs de fidélisation.'),
     el('div', { className: 'gi-top' }, tabs, refresh), note, content);
   async function load(automatic = false) {
     if (refresh.disabled) return;
@@ -186,7 +186,7 @@ export async function mountGrcInsights(root) {
       const result = await api('/admin/insights', automatic ? { passive: true } : {});
       if (!Array.isArray(result.monthly) || !Array.isArray(result.rfm)) throw new Error('Indicateurs incomplets.');
       data = result;
-      note.textContent = 'Du ' + result.period.from + ' au ' + result.period.to + '.';
+      note.textContent = 'Période du ' + result.period.from.split('-').reverse().join('/') + ' au ' + result.period.to.split('-').reverse().join('/') + '.';
       if (!automatic || active === 'overview' || active === 'rfm') paint();
     } catch (error) {
       if (!automatic) renderError(content, error, () => load());

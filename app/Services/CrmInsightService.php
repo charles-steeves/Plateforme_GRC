@@ -13,6 +13,10 @@ final class CrmInsightService
 
     private static function score(?int $days, int $frequency, int $amount): array
     {
+        // Sans commande livrée, aucun critère R/F/M ne peut recevoir de point.
+        if ($frequency === 0 || $days === null) {
+            return ['r' => 0, 'f' => 0, 'm' => 0, 'score' => 0, 'segment' => 'Sans achat'];
+        }
         $r = $days === null ? 1 : ($days <= 30 ? 5 : ($days <= 60 ? 4 : ($days <= 90 ? 3 : ($days <= 180 ? 2 : 1))));
         $f = $frequency >= 12 ? 5 : ($frequency >= 8 ? 4 : ($frequency >= 4 ? 3 : ($frequency >= 2 ? 2 : 1)));
         $m = $amount >= 1000000 ? 5 : ($amount >= 500000 ? 4 : ($amount >= 250000 ? 3 : ($amount >= 100000 ? 2 : 1)));
@@ -47,7 +51,7 @@ final class CrmInsightService
             GROUP BY u.id ORDER BY amount DESC, u.id LIMIT 1000");
         $query->execute(['start' => $from, 'end' => $until]);
         $customers = [];
-        $segments = ['Prioritaire'=>0, 'À développer'=>0, 'À fidéliser'=>0, 'À réactiver'=>0];
+        $segments = ['Prioritaire'=>0, 'À développer'=>0, 'À fidéliser'=>0, 'À réactiver'=>0, 'Sans achat'=>0];
         foreach ($query->fetchAll(PDO::FETCH_ASSOC) as $row) {
             $days = $row['last_at'] === null ? null :
                 max(0, (int)floor(($today->getTimestamp() - strtotime((string)$row['last_at'])) / 86400));

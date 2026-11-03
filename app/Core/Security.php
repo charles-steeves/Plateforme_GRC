@@ -39,7 +39,7 @@ final class Security
         $route = (string)(parse_url((string)($_SERVER['REQUEST_URI'] ?? ''), PHP_URL_PATH) ?? '');
         $passiveRead = ($_SERVER['REQUEST_METHOD'] ?? '') === 'GET'
             && ($_SERVER['HTTP_X_GRC_PASSIVE'] ?? '') === '1'
-            && preg_match('~^/api/v1/(?:tickets/me|tickets/[1-9][0-9]*|admin/tickets|admin/dashboard|admin/insights)$~D', $route) === 1;
+            && preg_match('~^/api/v1/(?:tickets/me|tickets/[1-9][0-9]*|admin/tickets|admin/orders|admin/dashboard|admin/insights)$~D', $route) === 1;
         if (!$passiveRead) {
             $_SESSION['last_seen'] = $now;
         }

@@ -36,8 +36,9 @@ if (count($r['rfm']) !== 2 || array_sum($r['segments']) !== 2
     || $r['rfm'][0]['loyalty_points'] !== 40)
     throw new RuntimeException('Segmentation RFM incomplète.');
 $inactive = array_values(array_filter($r['rfm'], static fn(array $c): bool => $c['id'] === 3));
-if (count($inactive) !== 1 || $inactive[0]['segment'] !== 'À réactiver' ||
-    $inactive[0]['days'] !== null || $inactive[0]['score'] !== 3)
+if (count($inactive) !== 1 || $inactive[0]['segment'] !== 'Sans achat' ||
+    $inactive[0]['days'] !== null || $inactive[0]['score'] !== 0 ||
+    $inactive[0]['r'] !== 0 || $inactive[0]['f'] !== 0 || $inactive[0]['m'] !== 0)
     throw new RuntimeException('Clients sans achat exclus du scoring.');
 if (count($r['monthly']) !== 12 || $before !== (int)$db->query('PRAGMA data_version')->fetchColumn())
     throw new RuntimeException('Périodes ou lecture SQLite invalides.');

@@ -6,13 +6,9 @@ const tile = (name,value) => el('article',{className:'gi-tile'},el('span',{},nam
 export function mountTDExercise() {
   const root = el('div',{className:'gi-stack'});
   const introduction = el('section',{className:'panel gi-section'},
-    el('h2',{},'Exercice SPIRA — 2022'),
-    el('p',{},'Modifiez les données d’un client, puis lancez le calcul pour obtenir les notes R, F, M et leur somme.'),
-    el('p',{className:'gi-footnote'},'Source : exercice 2, annexes 1 et 2 du TD. Les données de ce tableau sont indépendantes des ventes de la boutique.'));
-  const caveat = el('p',{className:'notice notice-info'},
-    'Attention : « achat sur nombre de mois » n’est pas une date de dernier achat. Pour reproduire le barème du TD, cette colonne sert ici de valeur d’entrée à R. Ce choix pédagogique doit être confirmé avec l’enseignante.');
+    el('h2',{},'Analyse des achats clients'));
   const table = el('table',{className:'gi-table'}, el('thead',{},el('tr',{},
-    ...['Client','Achats/an','Montant/an (FCFA)','Mois indiqués','R','F','M','Total / 15'].map(label=>el('th',{scope:'col'},label)))));
+    ...['Client','Achats/an','Montant/an (FCFA)','Période (mois)','R','F','M','Total / 15'].map(label=>el('th',{scope:'col'},label)))));
   const tbody=el('tbody');table.append(tbody);
   const fields=[];
   for(const [name,purchases,amount,months] of TD_SPIRA_2022) {
@@ -27,7 +23,7 @@ export function mountTDExercise() {
     fields.push({name,inputs,result});
   }
   const actions=el('div',{className:'gi-actions'});
-  const compute=button('Calculer le scoring du TD',{type:'submit',className:'button button-primary'});
+  const compute=button('Effectuer les calculs',{type:'submit',className:'button button-primary'});
   const reset=button('Réinitialiser le tableau',{className:'button button-secondary'});
   actions.append(compute,reset);
   const error=el('p',{className:'gi-error',role:'alert'});
@@ -65,11 +61,11 @@ export function mountTDExercise() {
     render();
   });
   const interpretation=el('section',{className:'panel gi-section'},
-    el('h2',{},'Méthode de calcul'),
+    el('h2',{},'Répartition des scores'),
     el('p',{},'R : 5 points pour 1 à 2 mois, 3 pour 3 à 7, 1 au-delà de 7. F : 5 points au-dessus de 5 achats, 3 pour 2 à 5, 1 en dessous de 2. M : 5 points au-dessus de 4 millions FCFA, 3 de 2 à 4 millions, 1 en dessous de 2 millions.'),
-    el('p',{className:'gi-footnote'},'Score total = R + F + M, soit 3 à 15 points. Les seuils des quatre catégories de clients ne figurent pas dans les annexes : aucune attribution automatique de catégorie n’est inventée.'),
-    el('p',{className:'gi-footnote'},'Ces points de scoring ne sont pas des points de fidélité utilisables en boutique.'));
-  root.append(introduction,caveat,form,totals,interpretation);
+    el('p',{className:'gi-footnote'},'Les scores calculés sur ce tableau représentent une comparaison des données saisies, indépendante des segments du portefeuille réel.'),
+    el('p',{className:'gi-footnote'},'Les scores d’analyse ne modifient pas les points de fidélité des clients.'));
+  root.append(introduction,form,totals,interpretation);
   render();
   return root;
 }

@@ -63,7 +63,7 @@ function renderAdminNav(user) {
   const container = document.getElementById('section-navigation');
   const tabs = [
     ['admin', 'Vue d’ensemble', '◫', 'Indicateurs et suivi'],
-    ['admin-analyses', 'Analyses', '∑', 'Calculs, RFM et enquêtes'],
+    ['admin-analyses', 'Analyses', '∑', 'Indicateurs, clients et calculs'],
     ['admin-reviews', 'Avis produits', '★', 'Notes et commentaires'],
     ['admin-customers', 'Clients', '♙', 'Portefeuille et fidélité'],
     ['admin-orders', 'Commandes', '▤', 'Ventes et transactions'],

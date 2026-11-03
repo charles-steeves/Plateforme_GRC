@@ -503,30 +503,48 @@ async function orders(root) {
     }
   }
 
-  async function load() {
-    if (mutationPending) return;
+  async function load(automatic = false) {
+    // Rafraîchissement discret : n'interrompt pas une confirmation ni la saisie.
+    if (mutationPending || (automatic && (loadingOrders || needsRefresh || !root.isConnected))) return;
     const request = ++generation;
     loadingOrders = true;
-    refresh.disabled = true;
-    loading(list, 'Chargement des commandes…');
+    if (!automatic) {
+      refresh.disabled = true;
+      loading(list, 'Chargement des commandes…');
+    }
     try {
-      const data = await api('/admin/orders');
+      const data = await api('/admin/orders', automatic ? { passive: true } : {});
       if (request !== generation) return;
-      items = records(data);
-      if (items.some((order) => !validId(order.id) || !Object.hasOwn(ORDER_LABELS, order.status))) throw new Error('Une commande reçue du serveur est invalide.');
+      const next = records(data);
+      if (next.some((order) => !validId(order.id) || !Object.hasOwn(ORDER_LABELS, order.status))) {
+        throw new Error('Une commande reçue du serveur est invalide.');
+      }
       const wasUncertain = needsRefresh;
-      render();
+      const changed = !automatic || JSON.stringify(items) !== JSON.stringify(next);
+      items = next;
+      if (changed) render();
       needsRefresh = false;
       loadingOrders = false;
-      list.querySelectorAll('button').forEach((control) => { control.disabled = false; });
-      if (wasUncertain) notice(message, 'Les commandes ont été relues sur le serveur. Vérifiez leur statut avant toute nouvelle action.', 'info');
+      if (!automatic) {
+        list.querySelectorAll('button').forEach((control) => { control.disabled = false; });
+        if (wasUncertain) notice(message, 'Les commandes ont été relues sur le serveur. Vérifiez leur statut avant toute nouvelle action.', 'info');
+      }
     } catch (error) {
-      if (request === generation) renderError(list, error, load);
+      // Une coupure momentanée ne doit pas effacer une liste déjà visible.
+      if (!automatic && request === generation) renderError(list, error, () => load());
     } finally {
-      if (request === generation) { loadingOrders = false; list.removeAttribute('aria-busy'); refresh.disabled = false; }
+      if (request === generation) {
+        loadingOrders = false;
+        if (!automatic) { list.removeAttribute('aria-busy'); refresh.disabled = false; }
+      }
     }
   }
   await load();
+  const timer = window.setInterval(() => {
+    if (root.isConnected && document.visibilityState === 'visible' && navigator.onLine
+      && !mutationPending && !loadingOrders && !needsRefresh) void load(true);
+  }, 5000);
+  window.addEventListener('pagehide', () => window.clearInterval(timer), { once: true });
 }
 
 function customerSummary(customer) {

@@ -17,7 +17,7 @@
 
 ### Administration
 
-- Ouvrir directement `http://127.0.0.1:8000/admin.html` sur le PC qui héberge le site.
+- Sur le PC serveur, ouvrir `http://127.0.0.1:8000/admin.html`. L'administration fonctionne aussi depuis l'autre ordinateur avec l'adresse HTTPS du tunnel suivie de `/admin.html`, après connexion par un véritable compte administrateur.
 - Si non connecté, un lien renvoie vers le formulaire normal avec une destination administrateur. **Aucun lien de connexion « administrateur » n'est proposé aux clients de la boutique**.
 - Sur une nouvelle installation de démonstration, identifiant simplifié : `admin` ; mot de passe généré **aléatoirement** sur ce PC, jamais commité.
 - Afficher le compte et le mot de passe locaux : `powershell -NoProfile -ExecutionPolicy Bypass -File .\admin.ps1`.
@@ -31,7 +31,7 @@ Dans un deuxième terminal :
 cloudflared tunnel --url http://127.0.0.1:8000
 ```
 
-Le site accepte automatiquement les hôtes HTTPS temporaires `*.trycloudflare.com`, sans changer manuellement `GRC_ORIGIN`. Le navigateur public peut consulter les produits, créer un compte client et commander. **Les pages et API administrateur sont bloquées depuis le lien public** ; seul un PC local peut ouvrir l'administration. Ne partagez jamais les identifiants. Le tunnel doit rester en cours d'exécution ; sa nouvelle adresse est affichée au terminal.
+Le site accepte automatiquement les hôtes HTTPS temporaires `*.trycloudflare.com`, sans changer manuellement `GRC_ORIGIN`. Les clients peuvent consulter les produits, créer un compte et commander. L'administrateur peut se connecter depuis un second appareil via `https://ADRESSE-DU-TUNNEL.trycloudflare.com/admin.html`. Les pages administratives sont protégées par une vraie session, les rôles, le mot de passe et un jeton CSRF : connaître l'adresse ne donne aucun droit d'administration. **Ne partagez jamais les identifiants admin.** Le tunnel doit rester actif pour que le second appareil accède au site. Cette ouverture est adaptée à une présentation temporaire, pas à un déploiement de production sans contrôle d'accès complémentaire.
 
 ### Diagnostic sans perte de données
 

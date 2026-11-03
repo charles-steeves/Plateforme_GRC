@@ -59,7 +59,7 @@ function session(){
       if(set?.length)cookie=set[0].split(';')[0];
       token=r.json?.data?.csrf_token;
       assert.ok(token);
-      if(host===publicHost)assert.ok(set?.some(value=>/;\s*secure\b/i.test(value)),'Cookie Cloudflare doit rester HTTPS');
+      if(host===publicHost && set?.length)assert.ok(set.some(value=>/;\s*secure\b/i.test(value)),'Cookie Cloudflare doit rester HTTPS');
       return r;
     },
     async post(path,body,host=localHost) {
@@ -67,7 +67,11 @@ function session(){
       const set=r.headers['set-cookie'];if(set?.length)cookie=set[0].split(';')[0];
       return r;
     },
-    async get(path,host=localHost){return req('/api/v1'+path,{host,cookie});}
+    async get(path,host=localHost){return req('/api/v1'+path,{host,cookie});},
+    async patch(path,body,host=localHost){
+      return req('/api/v1'+path,{host,method:'PATCH',body,cookie,csrf:token,
+        origin:host===publicHost?'https://'+host:'http://'+host});
+    }
   };
 }
 try {
@@ -95,8 +99,8 @@ try {
   const products=await req('/api/v1/products',{host:publicHost});
   assert.equal(products.status,200,'Catalogue Cloudflare malgré GRC_ORIGIN local');
   assert.equal(products.json?.data?.items?.length,12);
-  assert.equal((await req('/admin.html',{host:publicHost})).status,404,'Page admin interdite sur tunnel');
-  assert.equal((await req('/api/v1/admin/dashboard',{host:publicHost})).status,404,'API admin interdite sur tunnel');
+  assert.equal((await req('/admin.html',{host:publicHost})).status,200,'Page admin accessible via HTTPS Cloudflare');
+  assert.equal((await req('/api/v1/admin/dashboard',{host:publicHost})).status,401,'API admin exige une session via tunnel');
   assert.equal((await req('/',{host:'grc.trycloudflare.com.attacker.test'})).status,400,'Faux domaine rejeté');
 
   const visitor=session();await visitor.csrf(publicHost);
@@ -110,10 +114,25 @@ try {
   assert.equal(login.status,200,'Connexion client via Cloudflare');
   assert.equal(login.json.data.user.role,'client');
   assert.equal((await visitor.get('/auth/me',publicHost)).status,200);
+  assert.equal((await visitor.get('/admin/dashboard',publicHost)).status,403,'Compte client ne peut pas voir les données admin');
 
   const admCloud=session();await admCloud.csrf(publicHost);
-  const denied=await admCloud.post('/auth/login',{email:admin.email,password:admin.password},publicHost);
-  assert.equal(denied.status,403,'Administration interdite via tunnel');
+  const adminLogin=await admCloud.post('/auth/login',{email:admin.email,password:admin.password},publicHost);
+  assert.equal(adminLogin.status,200,'Administrateur authentifié depuis un autre ordinateur via Cloudflare');
+  assert.equal(adminLogin.json.data.user.role,'admin');
+  // La connexion renouvelle volontairement la session/CSRF ; le client web
+  // appelle refreshCsrf() après authentification avant toute écriture.
+  await admCloud.csrf(publicHost);
+  assert.equal((await admCloud.get('/admin/dashboard',publicHost)).status,200,'Session admin HTTPS autorisée');
+  assert.equal((await admCloud.get('/admin/insights',publicHost)).status,200,'Analyses admin accessibles avec authentification');
+  assert.equal((await admCloud.get('/admin/products',publicHost)).status,200,'Gestion produits accessible via tunnel');
+  const editFromOtherPC=await admCloud.patch('/admin/products/1',{price_xaf:97500},publicHost);
+  assert.equal(editFromOtherPC.status,200,'Modifier un produit via Cloudflare : '+editFromOtherPC.raw.slice(0,140));
+  assert.equal(editFromOtherPC.json?.data?.product?.price_xaf,97500);
+  assert.equal((await visitor.get('/products/1',publicHost)).json?.data?.product?.price_xaf,97500,
+    'Le produit modifié sur le deuxième PC apparaît sur la boutique');
+  const clientDenied=await visitor.patch('/admin/products/1',{price_xaf:1},publicHost);
+  assert.equal(clientDenied.status,403,'Un client connecté ne peut pas modifier les produits sur Cloudflare');
 
   const admLocal=session();await admLocal.csrf();
   const allowed=await admLocal.post('/auth/login',{email:'admin',password:admin.password});
@@ -132,7 +151,7 @@ try {
   await ready();
   assert.equal((await req('/api/v1/products')).status,200,'Commande courte php -S ... router.php');
   assert.equal((await req('/database/schema.sql')).status,404,'Pas d’accès aux fichiers hors public');
-  console.log('OK — clonage vierge, auto-installation sûre, boutique/Cloudflare, admin local et deux commandes PHP');
+  console.log('OK — clonage vierge, auto-installation sûre, boutique et administration authentifiée via Cloudflare, admin local et deux commandes PHP');
 } finally {
   if(child){child.kill();await delay(180);}
   rmSync(folder,{recursive:true,force:true});

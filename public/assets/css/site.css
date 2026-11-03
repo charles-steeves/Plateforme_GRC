@@ -939,3 +939,16 @@ body.admin-workspace .admin-sidebar .admin-nav a { align-items: center; }
   .admin-mobile-product-heading > .stack { min-width: 0; overflow-wrap: anywhere; }
   .admin-mobile-product > .button { min-height: 46px; width: 100%; }
 }
+
+/* Sélection tactile et clavier de la note produit, sans menu déroulant. */
+.review-stars-picker { margin: .4rem 0; border: 0; padding: 0; min-width: 0; }
+.review-stars-picker legend { color: var(--ink); font-size: .9rem; font-weight: 650; }
+.review-stars-help { margin: .1rem 0 .45rem; font-size: .8rem; }
+.review-stars-row { display: flex; flex-wrap: nowrap; gap: .1rem; align-items: center; width: max-content; max-width: 100%; }
+.review-star-option { position: relative; display: inline-flex; align-items: center; justify-content: center; min-height: 44px; min-width: 44px; cursor: pointer; }
+.review-star-option input { position: absolute; opacity: 0; inset: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; }
+.review-star-option span { display: inline-block; color: #b7c1c8; font-size: 2rem; line-height: 1; transition: color .12s ease; pointer-events: none; }
+.review-star-option[data-selected="true"] span { color: #b17612; }
+.review-star-option:has(input:focus-visible) { outline: 3px solid #197ba8; border-radius: 8px; outline-offset: 1px; }
+.review-star-option:hover span { color: #bd7a19; }
+@media (max-width: 360px) { .review-star-option { min-width: 41px; } }

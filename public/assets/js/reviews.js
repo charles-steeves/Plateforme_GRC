@@ -33,20 +33,36 @@ export async function mountProductReviews(root, productId, user) {
     } catch (error) { if (section.isConnected) renderError(list, error, load); }
   }
   if (user?.role === 'client') {
-    const rating = el('select', { id: 'product-review-rating', name: 'rating', required: true },
-      el('option', { value: '' }, 'Choisir une note'),
-      [5, 4, 3, 2, 1].map(n => el('option', { value: String(n) }, `${stars(n)} · ${n}/5`)));
+    const starOptions = [];
+    const starsInput = el('fieldset', { className: 'review-stars-picker', 'aria-describedby': 'product-rating-help' },
+      el('legend', {}, 'Note du produit'),
+      el('p', { id: 'product-rating-help', className: 'muted review-stars-help' },
+        'Sélectionnez directement de une à cinq étoiles.'));
+    const starRow = el('div', { className: 'review-stars-row' });
+    for (let n = 1; n <= 5; n++) {
+      const radio = el('input', { id: 'product-review-rating-' + n, name: 'rating', type: 'radio',
+        value: String(n), required: n === 1, 'aria-label': n + ' étoile' + (n > 1 ? 's' : '') + ' sur 5' });
+      const option = el('label', { className: 'review-star-option', 'data-selected': 'false' },
+        radio, el('span', { 'aria-hidden': 'true' }, '★'));
+      starOptions.push({radio, option, n});
+      radio.addEventListener('change', () => {
+        if (!radio.checked) return;
+        for (const item of starOptions) item.option.dataset.selected = String(item.n <= n);
+      });
+      starRow.append(option);
+    }
+    starsInput.append(starRow);
     const comment = el('textarea', { id: 'product-review-comment', name: 'comment', rows: 4,
       maxLength: 1500, placeholder: 'Votre expérience avec ce produit (facultatif)' });
     const message = el('div', { 'aria-live': 'polite' });
     const submit = button('Publier mon avis', { type: 'submit', className: 'button button-primary' });
     const form = el('form', { className: 'stack' },
-      field('Note du produit', rating), field('Commentaire', comment), message, submit);
+      starsInput, field('Commentaire', comment), message, submit);
     let uncertain = false;
     form.addEventListener('submit', async event => {
       event.preventDefault();
       if (submit.disabled || uncertain || !form.reportValidity()) return;
-      const value = Number(rating.value);
+      const value = Number(starOptions.find(item => item.radio.checked)?.radio.value || 0);
       if (!Number.isInteger(value) || value < 1 || value > 5) return;
       submit.disabled = true;
       try {
