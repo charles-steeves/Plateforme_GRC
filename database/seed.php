@@ -13,7 +13,22 @@ function seedDemo(PDO $db): array
         $id = $index + 1;
         $email = $id === 1 ? 'admin@example.test' : 'client' . $index . '@example.test';
         $role = $id === 1 ? 'admin' : 'client';
-        $password = bin2hex(random_bytes(16));
+        // Phrase aléatoire lisible plutôt qu'une longue suite hexadécimale.
+        // Aucun mot de passe commun ou prédictible n'est publié dans Git.
+        $words = [
+            'Acacia', 'Bambou', 'Corail', 'Dune', 'Ebene', 'Flamme', 'Galet', 'Horizon',
+            'Ivoire', 'Jardin', 'Kola', 'Lagune', 'Mangue', 'Nuage', 'Ocean', 'Palmier',
+            'Quartz', 'Rivage', 'Soleil', 'Terre', 'Univers', 'Voile', 'Wassa', 'Zenith',
+            'Atlas', 'Bateau', 'Cascade', 'Douceur', 'Etoile', 'Foret', 'Gazelle', 'Heron',
+            'Jungle', 'Lumiere', 'Marigot', 'Nature', 'Oasis', 'Pirogue', 'Racine', 'Sable',
+            'Tamarin', 'Vague', 'Wagon', 'Zebre', 'Aventure', 'Brise', 'Canari', 'Dauphin',
+            'Eclat', 'Fleur', 'Guitare', 'Harmonie', 'Jasmin', 'Lac', 'Miel', 'Nacre',
+            'Citron', 'Piano', 'Rocher', 'Savane', 'Tulipe', 'Vanille', 'Ylang', 'Argile',
+        ];
+        $password = $words[random_int(0, count($words) - 1)] . '-'
+            . $words[random_int(0, count($words) - 1)] . '-'
+            . $words[random_int(0, count($words) - 1)] . '-'
+            . random_int(100000000, 999999999);
         $userInsert->execute([$id, $name, $email, password_hash($password, PASSWORD_DEFAULT), $role, $at(180)]);
         $accounts[] = ['id' => $id, 'name' => $name, 'email' => $email, 'role' => $role, 'password' => $password];
     }
