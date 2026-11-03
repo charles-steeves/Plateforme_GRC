@@ -30,7 +30,9 @@ assert.match(shop, /field\('Catégorie', categoryInput\)/);
 assert.match(css, /\.catalogue-toolbar \{ display: grid;/);
 assert.match(css, /\.catalogue-toolbar-actions \{ display: flex;/);
 assert.match(css, /@media \(max-width: 540px\)/);
-assert.match(customer, /field\(register \? 'Adresse e-mail' : 'Identifiant ou adresse e-mail', email\)/);
+assert.match(customer, /adminEntry \? 'Identifiant administrateur ou e-mail' : 'Identifiant ou adresse e-mail'/);
+assert.match(customer, /adminEntry \? 'Le compte initial peut utiliser/);
+assert.match(customer, /Mot de passe perdu/);
 assert.match(customer, /12 caractères minimum\./);
 assert.ok(!customer.includes("href: '/login.html?next=%2Fadmin.html' }, 'Connexion administrateur'"),
   'Do not show an administrator login link on the public customer page');
