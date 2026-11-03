@@ -126,6 +126,15 @@ try {
   assert.equal((await admCloud.get('/admin/dashboard',publicHost)).status,200,'Session admin HTTPS autorisée');
   assert.equal((await admCloud.get('/admin/insights',publicHost)).status,200,'Analyses admin accessibles avec authentification');
   assert.equal((await admCloud.get('/admin/products',publicHost)).status,200,'Gestion produits accessible via tunnel');
+  const distantCategory=await admCloud.post('/admin/categories',{name:'Ordinateurs et périphériques'},publicHost);
+  assert.equal(distantCategory.status,201,'Création de catégorie depuis le second appareil');
+  assert.equal(distantCategory.json?.data?.category?.name,'Ordinateurs et périphériques');
+  const assignedFromOtherPC=await admCloud.patch('/admin/products/2',
+    {category:'Ordinateurs et périphériques'},publicHost);
+  assert.equal(assignedFromOtherPC.status,200,'Réaffectation de produit via Cloudflare');
+  assert.equal((await visitor.get('/products?category='+encodeURIComponent('Ordinateurs et périphériques'),
+    publicHost)).json?.data?.total,1,'Catégorie visible immédiatement dans la boutique distante');
+
   const editFromOtherPC=await admCloud.patch('/admin/products/1',{price_xaf:97500},publicHost);
   assert.equal(editFromOtherPC.status,200,'Modifier un produit via Cloudflare : '+editFromOtherPC.raw.slice(0,140));
   assert.equal(editFromOtherPC.json?.data?.product?.price_xaf,97500);
