@@ -63,8 +63,22 @@ final class Config
         }
     }
 
+    /**
+     * Cloudflare Quick Tunnels use temporary HTTPS hosts; the actual PHP
+     * connection must still be confined to this PC (127.0.0.1 / ::1).
+     * No wildcard for other domains or machines on the LAN.
+     */
+    public static function isQuickTunnelRequest(): bool
+    {
+        $peer = (string) ($_SERVER['REMOTE_ADDR'] ?? '');
+        $host = strtolower((string) ($_SERVER['HTTP_HOST'] ?? ''));
+        return in_array($peer, ['127.0.0.1', '::1'], true)
+            && preg_match('~^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.trycloudflare\.com$~D', $host) === 1;
+    }
+
     public static function isHttps(): bool
     {
+        if (self::isQuickTunnelRequest()) return true;
         if (in_array(strtolower((string)($_SERVER['HTTPS'] ?? '')), ['on', '1'], true)) {
             return true;
         }
@@ -77,6 +91,11 @@ final class Config
     public static function expectedOrigin(): string
     {
         $host = strtolower((string)($_SERVER['HTTP_HOST'] ?? ''));
+        if (self::isQuickTunnelRequest()) {
+            // Cloudflare changes its temporary hostname on every launch.
+            // Local admin permissions and role checks are NOT relaxed.
+            return 'https://' . $host;
+        }
         $configured = getenv('GRC_ORIGIN');
         if ($configured !== false && $configured !== '') {
             $origin = rtrim($configured, '/');
