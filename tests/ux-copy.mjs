@@ -32,6 +32,8 @@ assert.match(css, /\.catalogue-toolbar-actions \{ display: flex;/);
 assert.match(css, /@media \(max-width: 540px\)/);
 assert.match(customer, /field\(register \? 'Adresse e-mail' : 'Identifiant ou adresse e-mail', email\)/);
 assert.match(customer, /12 caractères minimum\./);
+assert.ok(!customer.includes("href: '/login.html?next=%2Fadmin.html' }, 'Connexion administrateur'"),
+  'Do not show an administrator login link on the public customer page');
 assert.doesNotMatch(customer, /72 octets UTF-8 maximum|Adresse e-mail fictive|projet universitaire/i);
 assert.doesNotMatch(shop, /démonstration|données fictives|Prix en FCFA · XAF/i);
 assert.doesNotMatch(app, /Les données affichées ne remplacent pas une connexion au serveur/i);

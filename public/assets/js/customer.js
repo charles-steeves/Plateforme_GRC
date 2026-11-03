@@ -223,10 +223,7 @@ async function auth(root, page, user) {
             el('aside', { className: 'panel stack' }, el('p', { className: 'eyebrow' }, 'Une relation qui compte'),
                 el('h2', {}, register ? 'Bien plus qu’un panier' : 'Votre espace, vos échanges'),
                 el('p', {}, 'Suivez vos commandes, retrouvez vos points de fidélité et échangez avec notre service après-vente.'),
-                el('a', { href: authLink(register ? 'login' : 'register') }, register ? 'J’ai déjà un compte' : 'Créer un compte client'),
-                !register && !adminEntry
-                    ? el('a', { href: '/login.html?next=%2Fadmin.html' }, 'Connexion administrateur')
-                    : !register ? el('a', { href: '/login.html' }, 'Connexion client') : null)));
+                el('a', { href: authLink(register ? 'login' : 'register') }, register ? 'J’ai déjà un compte' : 'Créer un compte client'))));
     let pending = false;
     form.addEventListener('submit', async event => {
         event.preventDefault();
