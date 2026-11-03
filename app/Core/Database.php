@@ -25,6 +25,7 @@ final class Database
         $pdo->exec('PRAGMA busy_timeout = 5000');
         Schema::ensureProductReviews($pdo);
         Schema::ensureOrderCustomerNote($pdo);
+        Schema::ensureProductCategories($pdo);
         return $pdo;
     }
 
