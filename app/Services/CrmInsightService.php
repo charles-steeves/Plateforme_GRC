@@ -17,12 +17,16 @@ final class CrmInsightService
         if ($frequency === 0 || $days === null) {
             return ['r' => 0, 'f' => 0, 'm' => 0, 'score' => 0, 'segment' => 'Sans achat'];
         }
-        $r = $days === null ? 1 : ($days <= 30 ? 5 : ($days <= 60 ? 4 : ($days <= 90 ? 3 : ($days <= 180 ? 2 : 1))));
-        $f = $frequency >= 12 ? 5 : ($frequency >= 8 ? 4 : ($frequency >= 4 ? 3 : ($frequency >= 2 ? 2 : 1)));
-        $m = $amount >= 1000000 ? 5 : ($amount >= 500000 ? 4 : ($amount >= 250000 ? 3 : ($amount >= 100000 ? 2 : 1)));
+        // Récence exprimée en mois : 365,25 jours / 12, sans arrondir
+        // avant la classification. Barème de 1, 3 ou 5 points par critère.
+        $months = $days / (365.25 / 12);
+        $r = $months <= 2 ? 5 : ($months <= 7 ? 3 : 1);
+        $f = $frequency > 5 ? 5 : ($frequency >= 2 ? 3 : 1);
+        $m = $amount > 4000000 ? 5 : ($amount >= 2000000 ? 3 : 1);
         $sum = $r + $f + $m;
         return ['r' => $r, 'f' => $f, 'm' => $m, 'score' => $sum,
-            'segment' => $sum >= 12 ? 'Prioritaire' : ($sum >= 9 ? 'À développer' : ($sum >= 6 ? 'À fidéliser' : 'À réactiver'))];
+            'segment' => $sum >= 13 ? 'Très bon client' :
+                ($sum >= 9 ? 'Bon client' : ($sum >= 5 ? 'Client occasionnel' : 'Nouveau client'))];
     }
 
     public function report(): array
@@ -51,7 +55,7 @@ final class CrmInsightService
             GROUP BY u.id ORDER BY amount DESC, u.id LIMIT 1000");
         $query->execute(['start' => $from, 'end' => $until]);
         $customers = [];
-        $segments = ['Prioritaire'=>0, 'À développer'=>0, 'À fidéliser'=>0, 'À réactiver'=>0, 'Sans achat'=>0];
+        $segments = ['Très bon client'=>0, 'Bon client'=>0, 'Client occasionnel'=>0, 'Nouveau client'=>0, 'Sans achat'=>0];
         foreach ($query->fetchAll(PDO::FETCH_ASSOC) as $row) {
             $days = $row['last_at'] === null ? null :
                 max(0, (int)floor(($today->getTimestamp() - strtotime((string)$row['last_at'])) / 86400));
@@ -60,6 +64,7 @@ final class CrmInsightService
             $scoring = self::score($days, $frequency, $amount);
             $segments[$scoring['segment']]++;
             $customers[] = ['id'=>(int)$row['id'], 'name'=>$row['name'], 'days'=>$days,
+                'months'=>$days === null ? null : round($days / (365.25 / 12), 1),
                 'frequency'=>$frequency, 'amount'=>$amount, 'loyalty_points'=>(int)$row['loyalty_points']] + $scoring;
         }
 

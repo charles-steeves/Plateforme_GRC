@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { scoreTD, calculateTD, TD_SPIRA_2022 } from '../public/assets/js/td-scoring.js';
+import { scoreTD, calculateTD, classifyRFMScore, TD_SPIRA_2022 } from '../public/assets/js/td-scoring.js';
 
 assert.equal(TD_SPIRA_2022.length,26);
 assert.deepEqual(TD_SPIRA_2022[0],['A',5,14000000,5]);
@@ -15,6 +15,17 @@ assert.deepEqual(scoreTD({purchases:1,amount:1900000,months:1}),{r:5,f:1,m:1,tot
 assert.deepEqual(scoreTD({purchases:7,amount:10000000,months:5}),{r:3,f:5,m:5,total:13});
 assert.equal(scoreTD({purchases:2,amount:2000000,months:7}).total,9);
 assert.equal(scoreTD({purchases:5,amount:4000000,months:2}).total,11);
+assert.deepEqual([3,5,7,9,11,13,15].map(classifyRFMScore),
+  ['Nouveau client','Client occasionnel','Client occasionnel',
+   'Bon client','Bon client','Très bon client','Très bon client']);
+assert.equal(r.data.length,26);
+assert.ok(r.data.every(row => row.segment === classifyRFMScore(row.points.total)));
+assert.throws(() => classifyRFMScore(8), RangeError);
+const tdUI = readFileSync('public/assets/js/td-exercise.js', 'utf8');
+assert.match(tdUI, /'Segment'\].map\(label/);
+assert.match(tdUI, /result\[4\]\.textContent=row\.segment/);
+assert.doesNotMatch(tdUI, /13 et plus|11[-–]9|7[-–]5|3 et moins/);
+
 assert.throws(()=>scoreTD({purchases:2,amount:200,months:0}),RangeError);
 assert.throws(()=>scoreTD({purchases:-1,amount:200,months:2}),RangeError);
 const ui=readFileSync('public/assets/js/grc-analyses.js','utf8');

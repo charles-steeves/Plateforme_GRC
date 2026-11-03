@@ -174,8 +174,22 @@ export function scoreTD({purchases, amount, months}) {
   const m = amount > 4000000 ? 5 : amount >= 2000000 ? 3 : 1;
   return {r,f,m,total:r+f+m};
 }
+// Seuils implicites : chaque composante R/F/M vaut 1, 3 ou 5.
+export function classifyRFMScore(total) {
+  if (![3, 5, 7, 9, 11, 13, 15].includes(total)) {
+    throw new RangeError('Score RFM invalide.');
+  }
+  return total >= 13 ? 'Très bon client'
+    : total >= 9 ? 'Bon client'
+    : total >= 5 ? 'Client occasionnel'
+    : 'Nouveau client';
+}
+
 export function calculateTD(rows) {
-  const data = rows.map(row => ({ ...row, points:scoreTD(row) }));
+  const data = rows.map(row => {
+    const points = scoreTD(row);
+    return { ...row, points, segment: classifyRFMScore(points.total) };
+  });
   const amount = data.reduce((sum,row)=>sum+row.amount,0);
   const purchases = data.reduce((sum,row)=>sum+row.purchases,0);
   if (!Number.isSafeInteger(amount)||!Number.isSafeInteger(purchases))throw new RangeError('Total trop grand.');

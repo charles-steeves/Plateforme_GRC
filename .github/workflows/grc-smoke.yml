@@ -95,6 +95,9 @@ jobs:
       - name: New GRC analytics (in-memory SQLite, no active data)
         run: php tests/grc-insights-domain.php
 
+      - name: Vérifier la récence RFM en mois et les quatre segments demandés
+        run: php tests/rfm-segmentation-months.php
+
       - name: New GRC analytics navigation and formulas
         run: node tests/grc-insights-front.mjs
 

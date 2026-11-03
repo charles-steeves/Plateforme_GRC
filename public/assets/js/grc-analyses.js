@@ -45,7 +45,7 @@ function overview(data) {
     tile('Rétention', data.retention === null ? '—' : number(data.retention) + ' %'),
     tile('Tickets à traiter', number(data.pending_tickets)),
     tile('Satisfaction', data.satisfaction === null ? '—' : number(data.satisfaction) + ' / 5'),
-    tile('Fréquence d’achat', number(data.purchase_frequency))));
+    tile('Fréquence moyenne d’achat', number(data.purchase_frequency))));
   const monthly = section('Évolution du chiffre d’affaires');
   monthly.append(barChart(data.monthly.map(x => ({ label: x.month, value: x.revenue })), true));
   const segments = section('Répartition RFM');
@@ -56,9 +56,9 @@ function overview(data) {
 
 function rfm(data) {
   const block = section('Segmentation des clients');
-  block.append(table(['Client', 'Récence', 'Achats', 'CA', 'Score RFM', 'Segment', 'Points fidélité'],
+  block.append(table(['Client', 'Récence (mois)', 'Achats', 'CA', 'Score RFM', 'Segment', 'Points fidélité'],
     data.rfm.map(row => [
-      row.name, row.days === null ? 'Aucun achat' : row.days + ' j',
+      row.name, row.months === null ? 'Aucun achat' : number(row.months) + ' mois',
       number(row.frequency), money(row.amount), row.score + '/15', row.segment, number(row.loyalty_points)
     ])));
   block.append(el('p', { className: 'gi-footnote' },
@@ -90,7 +90,7 @@ function calculations(data) {
     try {
       const val = clientValue(data.annual_value, ...controls.map(x => Number(x.value)));
       results.replaceChildren(tile('CA annuel par client', money(data.annual_value)),
-        tile('Durée estimée', number(val.duration) + ' ans'),
+        tile('Durée de vie moyenne d’un client', number(val.duration) + ' ans'),
         tile('Valeur brute', money(val.gross)),
         tile('CLV nette estimée', money(val.net)));
       error.textContent = '';
@@ -105,9 +105,9 @@ function calculations(data) {
   const formulas = section('Formules utilisées');
   formulas.append(table(['Indicateur', 'Formule'],
     [['Panier moyen', 'CA / nombre d’achats'],
-      ['Fréquence', 'Nombre d’achats / clients acheteurs'],
+      ['Fréquence moyenne d’achat', 'Nombre d’achats / nombre de clients acheteurs (sur 12 mois)'],
       ['CA annuel / client', 'CA annuel / clients acheteurs'],
-      ['Durée de vie', '1 / (1 − rétention)'],
+      ['Durée de vie moyenne d’un client', '1 / (1 − taux de rétention)'],
       ['CLV nette', '(CA annuel/client × marge) / (1 + actualisation − rétention) − acquisition']]));
   root.append(block, formulas);
   return root;

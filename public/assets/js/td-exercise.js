@@ -8,7 +8,7 @@ export function mountTDExercise() {
   const introduction = el('section',{className:'panel gi-section'},
     el('h2',{},'Analyse des achats clients'));
   const table = el('table',{className:'gi-table'}, el('thead',{},el('tr',{},
-    ...['Client','Achats/an','Montant/an (FCFA)','Période (mois)','R','F','M','Total / 15'].map(label=>el('th',{scope:'col'},label)))));
+    ...['Client','Achats/an','Montant/an (FCFA)','Période (mois)','R','F','M','Total / 15','Segment'].map(label=>el('th',{scope:'col'},label)))));
   const tbody=el('tbody');table.append(tbody);
   const fields=[];
   for(const [name,purchases,amount,months] of TD_SPIRA_2022) {
@@ -17,7 +17,7 @@ export function mountTDExercise() {
       step:'1',value:String(v),className:'gi-td-input',
       'aria-label':name+' '+['achats','montant','mois'][index]
     }));
-    const result=[el('td'),el('td'),el('td'),el('td')];
+    const result=[el('td'),el('td'),el('td'),el('td'),el('td')];
     tbody.append(el('tr',{},el('th',{scope:'row'},name),
       ...inputs.map(input=>el('td',{},input)),...result));
     fields.push({name,inputs,result});
@@ -44,6 +44,7 @@ export function mountTDExercise() {
       result.data.forEach((row,i)=>{
         const p=row.points;
         [p.r,p.f,p.m,p.total].forEach((value,j)=>fields[i].result[j].textContent=String(value));
+        fields[i].result[4].textContent=row.segment;
       });
       totals.replaceChildren(
         tile('Clients',fmt(result.clients)),
