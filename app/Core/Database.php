@@ -24,6 +24,7 @@ final class Database
         $pdo->exec('PRAGMA foreign_keys = ON');
         $pdo->exec('PRAGMA busy_timeout = 5000');
         Schema::ensureProductReviews($pdo);
+        Schema::ensureOrderCustomerNote($pdo);
         return $pdo;
     }
 
