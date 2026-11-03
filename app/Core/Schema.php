@@ -32,6 +32,16 @@ SQL;
         }
     }
 
+    /** Catalogue : catégories indépendantes, migration additive sans toucher aux produits. */
+    public static function ensureProductCategories(PDO $pdo): void
+    {
+        $pdo->exec("CREATE TABLE IF NOT EXISTS product_categories (
+            id INTEGER PRIMARY KEY,
+            name TEXT NOT NULL UNIQUE COLLATE NOCASE,
+            created_at TEXT NOT NULL
+        )");
+    }
+
     public static function ensureProductReviews(PDO $pdo): void
     {
         $exists = $pdo->query("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'product_reviews' LIMIT 1")->fetchColumn();

@@ -952,3 +952,15 @@ body.admin-workspace .admin-sidebar .admin-nav a { align-items: center; }
 .review-star-option:has(input:focus-visible) { outline: 3px solid #197ba8; border-radius: 8px; outline-offset: 1px; }
 .review-star-option:hover span { color: #bd7a19; }
 @media (max-width: 360px) { .review-star-option { min-width: 41px; } }
+
+/* Gestion des catégories : même formulaire sur PC, tablette et mobile. */
+.admin-category-form { display: flex; align-items: end; gap: .7rem; flex-wrap: wrap; }
+.admin-category-form .field { flex: 1 1 260px; min-width: 0; }
+.admin-category-form > button { min-height: 44px; }
+.admin-category-list { gap: .5rem; }
+.admin-category-list .badge { padding: .45rem .65rem; }
+@media (max-width: 540px) {
+  .admin-category-form { display: grid; grid-template-columns: minmax(0, 1fr); }
+  .admin-category-form > button { width: 100%; }
+  #admin-product-editor select { min-height: 44px; width: 100%; }
+}

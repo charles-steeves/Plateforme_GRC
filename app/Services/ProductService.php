@@ -49,6 +49,26 @@ final class ProductService
         return ['items' => $this->products->allCategories()];
     }
 
+    /** Administrator-only; creates a category without creating a placeholder product. */
+    public function createCategory(array $input): array
+    {
+        Validation::fields($input, ['name']);
+        $name = Validation::text($input, 'name', 1, 120);
+        $name = preg_replace('/\\s+/u', ' ', $name);
+        if (!is_string($name) || $name === '') {
+            throw new ApiException(422, 'VALIDATION_ERROR', 'Nom de catégorie invalide.');
+        }
+        return Database::write($this->pdo, function () use ($name): array {
+            foreach ($this->products->allCategories() as $category) {
+                if (strcasecmp($category['name'], $name) === 0) {
+                    throw new ApiException(409, 'CATEGORY_EXISTS', 'Cette catégorie existe déjà.');
+                }
+            }
+            $this->products->insertCategory($name);
+            return ['category' => ['name' => $name, 'count' => 0]];
+        });
+    }
+
     public function detail(int $id): array
     {
         return $this->products->find($id, true) ?? throw new ApiException(404, 'NOT_FOUND', 'Ressource introuvable.');

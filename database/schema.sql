@@ -21,6 +21,13 @@ CREATE TABLE products (
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
 );
+-- Independent category names; products keep their existing textual category,
+-- so existing items and orders are never rewritten by this feature.
+CREATE TABLE IF NOT EXISTS product_categories (
+    id INTEGER PRIMARY KEY,
+    name TEXT NOT NULL UNIQUE COLLATE NOCASE,
+    created_at TEXT NOT NULL
+);
 CREATE TABLE orders (
     id INTEGER PRIMARY KEY,
     user_id INTEGER NOT NULL REFERENCES users(id),

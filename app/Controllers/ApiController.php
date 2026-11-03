@@ -50,6 +50,7 @@ final class ApiController
             ['GET', '/admin/tickets', 'admin', 200, fn($u, $b, $id) => ['items' => (new TicketService($this->db()))->adminList()]],
             ['PATCH', '/admin/tickets/([0-9]+)', 'admin', 200, fn($u, $b, $id) => ['ticket' => (new TicketService($this->db()))->changeStatus($id, $b)]],
             ['GET', '/admin/categories', 'admin', 200, fn($u, $b, $id) => (new ProductService($this->db()))->adminCategories()],
+            ['POST', '/admin/categories', 'admin', 201, fn($u, $b, $id) => (new ProductService($this->db()))->createCategory($b)],
             ['GET', '/admin/product-reviews', 'admin', 200, fn($u, $b, $id) => (new ProductReviewService($this->db()))->adminReviews()],
             ['PATCH', '/admin/product-reviews/([0-9]+)', 'admin', 200, fn($u, $b, $id) => ['review' => (new ProductReviewService($this->db()))->moderate($id, $b)]],
             ['GET', '/admin/products', 'admin', 200, fn($u, $b, $id) => ['items' => (new ProductService($this->db()))->adminList()]],

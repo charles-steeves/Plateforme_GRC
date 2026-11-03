@@ -125,6 +125,9 @@ jobs:
       - name: Migrer les remarques de commande sans écraser les ventes
         run: php tests/order-note-migration.php
 
+      - name: Vérifier les anciennes catégories et leur création sans perte de produits
+        run: php tests/product-categories-migration.php
+
       - name: Démarrer un clone vierge et tester Cloudflare + authentification admin locale
         run: node tests/first-run-cloudflare.mjs
 
