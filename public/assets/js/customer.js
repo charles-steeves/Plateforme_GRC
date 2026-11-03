@@ -210,8 +210,10 @@ async function auth(root, page, user) {
     const form = el('form', { className: 'panel stack auth-form' },
         el('h2', {}, register ? 'Bienvenue dans la boutique' : adminEntry ? 'Connexion administrateur' : 'Connexion à votre compte'),
         register ? field('Nom complet', name) : null,
-        field(register ? 'Adresse e-mail' : 'Identifiant ou adresse e-mail', email),
-        field('Mot de passe', password, register ? '12 caractères minimum.' : ''),
+        field(register ? 'Adresse e-mail' : adminEntry ? 'Identifiant administrateur ou e-mail' : 'Identifiant ou adresse e-mail', email,
+            adminEntry ? 'Le compte initial peut utiliser « admin ». Il reste protégé par son mot de passe.' : ''),
+        field('Mot de passe', password, register ? '12 caractères minimum.' : adminEntry
+            ? 'Mot de passe perdu ? Depuis le terminal du PC : powershell -File .\\admin.ps1 -Changer' : ''),
         reveal, message, submit);
     if (!register && new URLSearchParams(window.location.search).get('logged_out') === '1') {
         notice(message, 'Vous êtes déconnecté. Votre session a été fermée.', 'success');
