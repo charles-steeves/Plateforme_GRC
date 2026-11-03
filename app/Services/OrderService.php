@@ -25,7 +25,8 @@ final class OrderService
             throw new ApiException(403, 'FORBIDDEN', 'Accès réservé aux clients.');
         }
         // Submitted prices are deliberately ignored; authority fields are rejected.
-        Validation::fields($input, ['items', 'request_id', 'price', 'price_xaf', 'unit_price_xaf']);
+        Validation::fields($input, ['items', 'request_id', 'customer_note', 'price', 'price_xaf', 'unit_price_xaf']);
+        $customerNote = Validation::text($input, 'customer_note', 0, 1500, '');
         $requestKey = IdempotencyRepository::key($input);
         $items = $input['items'] ?? null;
         if (!is_array($items) || !array_is_list($items) || count($items) < 1 || count($items) > 30) {
@@ -47,8 +48,8 @@ final class OrderService
             $lines[] = ['product_id' => $productId, 'quantity' => $quantity];
         }
         usort($lines, static fn(array $left, array $right): int => $left['product_id'] <=> $right['product_id']);
-        $fingerprint = hash('sha256', json_encode($lines, JSON_THROW_ON_ERROR));
-        return Database::write($this->pdo, function () use ($user, $lines, $requestKey, $fingerprint): array {
+        $fingerprint = hash('sha256', json_encode([$lines, $customerNote], JSON_THROW_ON_ERROR));
+        return Database::write($this->pdo, function () use ($user, $lines, $customerNote, $requestKey, $fingerprint): array {
             $requestLog = null;
             if ($requestKey !== null) {
                 $requestLog = new IdempotencyRepository($this->pdo);
@@ -86,8 +87,8 @@ final class OrderService
             }
             unset($line);
             $now = gmdate('Y-m-d\TH:i:s\Z');
-            $insert = $this->pdo->prepare("INSERT INTO orders(user_id, status, total_xaf, created_at, updated_at) VALUES (:user_id, 'pending', :total, :created, :updated)");
-            $insert->execute(['user_id' => $user['id'], 'total' => $total, 'created' => $now, 'updated' => $now]);
+            $insert = $this->pdo->prepare("INSERT INTO orders(user_id, status, total_xaf, customer_note, created_at, updated_at) VALUES (:user_id, 'pending', :total, :note, :created, :updated)");
+            $insert->execute(['user_id' => $user['id'], 'total' => $total, 'note' => $customerNote, 'created' => $now, 'updated' => $now]);
             $orderId = (int) $this->pdo->lastInsertId();
             $reserve = $this->pdo->prepare('UPDATE products SET stock_quantity=stock_quantity-:quantity, updated_at=:updated WHERE id=:id AND active=1 AND stock_quantity>=:quantity');
             $insertLine = $this->pdo->prepare('INSERT INTO order_items(order_id, product_id, product_name, quantity, unit_price_xaf, line_total_xaf) VALUES (:order_id, :product_id, :name, :quantity, :price, :total)');
