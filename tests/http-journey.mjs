@@ -371,6 +371,35 @@ try {
   ok((await client.post('/tickets/' + ticketId + '/messages', { body: 'Nouveau message' })).status === 409, 'closed ticket refuses message');
   ok((await outsider.get('/admin/customers')).status === 403, 'other client refused admin listing');
 
+  // Independent categories: administrators can create a category with no
+  // products, assign one later, and still keep every old category intact.
+  ok((await visitor.post('/admin/categories', { name: 'Rayon interdit' })).status === 401,
+    'anonymous visitor cannot create a category');
+  ok((await client.post('/admin/categories', { name: 'Rayon interdit' })).status === 403,
+    'ordinary customer cannot create a category');
+  const createdCategory = await admin.post('/admin/categories', { name: 'Informatique et réseaux' });
+  ok(createdCategory.status === 201 && createdCategory.data.category.name === 'Informatique et réseaux'
+    && createdCategory.data.category.count === 0,
+    'administrator creates an independent category without adding a dummy product');
+  const emptyCategories = await visitor.get('/products/categories');
+  ok(emptyCategories.status === 200
+    && emptyCategories.data.items.some(row => row.name === 'Informatique et réseaux' && row.count === 0),
+    'new empty category is visible in the public category selector');
+  ok((await admin.post('/admin/categories', { name: 'informatique et réseaux' })).status === 409,
+    'creating the same category with alternate case is safely refused');
+  ok((await admin.post('/admin/categories', { name: '' })).status === 422,
+    'empty category names are rejected');
+  const assigned = await admin.patch('/admin/products/1', { category: 'Informatique et réseaux' });
+  ok(assigned.status === 200 && assigned.data.product.category === 'Informatique et réseaux',
+    'administrator can reassign an existing product to a newly created category');
+  const shelf = await visitor.get('/products?category=' + encodeURIComponent('Informatique et réseaux'));
+  ok(shelf.status === 200 && shelf.data.total === 1 && shelf.data.items[0].id === 1,
+    'new category lists the assigned product to an anonymous visitor');
+  const adminCategoriesAfter = await admin.get('/admin/categories');
+  ok(adminCategoriesAfter.status === 200
+    && adminCategoriesAfter.data.items.some(row => row.name === 'Informatique et réseaux' && row.count === 1),
+    'category product count updates in SQLite without deleting old groups');
+
   // Group labels originate from the product administrator, never visitor input.
   // This uses only the disposable test DB, not the Windows demo user's DB.
   const moved = await admin.patch('/admin/products/1', { category: 'Smartphones et tablettes' });
