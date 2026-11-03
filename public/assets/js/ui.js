@@ -86,5 +86,6 @@ export function orderCard(order) {
     el('p', { className: 'muted' }, date(order.created_at)),
     el('ul', { className: 'order-items' }, items.map(item => el('li', { className: 'order-item' },
       el('span', {}, `${item.product_name} × ${item.quantity}`), el('span', {}, money(item.line_total_xaf))))),
+    typeof order.customer_note === 'string' && order.customer_note ? el('p', { className: 'muted' }, `Remarque du client : ${order.customer_note}`) : null,
     el('p', { className: 'price' }, `Total : ${money(order.total_xaf)}`));
 }
